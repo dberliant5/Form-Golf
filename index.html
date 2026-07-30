@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FORM — Driver Fit Experience</title>
+<style>
+:root{
+ --bg:#f7f7f3;--paper:#fbfbf8;--ink:#141714;--muted:#747a74;--line:#dcddd7;
+ --deep:#263e33;--deep2:#385347;--sage:#e8eee8;--sage2:#f0f3ef;--glow:#dce8ce;--sand:#efeae1;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit}button{cursor:pointer}
+header{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 34px;border-bottom:1px solid rgba(20,23,20,.08);background:rgba(247,247,243,.92);backdrop-filter:blur(12px);position:sticky;top:0;z-index:30}
+.brand{font-size:13px;font-weight:900;letter-spacing:.18em}.headerMeta{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#7b817b}
+.shell{max-width:1160px;margin:auto;padding:0 24px 70px}
+.topline{display:grid;grid-template-columns:1fr auto;gap:30px;align-items:center;padding:24px 0 10px}
+.progressWrap{display:flex;align-items:center;gap:14px}.progress{width:240px;height:2px;background:#dadcd7}.progress i{display:block;height:100%;background:var(--deep);width:11%;transition:.45s cubic-bezier(.2,.8,.2,1)}
+.stepCount{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#858a85}
+.fitStage{min-height:650px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:70px;align-items:center;padding:35px 0 20px}
+.mainPane{position:relative}.step{animation:fadeUp .38s ease}.hidden{display:none!important}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.eyebrow{font-size:9px;letter-spacing:.17em;text-transform:uppercase;font-weight:900;color:#718074;margin-bottom:14px}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:400;letter-spacing:-.045em}
+h1{font-size:clamp(52px,6vw,76px);line-height:.93;margin:0;max-width:790px}
+h2{font-size:46px;line-height:1;margin:0}h3{font-size:26px;margin:0}
+.lead{font-size:16px;line-height:1.7;color:#687069;max-width:720px;margin:24px 0 36px}
+.options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:760px}
+.opt{
+ border:0;border-bottom:1px solid #cfd2cd;background:transparent;padding:18px 2px 17px;text-align:left;
+ font-size:13px;position:relative;transition:.18s;color:#313631
+}
+.opt:after{content:"";position:absolute;right:2px;top:50%;width:10px;height:10px;border:1px solid #b6bbb6;border-radius:50%;transform:translateY(-50%)}
+.opt:hover{padding-left:8px;color:#111}
+.opt.on{color:var(--deep);font-weight:700;border-bottom-color:var(--deep)}
+.opt.on:after{background:var(--deep);border-color:var(--deep);box-shadow:inset 0 0 0 3px var(--paper)}
+.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.techGrid{display:grid;grid-template-columns:1fr 1fr;gap:22px 32px;max-width:760px}
+
+.lmInputs{margin-top:30px;display:grid;gap:18px;max-width:760px}
+.metricBox{padding:18px 0;border-top:1px solid var(--line)}
+.metricTop{display:flex;justify-content:space-between;gap:18px;align-items:end;margin-bottom:12px}
+.metricTop b{font-family:Georgia,"Times New Roman",serif;font-size:22px;font-weight:400}
+.metricTop span{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#7f8680}
+.metricChoices{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.metricChoice{border:1px solid #d4d8d3;background:transparent;padding:11px;font-size:10px;text-align:left}
+.metricChoice.on{background:var(--deep);color:#fff;border-color:var(--deep)}
+.metricInput{width:100%;border:0;border-bottom:1px solid #b8bdb8;background:transparent;padding:11px 0;font-size:13px}
+.signalStrength{margin-top:9px;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#7f8680}
+
+.field label{display:block;font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:#7b817b;margin-bottom:8px}
+.field select{width:100%;border:0;border-bottom:1px solid #b9bdb8;background:transparent;padding:12px 0;color:#202420}
+.note{font-size:11px;line-height:1.6;color:#717871;max-width:680px;margin-top:20px}
+.sideRail{align-self:stretch;display:flex;flex-direction:column;justify-content:center;position:relative}
+.oracle{
+ background:linear-gradient(180deg,#f5f7f3,#edf2ec);border:1px solid #dfe5df;padding:24px;min-height:330px;position:relative;overflow:hidden
+}
+.oracle:before{content:"";position:absolute;width:220px;height:220px;border-radius:50%;border:1px solid rgba(38,62,51,.12);right:-95px;top:-70px;box-shadow:0 0 0 34px rgba(38,62,51,.025),0 0 0 70px rgba(38,62,51,.018)}
+.oracleLabel{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:#7f8981;position:relative;z-index:2}
+.oracle h3{font-size:29px;line-height:1.03;margin-top:18px;position:relative;z-index:2}
+.signalList{margin-top:30px;display:grid;gap:13px;position:relative;z-index:2}
+.signal{display:flex;gap:10px;align-items:flex-start;font-size:10px;line-height:1.45;color:#687069}
+.dot{width:7px;height:7px;border-radius:50%;background:#aeb8ae;margin-top:3px;flex:0 0 auto}.dot.on{background:var(--deep)}
+.candidateCount{margin-top:25px;padding-top:18px;border-top:1px solid #d8ded8;position:relative;z-index:2}
+.candidateCount span{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#828982}.candidateCount b{display:block;font-family:Georgia,serif;font-size:34px;font-weight:400;margin-top:3px}
+.derived{margin-top:28px;background:var(--sage);padding:18px 20px;max-width:760px;font-size:12px;line-height:1.6;color:#586159}
+.flowNav{display:flex;justify-content:space-between;align-items:center;padding-top:22px;border-top:1px solid var(--line);margin-top:20px}
+.btn{border:0;background:transparent;padding:12px 0;font-size:9px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
+.btn.primary{background:var(--deep);color:#fff;padding:15px 20px;min-width:145px}.btn.primary:hover{background:var(--deep2)}
+.btn.ghost{color:#737973}
+.reviewHero{padding:30px 0 25px}.reviewGrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);margin-top:28px}
+.reviewGroup{background:#fff;padding:22px}.reviewHead{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:15px}.reviewHead span{font-size:8px;text-transform:uppercase;letter-spacing:.12em;color:#808680}.edit{border:0;background:transparent;font-size:8px;text-transform:uppercase;letter-spacing:.1em;text-decoration:underline;color:#5d665f}
+.reviewRows{display:grid;gap:11px}.reviewRow{display:flex;justify-content:space-between;gap:20px;font-size:11px}.reviewRow span{color:#7b817b}.reviewRow b{font-weight:600;text-align:right}
+.quality{display:inline-block;padding:4px 6px;background:#eef1ed;font-size:7px;letter-spacing:.08em;text-transform:uppercase;margin-left:6px;color:#6b746c}
+.readyBox{background:var(--deep);color:white;padding:28px;margin-top:18px;display:flex;justify-content:space-between;gap:30px;align-items:center}.readyBox h3{font-size:31px}.readyBox p{color:#c1cbc4;font-size:11px;line-height:1.55;max-width:580px}
+.resultsTop{display:flex;justify-content:space-between;gap:30px;align-items:end;border-bottom:1px solid var(--line);padding:30px 0 18px}
+.conf{font-family:Georgia,serif;font-size:48px}.result{display:grid;grid-template-columns:54px 1fr 82px;gap:20px;padding:28px 0;border-bottom:1px solid var(--line)}
+.rank{font-family:Georgia,serif;font-size:32px;color:#a4a8a4}.score{width:72px;height:72px;border:1px solid #aeb3ae;border-radius:50%;display:grid;place-items:center;font-family:Georgia,serif;font-size:22px}
+.meta{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#8a8f8a;margin:6px 0 11px}.reason{font-size:11px;line-height:1.65;color:#5c645d;max-width:760px}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:11px}.tag{padding:5px 7px;background:#eef1ed;font-size:7px;letter-spacing:.08em;text-transform:uppercase}
+.keep{margin-top:20px;background:var(--sage);padding:16px;font-size:11px;line-height:1.6}
+@media(max-width:900px){.fitStage{grid-template-columns:1fr;gap:20px}.sideRail{order:-1}.oracle{min-height:auto}.reviewGrid{grid-template-columns:1fr}.options,.three{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){header{padding:0 16px}.shell{padding:0 18px 60px}.fitStage{min-height:auto;padding-top:20px}.options,.three,.techGrid{grid-template-columns:1fr}.topline{grid-template-columns:1fr}.progress{width:100%}.result{grid-template-columns:38px 1fr}.score{grid-column:2}h1{font-size:48px}.readyBox{align-items:flex-start;flex-direction:column}}
+.multiOptions{display:flex;flex-wrap:wrap;gap:8px}.multiOptions button{border:1px solid #d4d8d3;background:transparent;padding:11px 13px;font-size:10px}.multiOptions button.on{background:var(--deep);color:white;border-color:var(--deep)}
+.rankPanel{max-width:720px;border-top:1px solid var(--line)}.rankSlot{display:grid;grid-template-columns:54px 1fr;align-items:center;border-bottom:1px solid var(--line);padding:15px 0}.rankSlot span{font-family:Georgia,serif;font-size:25px;color:#9ba09b}.rankSlot select{border:0;background:transparent;font-family:Georgia,serif;font-size:20px;width:100%;padding:8px}
+.upgradeCard{margin:22px 0;border:1px solid var(--line);background:#fff;padding:22px}.upgradeTop{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.upgradeLevel{font-family:Georgia,serif;font-size:30px}.benchmark{display:grid;grid-template-columns:1fr auto;gap:12px;padding:13px 0;border-top:1px solid var(--line);font-size:11px}</style>
+</head>
+<body>
+<header><div class="brand">FORM</div><div class="headerMeta">Driver Fit Experience · v1.1</div></header>
+<div class="shell">
+  <div class="topline">
+    <div class="progressWrap"><div class="progress"><i id="progressBar"></i></div><div class="stepCount" id="stepCount">01 / 11</div></div>
+    <div class="headerMeta">Adaptive fitting interview</div>
+  </div>
+
+  <div class="fitStage">
+    <main class="mainPane">
+      <section id="step1" class="step">
+        <div class="eyebrow">Golfer DNA</div><h1>Which side do you play from?</h1><p class="lead">Handedness changes how FORM interprets physical shot direction. We save this once and use it everywhere.</p>
+        <div class="options" data-group="handed"><button class="opt on" data-v="right">Right-handed</button><button class="opt" data-v="left">Left-handed</button></div>
+      </section>
+
+      <section id="step2" class="step hidden">
+        <div class="eyebrow">Ball flight</div><h1>Where does your normal drive begin?</h1><p class="lead">Start direction and curvature tell different stories. Keeping them separate lets FORM understand the pattern instead of just the final miss.</p>
+        <div class="options" data-group="start"><button class="opt" data-v="left">Starts left</button><button class="opt on" data-v="straight">Starts mostly straight</button><button class="opt" data-v="right">Starts right</button><button class="opt" data-v="varies">It varies / not sure</button></div>
+      </section>
+
+      <section id="step3" class="step hidden">
+        <div class="eyebrow">Ball flight</div><h1>Then what does it do?</h1><p class="lead">FORM normalizes this as hook, draw, straight, fade or slice—then maps that back to physical direction using your handedness.</p>
+        <div class="options three" data-group="curve"><button class="opt" data-v="hook">Hook</button><button class="opt" data-v="draw">Draw</button><button class="opt on" data-v="straight">Straight</button><button class="opt" data-v="fade">Fade</button><button class="opt" data-v="slice">Slice</button><button class="opt" data-v="varies">Varies / unknown</button></div>
+        <div id="derived" class="derived"></div>
+      </section>
+
+      <section id="step4" class="step hidden">
+        <div class="eyebrow">Outcome pattern</div><h1>Which miss actually costs you?</h1><p class="lead">The most expensive miss matters more than the shot you occasionally hit on the range.</p>
+        <div class="options three" data-group="costly"><button class="opt" data-v="hook">Hook</button><button class="opt" data-v="slice">Slice</button><button class="opt" data-v="left">Straight left</button><button class="opt" data-v="right">Straight right</button><button class="opt on" data-v="two_way">Two-way miss</button><button class="opt" data-v="other">Other / not sure</button></div>
+        <p class="lead" style="margin-top:34px;margin-bottom:14px;font-size:13px">And where do you usually find the face?</p>
+        <div class="options" data-group="strike"><button class="opt" data-v="toe">Toe side</button><button class="opt on" data-v="heel">Heel side</button><button class="opt" data-v="center">Center-ish</button><button class="opt" data-v="varied">All over the face</button><button class="opt" data-v="unknown">I don't know</button></div>
+      </section>
+
+      <section id="step5" class="step hidden">
+        <div class="eyebrow">Technical profile</div><h1>Do you have launch-monitor data?</h1>
+        <p class="lead">Use it if you have it. If not, FORM will keep fitting from what you see on the course. Launch-monitor data should make the fit sharper—not determine whether the fit is credible.</p>
+        <div class="options" data-group="lm">
+          <button class="opt" data-v="exact">Yes — I know my numbers</button>
+          <button class="opt" data-v="range">I know them roughly</button>
+          <button class="opt" data-v="general">I know the general story</button>
+          <button class="opt on" data-v="none">No — I have no idea</button>
+        </div>
+
+        <div id="lmInputs" class="lmInputs"></div>
+        <div class="note">FORM stores both the answer and how precise the answer is. Exact, range, general and unknown inputs carry different signal strength behind the scenes.</div>
+      </section>
+
+      <section id="step6" class="step hidden">
+        <div class="eyebrow">Priorities</div><h1>What are we optimizing for?</h1><p class="lead">Performance remains protected. Your priorities help FORM distinguish between several products that all technically fit.</p>
+        <div class="options" data-group="priority"><button class="opt on" data-v="forgiveness">Forgiveness / dispersion</button><button class="opt" data-v="distance">Distance / speed</button><button class="opt" data-v="balanced">Balanced</button><button class="opt" data-v="control">Control / workability</button></div>
+      </section>
+
+      <section id="step7" class="step hidden">
+        <div class="eyebrow">Preference fit</div><h1>If performance is close, what feels like you?</h1><p class="lead">This is a tie-breaker, not a shortcut around performance.</p>
+        <div class="options" data-group="style"><button class="opt on" data-v="balanced">No strong preference</button><button class="opt" data-v="classic">Classic & understated</button><button class="opt" data-v="technical">Engineered & purposeful</button><button class="opt" data-v="modern">Modern & cool</button><button class="opt" data-v="edgy">Edgy & different</button></div>
+      </section>
+
+      <section id="step8" class="step hidden">
+<div class="eyebrow">Current gamer baseline</div><h1>What driver are we trying to beat?</h1>
+<p class="lead">FORM doesn't assume new is better. Tell us what you play now so every recommendation has to earn its place in your bag.</p>
+<div class="techGrid">
+<div class="field"><label>Brand</label><select id="currentBrand"><option value="">Select / unknown</option><option>Callaway</option><option>Titleist</option><option>Ping</option><option>TaylorMade</option><option>Cobra</option><option>Mizuno</option><option>Srixon</option><option>Cleveland</option><option>PXG</option><option>Wilson</option><option>Other</option></select></div>
+<div class="field"><label>Model</label><input id="currentModel" class="metricInput" placeholder="e.g. Paradym, G430 Max, TSR2"></div>
+<div class="field"><label>Loft</label><input id="currentLoft" class="metricInput" placeholder="e.g. 10.5° or unknown"></div>
+<div class="field"><label>Shaft / flex</label><input id="currentShaft" class="metricInput" placeholder="Optional"></div></div>
+<div class="miniTitle" style="margin-top:30px">What does it already do well?</div>
+<div class="multiOptions" id="works"><button data-v="distance">Distance</button><button data-v="forgiveness">Forgiveness</button><button data-v="dispersion">Dispersion</button><button data-v="launch">Launch</button><button data-v="spin">Spin</button><button data-v="feel">Feel / sound</button><button data-v="looks">Looks</button><button data-v="confidence">Confidence</button></div>
+<div class="miniTitle" style="margin-top:24px">What would you most like to improve?</div>
+<div class="multiOptions" id="problems"><button data-v="distance">More distance</button><button data-v="forgiveness">More forgiveness</button><button data-v="dispersion">Tighter dispersion</button><button data-v="spin_high">Lower spin</button><button data-v="spin_low">More spin</button><button data-v="launch_high">Lower flight</button><button data-v="launch_low">Higher flight</button><button data-v="feel">Feel / sound</button><button data-v="looks">Looks at address</button></div>
+<div class="note">Don't know the exact model? That's fine. The upgrade comparison will simply carry less certainty.</div></section>
+<section id="step9" class="step hidden">
+<div class="eyebrow">Your priorities</div><h1>What has to matter most?</h1>
+<p class="lead">Rank your three most important factors. FORM uses these weights to distinguish close fits instead of giving every golfer the same answer.</p>
+<div class="rankPanel"><div class="rankSlot"><span>01</span><select id="rank1"></select></div><div class="rankSlot"><span>02</span><select id="rank2"></select></div><div class="rankSlot"><span>03</span><select id="rank3"></select></div></div>
+<div class="derived"><b>Your ranking changes the fit.</b><br>Performance remains protected, but your top priorities carry progressively more weight in close decisions.</div></section>
+<section id="step10" class="step hidden">
+        <div class="eyebrow">Current equipment</div><h1>Does your current driver already work?</h1><p class="lead">FORM should never manufacture an upgrade just because a new product exists.</p>
+        <div class="options" data-group="current"><button class="opt on" data-v="good">Pretty well</button><button class="opt" data-v="poor">Clearly not well</button><button class="opt" data-v="unknown">I'm not sure</button></div>
+      </section>
+
+      <section id="step11" class="step hidden">
+        <div class="reviewHero"><div class="eyebrow">Review My Answers</div><h2>One last look before FORM builds your fit.</h2><p class="lead">Tap Edit on any section if something looks wrong. Your recommendation will use exactly what you see here.</p></div>
+        <div class="reviewGrid">
+          <div class="reviewGroup"><div class="reviewHead"><span>Ball flight</span><button class="edit" onclick="goTo(2)">Edit</button></div><div class="reviewRows" id="reviewBall"></div></div>
+          <div class="reviewGroup"><div class="reviewHead"><span>Strike & miss</span><button class="edit" onclick="goTo(4)">Edit</button></div><div class="reviewRows" id="reviewStrike"></div></div>
+          <div class="reviewGroup"><div class="reviewHead"><span>Technical profile</span><button class="edit" onclick="goTo(5)">Edit</button></div><div class="reviewRows" id="reviewTech"></div></div>
+          <div class="reviewGroup"><div class="reviewHead"><span>Priorities</span><button class="edit" onclick="goTo(6)">Edit</button></div><div class="reviewRows" id="reviewPrefs"></div></div>
+        </div>
+        <div class="readyBox"><div><h3>FORM has enough to build your match.</h3><p id="readyCopy">Your signals are internally consistent enough to produce a high-confidence head recommendation.</p></div><button class="btn primary" onclick="showResults()">Generate My Fit →</button></div>
+      </section>
+
+      <section id="results" class="step hidden">
+        <div class="resultsTop"><div><div class="eyebrow">Your fit</div><h2>Current-generation matches</h2></div><div><div class="headerMeta">Recommendation confidence</div><div class="conf" id="conf">—</div></div></div>
+        <div id="keep" class="keep"></div><div id="resultList"></div>
+      </section>
+
+      <div class="flowNav" id="flowNav"><button class="btn ghost" id="backBtn" onclick="back()">← Back</button><button class="btn primary" id="nextBtn" onclick="next()">Continue →</button></div>
+    </main>
+
+    <aside class="sideRail">
+      <div class="oracle">
+        <div class="oracleLabel">FORM is learning</div>
+        <h3 id="oracleTitle">Building your baseline.</h3>
+        <div class="signalList" id="signalList"></div>
+        <div class="candidateCount"><span>Current-generation candidates</span><b id="candidateCount">22</b></div>
+      </div>
+    </aside>
+  </div>
+</div>
+<script>
+const products = [{"brand": "Titleist", "model": "GTS2", "generation": "current", "price": 699, "launch": 3, "spin": 3, "forgiveness": 4.5, "draw_bias": 0, "speed_fit": [80, 108], "player": "broad", "style": "classic"}, {"brand": "Titleist", "model": "GTS3", "generation": "current", "price": 699, "launch": 3, "spin": 2.5, "forgiveness": 3.7, "draw_bias": 0, "speed_fit": [90, 115], "player": "controlled", "style": "classic"}, {"brand": "Titleist", "model": "GTS4", "generation": "current", "price": 699, "launch": 2, "spin": 1.5, "forgiveness": 2.8, "draw_bias": 0, "speed_fit": [100, 125], "player": "lowspin", "style": "classic"}, {"brand": "Titleist", "model": "GT1", "generation": "current_special", "price": 449, "launch": 5, "spin": 3.5, "forgiveness": 4.3, "draw_bias": 0.5, "speed_fit": [65, 90], "player": "moderate_speed", "style": "classic"}, {"brand": "TaylorMade", "model": "Qi4D Max", "generation": "current", "price": 650, "launch": 4, "spin": 3, "forgiveness": 4.7, "draw_bias": 0.3, "speed_fit": [80, 108], "player": "broad", "style": "modern"}, {"brand": "TaylorMade", "model": "Qi4D", "generation": "current", "price": 650, "launch": 3, "spin": 2.5, "forgiveness": 4.0, "draw_bias": 0, "speed_fit": [88, 115], "player": "broad", "style": "modern"}, {"brand": "TaylorMade", "model": "Qi4D LS", "generation": "current", "price": 650, "launch": 2, "spin": 1.5, "forgiveness": 3.0, "draw_bias": 0, "speed_fit": [100, 125], "player": "lowspin", "style": "modern"}, {"brand": "TaylorMade", "model": "Qi4D Max Lite", "generation": "current", "price": 650, "launch": 5, "spin": 3.5, "forgiveness": 4.4, "draw_bias": 0.2, "speed_fit": [65, 90], "player": "moderate_speed", "style": "modern"}, {"brand": "Callaway", "model": "Quantum Max", "generation": "current", "price": 650, "launch": 4, "spin": 3, "forgiveness": 4.6, "draw_bias": 0.2, "speed_fit": [80, 110], "player": "broad", "style": "balanced"}, {"brand": "Callaway", "model": "Quantum Max D", "generation": "current", "price": 650, "launch": 4.5, "spin": 3, "forgiveness": 4.6, "draw_bias": 1.0, "speed_fit": [75, 105], "player": "slice_help", "style": "balanced"}, {"brand": "Callaway", "model": "Quantum Max Fast", "generation": "current", "price": 650, "launch": 5, "spin": 3.5, "forgiveness": 4.4, "draw_bias": 0.4, "speed_fit": [65, 90], "player": "moderate_speed", "style": "balanced"}, {"brand": "Callaway", "model": "Quantum Triple Diamond Max", "generation": "current", "price": 700, "launch": 3, "spin": 2, "forgiveness": 3.7, "draw_bias": 0, "speed_fit": [95, 120], "player": "controlled", "style": "balanced"}, {"brand": "Callaway", "model": "Quantum Triple Diamond", "generation": "current", "price": 700, "launch": 2, "spin": 1.5, "forgiveness": 2.9, "draw_bias": 0, "speed_fit": [100, 125], "player": "lowspin", "style": "balanced"}, {"brand": "Cobra", "model": "OPTM MAX-K", "generation": "current", "price": 599, "launch": 4, "spin": 3, "forgiveness": 4.9, "draw_bias": 0.2, "speed_fit": [80, 108], "player": "broad", "style": "edgy"}, {"brand": "Cobra", "model": "OPTM MAX-D", "generation": "current", "price": 599, "launch": 4.5, "spin": 3, "forgiveness": 4.7, "draw_bias": 1.0, "speed_fit": [75, 105], "player": "slice_help", "style": "edgy"}, {"brand": "Cobra", "model": "OPTM X", "generation": "current", "price": 599, "launch": 3, "spin": 2.5, "forgiveness": 4.0, "draw_bias": 0, "speed_fit": [88, 115], "player": "broad", "style": "edgy"}, {"brand": "Cobra", "model": "OPTM LS", "generation": "current", "price": 599, "launch": 2, "spin": 1.5, "forgiveness": 3.0, "draw_bias": 0, "speed_fit": [100, 125], "player": "lowspin", "style": "edgy"}, {"brand": "PING", "model": "G440 K", "generation": "current", "price": 649, "launch": 4, "spin": 3, "forgiveness": 5.0, "draw_bias": 0.1, "speed_fit": [80, 108], "player": "max_forgiveness", "style": "technical"}, {"brand": "PING", "model": "G440 MAX", "generation": "current", "price": 599, "launch": 4, "spin": 3, "forgiveness": 4.8, "draw_bias": 0.2, "speed_fit": [80, 108], "player": "broad", "style": "technical"}, {"brand": "PING", "model": "G440 SFT", "generation": "current", "price": 599, "launch": 4.5, "spin": 3, "forgiveness": 4.7, "draw_bias": 1.0, "speed_fit": [75, 105], "player": "slice_help", "style": "technical"}, {"brand": "PING", "model": "G440 LST", "generation": "current", "price": 599, "launch": 2.5, "spin": 1.5, "forgiveness": 3.4, "draw_bias": 0, "speed_fit": [100, 125], "player": "lowspin", "style": "technical"}, {"brand": "PING", "model": "G430 MAX 10K", "generation": "previous_limited", "price": 499, "launch": 4, "spin": 3, "forgiveness": 4.9, "draw_bias": 0.2, "speed_fit": [80, 108], "player": "broad", "style": "technical"}];
+const state={handed:'right',start:'straight',curve:'straight',costly:'two_way',strike:'heel',priority:'forgiveness',style:'balanced',current:'good',lm:'none',metrics:{speed:{mode:'unknown',value:null},spin:{mode:'unknown',value:null},aoa:{mode:'unknown',value:null},launch:{mode:'unknown',value:null}},currentClub:{brand:'',model:'',loft:'',shaft:'',works:[],problems:[]},ranks:['dispersion','distance','feel']};
+let step=1;
+
+document.querySelectorAll('[data-group]').forEach(g=>g.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+ g.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));b.classList.add('on');state[g.dataset.group]=b.dataset.v;
+ if(['handed','start','curve'].includes(g.dataset.group)) updateDerived();
+ if(g.dataset.group==='lm') renderLMInputs();
+ updateOracle();
+}));
+
+function physicalFinish(handed,curve){
+ if(curve==='straight')return 'center'; if(curve==='varies')return 'varies';
+ const leftForRH=['draw','hook'].includes(curve);
+ return handed==='right'?(leftForRH?'left':'right'):(leftForRH?'right':'left');
+}
+function curveClass(c){if(['hook','draw'].includes(c))return'draw_curve';if(['fade','slice'].includes(c))return'fade_curve';return c}
+function normalizedStart(handed,start){
+ if(start==='straight'||start==='varies')return start;
+ if(handed==='right')return start==='left'?'pull':'push';
+ return start==='left'?'push':'pull';
+}
+function startDescription(handed,start){
+ if(start==='straight')return 'Mostly straight';
+ if(start==='varies')return 'Varies / not sure';
+ const golfTerm=normalizedStart(handed,start);
+ return `${start.charAt(0).toUpperCase()+start.slice(1)} (${golfTerm})`;
+}
+function updateDerived(){
+ const el=document.getElementById('derived'); if(!el)return;
+ const startTerm=normalizedStart(state.handed,state.start);
+ const startText=state.start==='varies'?'an uncertain start':state.start==='straight'?'a mostly straight start':`a physical start ${state.start} (${startTerm})`;
+ el.innerHTML=`FORM reads this as <b>${startText}</b> with <b>${state.curve}</b> curvature for a <b>${state.handed}-handed</b> golfer. That pattern typically finishes physically <b>${physicalFinish(state.handed,state.curve)}</b>.`;
+}
+function golfer(){
+ const speedMetric=state.metrics.speed;
+ const speed = speedMetric.mode==='exact' ? (+speedMetric.value||null) :
+               speedMetric.mode==='range' ? ({'under80':77,'80-89':85,'90-99':95,'100-109':105,'110plus':113}[speedMetric.value]||null) :
+               speedMetric.mode==='general' ? ({'slow':78,'moderate':87,'average':95,'fast':105,'veryfast':115}[speedMetric.value]||null) : null;
+ const spinMetric=state.metrics.spin;
+ const spin = spinMetric.mode==='exact' ? ((+spinMetric.value||0)<2200?'low':(+spinMetric.value||0)>3000?'high':'mid') :
+              spinMetric.mode==='range' ? ({'under2000':'low','2000-2499':'low','2500-2999':'mid','3000-3499':'high','3500plus':'high'}[spinMetric.value]||'unknown') :
+              spinMetric.mode==='general' ? ({'verylow':'low','low':'low','average':'mid','high':'high','veryhigh':'high'}[spinMetric.value]||'unknown') : 'unknown';
+ const trajMetric=state.metrics.launch;
+ const traj = trajMetric.mode==='exact' ? ((+trajMetric.value||0)<11?'low':(+trajMetric.value||0)>16?'high':'mid') :
+              trajMetric.mode==='range' ? ({'under10':'low','10-12':'low','13-15':'mid','16-18':'high','19plus':'high'}[trajMetric.value]||'unknown') :
+              trajMetric.mode==='general' ? ({'verylow':'low','low':'low','mid':'mid','high':'high','veryhigh':'high'}[trajMetric.value]||'unknown') : 'unknown';
+ return {handed:state.handed,start:state.start,startClass:normalizedStart(state.handed,state.start),curve:state.curve,curveClass:curveClass(state.curve),costly:state.costly,strike:state.strike,priority:state.priority,style:state.style,current:state.current,
+ hcp:15,speed,spin,traj,lm:state.lm,metrics:state.metrics,currentClub:state.currentClub,ranks:state.ranks};
+}
+
+const priorityOptions=[['dispersion','Dispersion / forgiveness'],['distance','Distance / speed'],['launch','Launch / trajectory'],['spin','Spin control'],['feel','Feel / sound'],['looks','Looks at address'],['brand','Brand preference'],['value','Price / value']];
+function initRanks(){['rank1','rank2','rank3'].forEach((id,i)=>{const e=document.getElementById(id);if(!e)return;e.innerHTML=priorityOptions.map(x=>`<option value="${x[0]}" ${state.ranks[i]===x[0]?'selected':''}>${x[1]}</option>`).join('');e.onchange=()=>{state.ranks[i]=e.value;updateOracle()}})}
+function initCurrentClub(){let map={currentBrand:'brand',currentModel:'model',currentLoft:'loft',currentShaft:'shaft'};Object.entries(map).forEach(([id,k])=>{let e=document.getElementById(id);if(!e)return;e.value=state.currentClub[k];e.oninput=e.onchange=()=>state.currentClub[k]=e.value});['works','problems'].forEach(id=>{let box=document.getElementById(id);if(!box)return;box.querySelectorAll('button').forEach(b=>{b.classList.toggle('on',state.currentClub[id].includes(b.dataset.v));b.onclick=()=>{let a=state.currentClub[id],k=a.indexOf(b.dataset.v);k>=0?a.splice(k,1):a.push(b.dataset.v);b.classList.toggle('on');updateOracle()}})})}
+function currentBenchmark(g){let b=80,c=g.currentClub;if(c.model)b+=3;if(c.works.includes('forgiveness'))b+=3;if(c.works.includes('dispersion'))b+=3;if(c.works.includes('distance'))b+=2;if(c.problems.includes('dispersion'))b-=6;if(c.problems.includes('forgiveness'))b-=5;if(c.problems.includes('distance'))b-=3;if(c.problems.some(x=>x.startsWith('spin_')))b-=3;if(c.problems.some(x=>x.startsWith('launch_')))b-=2;return Math.max(65,Math.min(94,b))}
+function upgradeLevel(d){if(d>=10)return['HIGH','A materially better fit appears to be available.'];if(d>=5)return['MODERATE','There is enough projected improvement to justify a head-to-head test.'];if(d>=2)return['LOW','A new model may improve a few areas, but your current driver remains a strong fit.'];return['NO COMPELLING REASON','FORM would keep your current driver unless testing proves a meaningful gain.']}
+const metricDefs={
+ speed:{label:'Club speed',unit:'mph',
+   exact:'e.g. 97',
+   range:[['under80','Under 80'],['80-89','80–89'],['90-99','90–99'],['100-109','100–109'],['110plus','110+']],
+   general:[['slow','Slow'],['moderate','Moderate'],['average','Average'],['fast','Fast'],['veryfast','Very fast']]},
+ spin:{label:'Driver spin',unit:'rpm',
+   exact:'e.g. 2650',
+   range:[['under2000','Under 2,000'],['2000-2499','2,000–2,499'],['2500-2999','2,500–2,999'],['3000-3499','3,000–3,499'],['3500plus','3,500+']],
+   general:[['verylow','Very low / falls out'],['low','Low / penetrating'],['average','Average'],['high','High / climbs'],['veryhigh','Very high / balloons']]},
+ aoa:{label:'Attack angle',unit:'degrees',
+   exact:'e.g. +3.2',
+   range:[['down4','More than 4° down'],['down2-4','2–4° down'],['down0-2','0–2° down'],['up0-2','0–2° up'],['up2-4','2–4° up'],['up4','More than 4° up']],
+   general:[['steep','Steep / clearly down'],['slightdown','Slightly down'],['neutral','Neutral'],['slightup','Slightly up'],['upward','Very upward']]},
+ launch:{label:'Launch angle',unit:'degrees',
+   exact:'e.g. 13.8',
+   range:[['under10','Under 10°'],['10-12','10–12°'],['13-15','13–15°'],['16-18','16–18°'],['19plus','19°+']],
+   general:[['verylow','Very low'],['low','Low'],['mid','Mid'],['high','High'],['veryhigh','Very high']]}
+};
+
+function metricStrength(mode){
+ return mode==='exact'?'High precision':mode==='range'?'Strong signal':mode==='general'?'Useful signal':'Unknown';
+}
+function renderMetric(def,id,mode){
+ const m=state.metrics[id];
+ let body='';
+ if(mode==='exact'){
+   body=`<input class="metricInput" data-metric-input="${id}" inputmode="decimal" placeholder="${def.exact}" value="${m.value||''}">`;
+ }else if(mode==='range'){
+   body=`<div class="metricChoices">${def.range.map(x=>`<button class="metricChoice ${m.value===x[0]?'on':''}" data-metric-pick="${id}" data-value="${x[0]}">${x[1]}</button>`).join('')}</div>`;
+ }else if(mode==='general'){
+   body=`<div class="metricChoices">${def.general.map(x=>`<button class="metricChoice ${m.value===x[0]?'on':''}" data-metric-pick="${id}" data-value="${x[0]}">${x[1]}</button>`).join('')}</div>`;
+ }else{
+   body=`<div class="note" style="margin-top:0">No problem. FORM will use other signals and may ask an easier follow-up if this becomes important.</div>`;
+ }
+ return `<div class="metricBox"><div class="metricTop"><b>${def.label}</b><span>${def.unit}</span></div>${body}<div class="signalStrength">${metricStrength(mode)}</div></div>`;
+}
+function renderLMInputs(){
+ const box=document.getElementById('lmInputs'); if(!box)return;
+ let mode=state.lm;
+ if(mode==='none'){
+   ['speed','spin','aoa','launch'].forEach(id=>state.metrics[id]={mode:'unknown',value:null});
+   box.innerHTML=`<div class="derived"><b>No launch-monitor data needed.</b><br>FORM will keep learning from start direction, curvature, strike, trajectory and current equipment.</div>`;
+   updateOracle(); return;
+ }
+ ['speed','spin','aoa','launch'].forEach(id=>{state.metrics[id].mode=mode;if(state.metrics[id].value===null)state.metrics[id].value=null;});
+ box.innerHTML=Object.entries(metricDefs).map(([id,def])=>renderMetric(def,id,mode)).join('');
+ document.querySelectorAll('[data-metric-input]').forEach(inp=>inp.oninput=()=>{state.metrics[inp.dataset.metricInput].value=inp.value||null;updateOracle();});
+ document.querySelectorAll('[data-metric-pick]').forEach(btn=>btn.onclick=()=>{
+   const id=btn.dataset.metricPick;state.metrics[id].value=btn.dataset.value;
+   btn.parentElement.querySelectorAll('.metricChoice').forEach(x=>x.classList.remove('on'));btn.classList.add('on');updateOracle();
+ });
+ updateOracle();
+}
+
+function eligible(p,g){
+ let reasons=[];
+ if(g.speed&&(g.speed<p.speed_fit[0]-8||g.speed>p.speed_fit[1]+8))reasons.push('speed');
+ if(g.spin==='low'&&p.spin<=1.5)reasons.push('lowspin');
+ if(g.costly==='hook'&&p.draw_bias>=.8)reasons.push('drawbias');
+ if(g.hcp>=15&&p.forgiveness<2.9&&g.priority!=='control')reasons.push('demanding');
+ return reasons.length===0;
+}
+function candidateN(){
+ const g=golfer(); return products.filter(p=>p.generation!=='previous_limited'&&eligible(p,g)).length;
+}
+function updateOracle(){
+ const g=golfer(), sig=[];
+ if(step>=2)sig.push(['Handedness anchored',true]);
+ if(step>=3)sig.push([`${startDescription(g.handed,g.start)} start pattern captured`,true]);
+ if(step>=4)sig.push([`${g.curve} curvature normalized`,g.curve!=='varies']);
+ if(step>=5)sig.push([`${g.costly} costly miss prioritized`,g.costly!=='other']);
+ if(step>=6)sig.push([g.lm==='none'?'Observational route selected':`${g.lm} launch-monitor route selected`,true]);
+ if(step>=7)sig.push([g.speed?`${Math.round(g.speed)} mph speed signal added`:'Speed remains unknown',!!g.speed]);
+ if(step>=7)sig.push([`${g.priority} optimization selected`,true]);
+ if(step>=8)sig.push([`${g.style} preference layer added`,true]);
+ document.getElementById('signalList').innerHTML=sig.slice(-5).map(x=>`<div class="signal"><span class="dot ${x[1]?'on':''}"></span><span>${x[0]}</span></div>`).join('');
+ const titles=['Building your baseline.','Reading start direction.','Normalizing ball flight.','Separating miss from strike.','Narrowing launch profiles.','Weighting performance priorities.','Adding preference fit.','Checking whether an upgrade is justified.','Ready to synthesize your fit.'];
+ document.getElementById('oracleTitle').textContent=titles[Math.min(step-1,8)];
+ document.getElementById('candidateCount').textContent=step<5?products.filter(p=>p.generation!=='previous_limited').length:candidateN();
+}
+function renderReview(){
+ const g=golfer(), row=(a,b,q='Profile')=>`<div class="reviewRow"><span>${a}</span><b>${b}<span class="quality">${q}</span></b></div>`;
+ document.getElementById('reviewBall').innerHTML=row('Handedness',g.handed,'Saved')+row('Start direction',startDescription(g.handed,g.start),'Observed')+row('Curvature',g.curve,'Observed')+row('Physical finish',physicalFinish(g.handed,g.curve),'Derived');
+ document.getElementById('reviewStrike').innerHTML=row('Costly miss',g.costly,'Observed')+row('Strike',g.strike,'Observed');
+ const techRow=(label,id)=>{const m=g.metrics[id];return row(label,m.value||'Unknown',m.mode==='unknown'?'Unknown':m.mode.charAt(0).toUpperCase()+m.mode.slice(1));};
+ document.getElementById('reviewTech').innerHTML=row('LM route',g.lm==='none'?'No launch-monitor data':g.lm,'Route')+techRow('Club speed','speed')+techRow('Spin','spin')+techRow('Attack angle','aoa')+techRow('Launch','launch');
+ document.getElementById('reviewPrefs').innerHTML=row('Priority',g.priority,'Preference')+row('Style',g.style,'Preference')+row('Current driver',g.current,'Context');
+}
+function renderStep(){
+ document.querySelectorAll('.step').forEach(x=>x.classList.add('hidden'));
+ const id=step<=9?'step'+step:'results';document.getElementById(id).classList.remove('hidden');
+ document.getElementById('progressBar').style.width=(Math.min(step,9)/9*100)+'%';
+ document.getElementById('stepCount').textContent=String(Math.min(step,9)).padStart(2,'0')+' / 11';
+ document.getElementById('backBtn').style.visibility=step===1?'hidden':'visible';
+ document.getElementById('nextBtn').style.display=step===11?'none':'inline-block';
+ document.getElementById('flowNav').style.display=step>9?'none':'flex';
+ if(step===3)updateDerived(); if(step===5)renderLMInputs(); if(step===8)initCurrentClub(); if(step===9)initRanks(); if(step===11)renderReview(); updateOracle();window.scrollTo({top:0,behavior:'smooth'});
+}
+function next(){if(step<11){step++;renderStep()}}
+function back(){if(step>1){step--;renderStep()}}
+function goTo(n){step=n;renderStep()}
+function score(p,g){
+ let perf=80;if(g.speed){const mid=(p.speed_fit[0]+p.speed_fit[1])/2;perf-=Math.min(13,Math.abs(g.speed-mid)*.45)}
+ if(g.costly==='slice'||g.curveClass==='fade_curve')perf+=p.draw_bias*7;
+ if(g.costly==='hook'||g.curveClass==='draw_curve')perf-=p.draw_bias*7;
+ if(g.costly==='two_way')perf+=(p.forgiveness-3.5)*3;
+ if(['heel','toe','varied'].includes(g.strike))perf+=(p.forgiveness-3.5)*4;
+ if(g.priority==='forgiveness')perf+=(p.forgiveness-3.5)*5;
+ if(g.priority==='control')perf+=['controlled','lowspin'].includes(p.player)?6:-2;
+ if(g.priority==='distance')perf+=p.player==='lowspin'&&g.spin==='high'?5:2;
+ if(g.spin==='high'&&p.spin<=2)perf+=7;if(g.spin==='low'&&p.spin>=3)perf+=4;
+ if(g.traj==='low'&&p.launch>=4)perf+=5;if(g.traj==='high'&&p.launch<=2.5)perf+=5;
+ perf=Math.max(45,Math.min(98,perf));let pref=80;if(g.style!=='balanced')pref+=p.style===g.style?12:-3;
+ let overall=perf*.85+pref*.15;if(p.generation==='previous_limited')overall-=7;
+ return {perf:Math.round(perf),pref:Math.round(pref),overall:Math.round(Math.min(98,overall))}
+}
+function confidence(g){
+ let c=72;
+ if(g.curve!=='varies')c+=5;if(g.start!=='varies')c+=4;if(g.costly!=='other')c+=4;if(g.strike!=='unknown')c+=4;
+ const modes=Object.values(g.metrics).map(m=>m.mode);
+ c+=modes.filter(x=>x==='exact').length*3;
+ c+=modes.filter(x=>x==='range').length*2;
+ c+=modes.filter(x=>x==='general').length*1;
+ if(g.curve==='straight'&&['hook','slice'].includes(g.costly))c-=6;
+ return Math.max(72,Math.min(95,c));
+}
+function why(p,g){
+ let r=[];if(p.forgiveness>=4.6&&(g.priority==='forgiveness'||g.strike!=='center'))r.push('high stability matches your strike and dispersion needs');
+ if((g.costly==='slice'||g.curveClass==='fade_curve')&&p.draw_bias>=.8)r.push('draw help fits the slice/fade pattern');
+ if((g.costly==='hook'||g.curveClass==='draw_curve')&&p.draw_bias<.5)r.push('neutral bias avoids adding hook tendency');
+ if(g.spin==='high'&&p.spin<=2)r.push('lower-spin profile fits reported spin');if(g.spin==='low'&&p.spin>=3)r.push('avoids an overly low-spin head');
+ if(g.traj==='low'&&p.launch>=4)r.push('higher-launch profile supports trajectory');if(g.style!=='balanced'&&p.style===g.style)r.push('product personality matches your preference');
+ if(!r.length)r.push('balanced fit across speed, launch and forgiveness');return r.slice(0,3).join('; ')
+}
+function showResults(){
+ const g=golfer();let rows=[];products.forEach(p=>{if(eligible(p,g))rows.push({p,s:score(p,g)})});rows.sort((a,b)=>b.s.overall-a.s.overall);
+ const current=rows.filter(x=>x.p.generation!=='previous_limited').slice(0,5);const prev=rows.filter(x=>x.p.generation==='previous_limited')[0];
+ step=10;document.querySelectorAll('.step').forEach(x=>x.classList.add('hidden'));document.getElementById('results').classList.remove('hidden');document.getElementById('flowNav').style.display='none';
+ document.getElementById('progressBar').style.width='100%';document.getElementById('stepCount').textContent='FIT COMPLETE';document.getElementById('conf').textContent=confidence(g)+'%';
+ document.getElementById('keep').innerHTML=g.current==='good'&&current[0].s.overall<90?'<b>Keep-current check:</b> your current driver already sounds reasonably well fit, and no candidate clears the prototype meaningful-upgrade threshold.':'<b>Upgrade check:</b> at least one current-generation profile scores strongly enough to justify testing against your current driver.';
+ document.getElementById('resultList').innerHTML=current.map((x,i)=>`<div class="result"><div class="rank">${String(i+1).padStart(2,'0')}</div><div><h3>${x.p.brand} ${x.p.model}</h3><div class="meta">${x.p.generation.replace('_',' ')} · approx $${x.p.price}</div><div class="reason">${why(x.p,g)}</div><div class="tags"><span class="tag">Performance ${x.s.perf}</span><span class="tag">Preference ${x.s.pref}</span></div></div><div class="score">${x.s.overall}</div></div>`).join('');
+ document.getElementById('oracleTitle').textContent='Fit synthesized.';document.getElementById('signalList').innerHTML='<div class="signal"><span class="dot on"></span><span>Eligibility filters applied</span></div><div class="signal"><span class="dot on"></span><span>Performance and preference scores combined</span></div><div class="signal"><span class="dot on"></span><span>Current-generation policy enforced</span></div><div class="signal"><span class="dot on"></span><span>Upgrade threshold checked</span></div>';
+ document.getElementById('candidateCount').textContent=current.length;
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+updateDerived();renderStep();
+</script>
+</body>
+</html>
