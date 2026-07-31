@@ -1,0 +1,56 @@
+name: FORM Deploy Relay
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  deploy:
+    if: startsWith(github.event.issue.title, 'FORM_DEPLOY')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Decode FORM build
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          python - <<'PY'
+          import os, re, base64, gzip
+
+          body = os.environ["ISSUE_BODY"]
+          match = re.search(r'FORM_PAYLOAD_START\s*(.*?)\s*FORM_PAYLOAD_END', body, re.S)
+
+          if not match:
+              raise SystemExit("FORM payload not found.")
+
+          payload = re.sub(r'\s+', '', match.group(1))
+          html = gzip.decompress(base64.b64decode(payload))
+          open("index.html", "wb").write(html)
+          PY
+
+      - name: Publish index.html
+        run: |
+          git config user.name "FORM Deploy Bot"
+          git config user.email "actions@github.com"
+          git add index.html
+
+          if git diff --cached --quiet; then
+            echo "No changes to deploy."
+          else
+            git commit -m "Deploy latest FORM build"
+            git push
+          fi
+
+      - name: Close deployment issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue close "${{ github.event.issue.number }}" \
+            --comment "FORM deployment completed."
