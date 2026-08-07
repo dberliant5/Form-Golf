@@ -1,0 +1,30 @@
+name: Restore full index for FORM 6.6
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  restore:
+    if: github.event.head_commit.message == 'Trigger FORM 6.6 index restore'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore full index and version assets
+        run: |
+          git checkout e3a5e2fa78fc894a9770410fc76d7fbcaf86d5a6 -- index.html
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('driver-v63.css?v=6.5','driver-v63.css?v=6.6')
+          s=s.replace('driver-v63.js?v=6.5','driver-v63.js?v=6.6')
+          p.write_text(s)
+          PY
+          git config user.name "FORM QA Bot"
+          git config user.email "actions@github.com"
+          git add index.html
+          git commit -m "Restore full FORM index and load 6.6 assets"
+          git push
