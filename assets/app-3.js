@@ -502,6 +502,9 @@ openFit=function(id){
     document.getElementById('results')?.classList.add('hidden');
     const nav=document.getElementById('flowNav');
     if(nav)nav.style.display='flex';
+    const result=_openFitV62QA(id);
+    setTimeout(()=>renderStep(),0);
+    return result;
   }
   return _openFitV62QA(id);
 };
