@@ -62,13 +62,6 @@ toggleFitBrand=function(brand){
   renderBrandScope();
 };
 
-setTimeout(()=>{
-  const saved=localStorage.getItem('formBrandScopeConfirmed');
-  if(saved==='true' && brandScopeIsValid()){
-    formBrandScopeConfirmed=true;
-    confirmBrandScope();
-  }
-},0);
 
 const _saveBrandScopeV59=saveBrandScope;
 saveBrandScope=function(){
@@ -296,11 +289,12 @@ renderBagIntel=function(){
   const rows=items.map(item=>{
     const cat=normalizeBagCategory(item.type);
     const model=bagDisplayModel(item);
+    const verified=item.model!=='__custom__' && item.brand!=='Other / not listed';
     let score=null;
-    try{score=bagFitScore(cat,{brand:item.brand,model},profile,fits)}catch(e){}
+    if(verified){try{score=bagFitScore(cat,{brand:item.brand,model},profile,fits)}catch(e){}}
     const grade=score?fitLetter(score):'—';
-    let traits={pills:[],source:'Custom entry'};
-    try{if(item.model!=='__custom__')traits=attributePills(cat,{brand:item.brand,model})}catch(e){}
+    let traits={pills:[],source:verified?'Catalog entry':'Unverified manual entry'};
+    try{if(verified)traits=attributePills(cat,{brand:item.brand,model})}catch(e){}
     return `<div class="bagGradeCard">
       <div class="bagGradeTop">
         <small>${bagTypeLabel(item.type)}</small>
@@ -308,7 +302,7 @@ renderBagIntel=function(){
         <div class="bagGradeCircle">${grade}</div>
       </div>
       ${traits.pills?.length?`<div class="bagTraitRow">${traits.pills.map(x=>`<span class="bagTrait">${x}</span>`).join('')}</div>`:''}
-      ${score?`<div class="bagGradeWhy">Modeled fit score: <b>${score}/100</b>. FORM compares the product profile with your saved golfer profile and completed fittings.</div>`:''}
+      ${score?`<div class="bagGradeWhy">Modeled fit score: <b>${score}/100</b>. FORM compares the verified product profile with your saved golfer profile and completed fittings.</div>`:`<div class="bagGradeWhy">Saved to your bag. FORM will not assign a fit grade until this product is verified in the equipment catalog.</div>`}
     </div>`;
   }).join('');
   card.insertAdjacentHTML('afterend',`<div class="bagIntel"><div class="sectionHead"><div><div class="eyebrow">Bag intelligence</div><h2>What deserves attention?</h2></div><p>Each club is evaluated separately, including duplicate club types.</p></div>${rows}</div>`);
@@ -420,25 +414,28 @@ next=function(){
 
 // Confidence now affects the displayed score rather than competing with it.
 function confidenceAdjustedDriverScore(rawScore,confidence){
-  const penalty=(100-confidence)*0.35;
-  return Math.max(50,Math.round((rawScore-penalty)*10)/10);
+  const conf=Math.max(0,Math.min(100,Number(confidence)||0));
+  const evidencePenalty=(100-conf)*0.52;
+  const evidenceCeiling=Math.min(99.5,58+conf*0.42);
+  const adjusted=Math.min(rawScore-evidencePenalty,evidenceCeiling);
+  return Math.max(50,Math.round(adjusted*10)/10);
 }
 function driverDataStrengthCopy(conf){
-  if(conf>=90)return {
+  if(conf>=92)return {
     label:'Strong evidence',
     text:'FORM has enough specific information to make a strong recommendation. The score already reflects the small amount of remaining uncertainty.'
   };
-  if(conf>=82)return {
+  if(conf>=84)return {
     label:'Good evidence',
     text:'This is a credible recommendation, but exact launch-monitor numbers or more complete current-driver details could refine the order of close alternatives.'
   };
   if(conf>=74)return {
     label:'Provisional recommendation',
-    text:'FORM sees a likely direction, but the available information is not strong enough to support an elite score. Add launch-monitor data or current-club details later to improve the fit.'
+    text:'FORM sees a likely direction, but the available information is not strong enough to support an elite recommendation score. Add reliable data later and FORM will re-evaluate the fit.'
   };
   return {
     label:'Early recommendation',
-    text:'The available data suggests a starting point rather than a purchase-level conclusion. These drivers may fit better than shown, but FORM cannot make a strong recommendation until more information is added.'
+    text:'Treat this as a starting point, not a purchase-level conclusion. The best driver may fit better than the score shown, but FORM cannot support a stronger recommendation until more information is added.'
   };
 }
 
@@ -491,3 +488,20 @@ showResults=function(){
 };
 
 setTimeout(()=>{ if(step===1)renderStep(); },0);
+
+
+// FORM 6.2 QA PATCH
+// A new Driver Fitting always asks handedness and brand scope once.
+const _openFitV62QA=openFit;
+openFit=function(id){
+  if(id==='driver'){
+    step=1;
+    state.handed=null;
+    formBrandScopeConfirmed=false;
+    localStorage.setItem('formBrandScopeConfirmed','false');
+    document.getElementById('results')?.classList.add('hidden');
+    const nav=document.getElementById('flowNav');
+    if(nav)nav.style.display='flex';
+  }
+  return _openFitV62QA(id);
+};
