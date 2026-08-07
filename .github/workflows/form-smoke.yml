@@ -16,14 +16,20 @@ jobs:
           node --check assets/app-1.js
           node --check assets/app-2.js
           node --check assets/app-3.js
+          node --check assets/driver-v63.js
       - name: Verify split application references
         run: |
           python - <<'PY'
           from pathlib import Path
           html=Path('index.html').read_text(encoding='utf-8')
-          required=['assets/form-base.css','assets/form-responsive.css','assets/catalog-data.js','assets/app-1.js','assets/app-2.js','assets/app-3.js']
+          required=['assets/form-base.css','assets/form-responsive.css','assets/driver-v63.css','assets/catalog-data.js','assets/app-1.js','assets/app-2.js','assets/app-3.js','assets/driver-v63.js']
           missing=[x for x in required if x not in html or not Path(x).exists()]
           if missing:
               raise SystemExit('Missing application assets: '+', '.join(missing))
           print('FORM split application references verified.')
           PY
+      - name: Verify Driver v6.3 safeguards
+        run: |
+          grep -q 'ensureResultsScaffold' assets/driver-v63.js
+          grep -q 'metricModePicker' assets/driver-v63.js
+          grep -q 'dataStrengthNote' assets/driver-v63.js
