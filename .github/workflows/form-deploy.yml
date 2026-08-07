@@ -34,10 +34,15 @@ jobs:
               return re.sub(r'\s+', '', value or '')
 
           def merge_overlap(left, right):
-              max_overlap = min(len(left), len(right))
-              for size in range(max_overlap, 0, -1):
-                  if left[-size:] == right[:size]:
-                      print(f"Removed {size:,} overlapping payload characters")
+              if not right:
+                  return left
+              anchor = right[:160]
+              position = left.find(anchor)
+              if position >= 0:
+                  print(f"Comments resume at payload character {position:,}")
+                  return left[:position] + right
+              for size in (4096, 2048, 1024, 512, 256, 128, 64, 32):
+                  if len(left) >= size and right.startswith(left[-size:]):
                       return left + right[size:]
               return left + right
 
