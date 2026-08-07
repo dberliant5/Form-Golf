@@ -1,0 +1,29 @@
+name: FORM Smoke Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate JavaScript syntax
+        run: |
+          node --check assets/catalog-data.js
+          node --check assets/app-1.js
+          node --check assets/app-2.js
+          node --check assets/app-3.js
+      - name: Verify split application references
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          html=Path('index.html').read_text(encoding='utf-8')
+          required=['assets/form-base.css','assets/form-responsive.css','assets/catalog-data.js','assets/app-1.js','assets/app-2.js','assets/app-3.js']
+          missing=[x for x in required if x not in html or not Path(x).exists()]
+          if missing:
+              raise SystemExit('Missing application assets: '+', '.join(missing))
+          print('FORM split application references verified.')
+          PY
