@@ -1,0 +1,30 @@
+name: Restore FORM index
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  restore:
+    if: github.event.head_commit.message == 'Add one-time index recovery'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+      - name: Restore and patch index
+        run: |
+          git show 6ca498f7effe5b31ac698fc37739eec2ff98280f:index.html > index.html
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('Which side do you play from?','Are you right- or left-handed?')
+          s=s.replace('Handedness changes how FORM interprets physical shot direction. We ask once and use it throughout your profile.','FORM uses this to interpret shot direction throughout your fitting.')
+          p.write_text(s)
+          PY
+          git config user.name "FORM QA Bot"
+          git config user.email "actions@github.com"
+          git add index.html
+          git commit -m "Restore FORM index and simplify handedness question"
+          git push
