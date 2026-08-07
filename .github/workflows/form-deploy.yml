@@ -30,6 +30,17 @@ jobs:
           repository = os.environ["GITHUB_REPOSITORY"]
           body = os.environ.get("ISSUE_BODY", "")
 
+          def clean(value):
+              return re.sub(r'\s+', '', value or '')
+
+          def merge_overlap(left, right):
+              max_overlap = min(len(left), len(right))
+              for size in range(max_overlap, 0, -1):
+                  if left[-size:] == right[:size]:
+                      print(f"Removed {size:,} overlapping payload characters")
+                      return left + right[size:]
+              return left + right
+
           try:
               for _ in range(150):
                   result = subprocess.run(
@@ -39,11 +50,18 @@ jobs:
                       check=True,
                   )
                   comments = json.loads(result.stdout or "[]")
-                  combined = body + "\n" + "\n".join(c.get("body", "") for c in comments)
-                  match = re.search(r'FORM_PAYLOAD_START\s*(.*?)\s*FORM_PAYLOAD_END', combined, re.S)
-                  if match:
-                      payload = re.sub(r'\s+', '', match.group(1))
-                      print(f"Found payload with {len(payload):,} characters across {len(comments)} comments")
+
+                  body_part = body.split('FORM_PAYLOAD_START', 1)[-1]
+                  body_part = body_part.split('FORM_PAYLOAD_END', 1)[0]
+                  comment_text = "".join(c.get("body", "") for c in comments)
+                  comment_part = comment_text.split('FORM_PAYLOAD_END', 1)[0]
+
+                  left = clean(body_part)
+                  right = clean(comment_part)
+                  payload = merge_overlap(left, right)
+
+                  if 'FORM_PAYLOAD_END' in comment_text or 'FORM_PAYLOAD_END' in body:
+                      print(f"Reconstructed payload with {len(payload):,} characters across {len(comments)} comments")
                       html = gzip.decompress(base64.b64decode(payload, validate=True))
                       open("index.html", "wb").write(html)
                       print(f"Decoded {len(html):,} bytes into index.html")
@@ -68,7 +86,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to deploy."
           else
-            git commit -m "Deploy latest FORM build"
+            git commit -m "Deploy FORM v6.1 baseline"
             git push
           fi
 
