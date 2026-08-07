@@ -1,15 +1,16 @@
 name: Apply FORM v6.3
 
 on:
-  push:
-    branches: [main]
+  issues:
+    types: [opened, reopened]
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   apply:
-    if: ${{ github.event.head_commit.message == 'Wire FORM v6.3 runtime' }}
+    if: ${{ github.event.issue.title == 'FORM_V63_APPLY' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,3 +43,9 @@ jobs:
           git add index.html .github/workflows/form-smoke.yml .github/workflows/apply-v63.yml scripts/apply-v63.py
           git commit -m "FORM v6.3 driver experience fixes"
           git push
+
+      - name: Close trigger issue
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue close "${{ github.event.issue.number }}" --comment "FORM v6.3 applied and validated."
