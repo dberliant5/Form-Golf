@@ -1,0 +1,37 @@
+name: Enable FORM 6.7 Driver Engine
+on:
+  push:
+    paths:
+      - '.github/workflows/enable-driver-engine-v67.yml'
+permissions:
+  contents: write
+jobs:
+  enable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wire engine and bump cache
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('assets/driver-v63.css?v=6.6','assets/driver-v63.css?v=6.7')
+          old='<script src="assets/driver-v63.js?v=6.6"></script>'
+          new='<script src="assets/driver-v63.js?v=6.7"></script><script src="assets/driver-engine-v67.js?v=6.7"></script>'
+          if old in s:
+              s=s.replace(old,new)
+          elif 'driver-engine-v67.js' not in s:
+              s=s.replace('</body>','<script src="assets/driver-engine-v67.js?v=6.7"></script></body>')
+          p.write_text(s)
+          PY
+          node --check assets/driver-v63.js
+          node --check assets/driver-engine-v67.js
+          grep -q 'driver-engine-v67.js?v=6.7' index.html
+      - name: Commit
+        run: |
+          git config user.name 'FORM QA'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Enable FORM 6.7 driver compatibility engine'
+          git push
