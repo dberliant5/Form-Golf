@@ -1,41 +1,29 @@
-name: Repair FORM driver DOM
+name: Apply FORM 6.4 cache bust
 on:
   push:
     branches: [main]
 permissions:
   contents: write
 jobs:
-  repair:
-    if: github.event.head_commit.message == 'Trigger driver DOM repair'
+  cache-bust:
+    if: github.event.head_commit.message == 'Apply FORM 6.4 cache bust'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Repair driver review and results structure
+      - name: Version driver assets
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text()
-          bad='''      </section>\n\n      \n</div>\n        <div id="keep" class="keep"></div><div id="resultList"></div>\n      </section>\n\n      <div class="flowNav" id="flowNav">'''
-          good='''      </section>\n\n      <section id="results" class="step hidden"></section>\n\n      <div class="flowNav" id="flowNav">'''
-          if bad not in s:
-              raise SystemExit('Expected malformed driver block not found')
-          s=s.replace(bad,good,1)
+          s=s.replace('assets/driver-v63.css"','assets/driver-v63.css?v=6.4"')
+          s=s.replace('assets/driver-v63.js"></script>','assets/driver-v63.js?v=6.4"></script>')
           p.write_text(s)
           PY
-          grep -q '<section id="results" class="step hidden"></section>' index.html
-          python - <<'PY'
-          from pathlib import Path
-          s=Path('index.html').read_text()
-          a=s.index('<section id="step9"')
-          b=s.index('<div class="flowNav" id="flowNav">',a)
-          segment=s[a:b]
-          assert segment.count('<section') == 2, segment[-500:]
-          assert segment.count('</section>') == 2, segment[-500:]
-          print('Driver step 9/results DOM structure verified')
-          PY
+          grep -q 'driver-v63.css?v=6.4' index.html
+          grep -q 'driver-v63.js?v=6.4' index.html
           git config user.name "FORM QA Bot"
           git config user.email "actions@github.com"
           git add index.html
-          git commit -m "Repair driver review and results DOM"
+          git commit -m "Version FORM 6.4 driver assets"
           git push
