@@ -17,22 +17,37 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Decode FORM build
+      - name: Collect and decode FORM build
         env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
           python - <<'PY'
-          import os, re, base64, gzip
+          import os, re, base64, gzip, json, subprocess, time
 
-          body = os.environ["ISSUE_BODY"]
-          match = re.search(r'FORM_PAYLOAD_START\s*(.*?)\s*FORM_PAYLOAD_END', body, re.S)
+          issue_number = os.environ["ISSUE_NUMBER"]
+          body = os.environ.get("ISSUE_BODY", "")
 
-          if not match:
-              raise SystemExit("FORM payload not found.")
-
-          payload = re.sub(r'\s+', '', match.group(1))
-          html = gzip.decompress(base64.b64decode(payload))
-          open("index.html", "wb").write(html)
+          for _ in range(30):
+              result = subprocess.run(
+                  ["gh", "api", f"repos/${{GITHUB_REPOSITORY}}/issues/{issue_number}/comments", "--paginate"],
+                  capture_output=True,
+                  text=True,
+                  check=True,
+              )
+              comments = json.loads(result.stdout or "[]")
+              combined = body + "\n" + "\n".join(c.get("body", "") for c in comments)
+              match = re.search(r'FORM_PAYLOAD_START\s*(.*?)\s*FORM_PAYLOAD_END', combined, re.S)
+              if match:
+                  payload = re.sub(r'\s+', '', match.group(1))
+                  html = gzip.decompress(base64.b64decode(payload))
+                  open("index.html", "wb").write(html)
+                  print(f"Decoded {len(html):,} bytes into index.html")
+                  break
+              time.sleep(2)
+          else:
+              raise SystemExit("FORM payload was incomplete after waiting for issue comments.")
           PY
 
       - name: Publish index.html
@@ -49,8 +64,9 @@ jobs:
           fi
 
       - name: Close deployment issue
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh issue close "${{ github.event.issue.number }}" \
-            --comment "FORM deployment completed."
+            --comment "FORM deployment workflow finished."
