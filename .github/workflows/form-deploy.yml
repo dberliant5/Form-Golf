@@ -29,7 +29,7 @@ jobs:
           issue_number = os.environ["ISSUE_NUMBER"]
           body = os.environ.get("ISSUE_BODY", "")
 
-          for _ in range(30):
+          for _ in range(150):
               result = subprocess.run(
                   ["gh", "api", f"repos/${{GITHUB_REPOSITORY}}/issues/{issue_number}/comments", "--paginate"],
                   capture_output=True,
