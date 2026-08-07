@@ -2,96 +2,613 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FORM — Driver Fit Experience</title>
-<style>
-:root{
- --bg:#f7f7f3;--paper:#fbfbf8;--ink:#141714;--muted:#747a74;--line:#dcddd7;
- --deep:#263e33;--deep2:#385347;--sage:#e8eee8;--sage2:#f0f3ef;--glow:#dce8ce;--sand:#efeae1;
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
-button,input,select{font:inherit}button{cursor:pointer}
-header{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 34px;border-bottom:1px solid rgba(20,23,20,.08);background:rgba(247,247,243,.92);backdrop-filter:blur(12px);position:sticky;top:0;z-index:30}
-.brand{font-size:13px;font-weight:900;letter-spacing:.18em}.headerMeta{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#7b817b}
-.shell{max-width:1160px;margin:auto;padding:0 24px 70px}
-.topline{display:grid;grid-template-columns:1fr auto;gap:30px;align-items:center;padding:24px 0 10px}
-.progressWrap{display:flex;align-items:center;gap:14px}.progress{width:240px;height:2px;background:#dadcd7}.progress i{display:block;height:100%;background:var(--deep);width:11%;transition:.45s cubic-bezier(.2,.8,.2,1)}
-.stepCount{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#858a85}
-.fitStage{min-height:650px;display:block;padding:35px 0 20px}
-.mainPane{position:relative;max-width:860px;margin:0 auto}.step{animation:fadeUp .38s ease}.hidden{display:none!important}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-.eyebrow{font-size:9px;letter-spacing:.17em;text-transform:uppercase;font-weight:900;color:#718074;margin-bottom:14px}
-h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:400;letter-spacing:-.045em}
-h1{font-size:clamp(52px,6vw,76px);line-height:.93;margin:0;max-width:790px}
-h2{font-size:46px;line-height:1;margin:0}h3{font-size:26px;margin:0}
-.lead{font-size:16px;line-height:1.7;color:#687069;max-width:720px;margin:24px 0 36px}
-.options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:760px}
-.opt{
- border:0;border-bottom:1px solid #cfd2cd;background:transparent;padding:18px 2px 17px;text-align:left;
- font-size:13px;position:relative;transition:.18s;color:#313631
-}
-.opt:after{content:"";position:absolute;right:2px;top:50%;width:10px;height:10px;border:1px solid #b6bbb6;border-radius:50%;transform:translateY(-50%)}
-.opt:hover{padding-left:8px;color:#111}
-.opt.on{color:var(--deep);font-weight:700;border-bottom-color:var(--deep)}
-.opt.on:after{background:var(--deep);border-color:var(--deep);box-shadow:inset 0 0 0 3px var(--paper)}
-.three{grid-template-columns:repeat(3,minmax(0,1fr))}
-.techGrid{display:grid;grid-template-columns:1fr 1fr;gap:22px 32px;max-width:760px}
-
-.lmInputs{margin-top:30px;display:grid;gap:18px;max-width:760px}
-.metricBox{padding:18px 0;border-top:1px solid var(--line)}
-.metricTop{display:flex;justify-content:space-between;gap:18px;align-items:end;margin-bottom:12px}
-.metricTop b{font-family:Georgia,"Times New Roman",serif;font-size:22px;font-weight:400}
-.metricTop span{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#7f8680}
-.metricChoices{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.metricChoice{border:1px solid #d4d8d3;background:transparent;padding:11px;font-size:10px;text-align:left}
-.metricChoice.on{background:var(--deep);color:#fff;border-color:var(--deep)}
-.metricInput{width:100%;border:0;border-bottom:1px solid #b8bdb8;background:transparent;padding:11px 0;font-size:13px}
-.signalStrength{margin-top:9px;font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#7f8680}
-
-.field label{display:block;font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:#7b817b;margin-bottom:8px}
-.field select{width:100%;border:0;border-bottom:1px solid #b9bdb8;background:transparent;padding:12px 0;color:#202420}
-.note{font-size:11px;line-height:1.6;color:#717871;max-width:680px;margin-top:20px}
-.sideRail{align-self:stretch;display:flex;flex-direction:column;justify-content:center;position:relative}
-.oracle{
- background:linear-gradient(180deg,#f5f7f3,#edf2ec);border:1px solid #dfe5df;padding:24px;min-height:330px;position:relative;overflow:hidden
-}
-.oracle:before{content:"";position:absolute;width:220px;height:220px;border-radius:50%;border:1px solid rgba(38,62,51,.12);right:-95px;top:-70px;box-shadow:0 0 0 34px rgba(38,62,51,.025),0 0 0 70px rgba(38,62,51,.018)}
-.oracleLabel{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:#7f8981;position:relative;z-index:2}
-.oracle h3{font-size:29px;line-height:1.03;margin-top:18px;position:relative;z-index:2}
-.signalList{margin-top:30px;display:grid;gap:13px;position:relative;z-index:2}
-.signal{display:flex;gap:10px;align-items:flex-start;font-size:10px;line-height:1.45;color:#687069}
-.dot{width:7px;height:7px;border-radius:50%;background:#aeb8ae;margin-top:3px;flex:0 0 auto}.dot.on{background:var(--deep)}
-.candidateCount{margin-top:25px;padding-top:18px;border-top:1px solid #d8ded8;position:relative;z-index:2}
-.candidateCount span{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#828982}.candidateCount b{display:block;font-family:Georgia,serif;font-size:34px;font-weight:400;margin-top:3px}
-.derived{margin-top:28px;background:var(--sage);padding:18px 20px;max-width:760px;font-size:12px;line-height:1.6;color:#586159}
-.flowNav{display:flex;justify-content:space-between;align-items:center;padding-top:22px;border-top:1px solid var(--line);margin-top:20px}
-.btn{border:0;background:transparent;padding:12px 0;font-size:9px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
-.btn.primary{background:var(--deep);color:#fff;padding:15px 20px;min-width:145px}.btn.primary:hover{background:var(--deep2)}
-.btn.ghost{color:#737973}
-.reviewHero{padding:30px 0 25px}.reviewGrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);margin-top:28px}
-.reviewGroup{background:#fff;padding:22px}.reviewHead{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:15px}.reviewHead span{font-size:8px;text-transform:uppercase;letter-spacing:.12em;color:#808680}.edit{border:0;background:transparent;font-size:8px;text-transform:uppercase;letter-spacing:.1em;text-decoration:underline;color:#5d665f}
-.reviewRows{display:grid;gap:11px}.reviewRow{display:flex;justify-content:space-between;gap:20px;font-size:11px}.reviewRow span{color:#7b817b}.reviewRow b{font-weight:600;text-align:right}
-.quality{display:inline-block;padding:4px 6px;background:#eef1ed;font-size:7px;letter-spacing:.08em;text-transform:uppercase;margin-left:6px;color:#6b746c}
-.readyBox{background:var(--deep);color:white;padding:28px;margin-top:18px;display:flex;justify-content:space-between;gap:30px;align-items:center}.readyBox h3{font-size:31px}.readyBox p{color:#c1cbc4;font-size:11px;line-height:1.55;max-width:580px}
-.resultsTop{display:flex;justify-content:space-between;gap:30px;align-items:end;border-bottom:1px solid var(--line);padding:30px 0 18px}
-.conf{font-family:Georgia,serif;font-size:48px}.result{display:grid;grid-template-columns:54px 1fr 82px;gap:20px;padding:28px 0;border-bottom:1px solid var(--line)}
-.rank{font-family:Georgia,serif;font-size:32px;color:#a4a8a4}.score{width:72px;height:72px;border:1px solid #aeb3ae;border-radius:50%;display:grid;place-items:center;font-family:Georgia,serif;font-size:22px}
-.meta{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#8a8f8a;margin:6px 0 11px}.reason{font-size:11px;line-height:1.65;color:#5c645d;max-width:760px}
-.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:11px}.tag{padding:5px 7px;background:#eef1ed;font-size:7px;letter-spacing:.08em;text-transform:uppercase}
-.keep{margin-top:20px;background:var(--sage);padding:16px;font-size:11px;line-height:1.6}
-@media(max-width:900px){.fitStage{grid-template-columns:1fr;gap:20px}.sideRail{order:-1}.oracle{min-height:auto}.reviewGrid{grid-template-columns:1fr}.options,.three{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){header{padding:0 16px}.shell{padding:0 18px 60px}.fitStage{min-height:auto;padding-top:20px}.options,.three,.techGrid{grid-template-columns:1fr}.topline{grid-template-columns:1fr}.progress{width:100%}.result{grid-template-columns:38px 1fr}.score{grid-column:2}h1{font-size:48px}.readyBox{align-items:flex-start;flex-direction:column}}
-.multiOptions{display:flex;flex-wrap:wrap;gap:8px}.multiOptions button{border:1px solid #d4d8d3;background:transparent;padding:11px 13px;font-size:10px}.multiOptions button.on{background:var(--deep);color:white;border-color:var(--deep)}
-.rankPanel{max-width:720px;border-top:1px solid var(--line)}.rankSlot{display:grid;grid-template-columns:54px 1fr;align-items:center;border-bottom:1px solid var(--line);padding:15px 0}.rankSlot span{font-family:Georgia,serif;font-size:25px;color:#9ba09b}.rankSlot select{border:0;background:transparent;font-family:Georgia,serif;font-size:20px;width:100%;padding:8px}
-.upgradeCard{margin:22px 0;border:1px solid var(--line);background:#fff;padding:22px}.upgradeTop{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.upgradeLevel{font-family:Georgia,serif;font-size:30px}.benchmark{display:grid;grid-template-columns:1fr auto;gap:12px;padding:13px 0;border-top:1px solid var(--line);font-size:11px}.priorityRank{max-width:760px;border-top:1px solid var(--line)}
-.priorityItem{display:grid;grid-template-columns:1fr 110px;gap:18px;align-items:center;border-bottom:1px solid var(--line);padding:15px 0}
-.priorityItem b{font-family:Georgia,"Times New Roman",serif;font-size:20px;font-weight:400}
-.priorityItem small{display:block;color:#7b817b;font-size:10px;margin-top:4px}
-.priorityItem select{width:100%;border:0;border-bottom:1px solid #bcc1bc;background:transparent;padding:9px 0}
-</style>
+<title>FORM — Fit the Whole Golfer</title>
+<link rel="stylesheet" href="assets/form-base.css">
+<link rel="stylesheet" href="assets/form-responsive.css">
 </head>
 <body>
-<header><div class="brand">FORM</div><div class="headerMeta">Driver Fit Experience · v1.2</div></header>
+<header class="formHeader">
+  <button class="formBrand" data-page-nav="home" aria-label="FORM home">FORM</button>
+  <nav class="formNav">
+    <button data-page-nav="fittings">Fittings</button>
+    <button data-page-nav="profile">My Golf</button>
+    <button data-page-nav="resultsHub">My Fits</button>
+    <button data-page-nav="methodology">How FORM Fits</button>
+  </nav>
+  <div class="formHeaderActions">
+    <button class="formTextBtn" data-page-nav="login">Log in</button>
+    <button class="formPrimaryBtn" data-page-nav="fitstart">Start a fitting</button>
+    <button class="formMenuBtn" aria-label="Open menu">☰</button>
+  </div>
+</header>
+
+<div class="shell"><div style="padding-top:18px"><button class="ghostBtn" onclick="showPage('fittings')">← All fittings</button></div>
+
+  <section id="page-home" class="page active">
+    <div class="formHero">
+      <div class="formHeroCopy">
+        <div class="formEyebrow">Golf intelligence, built around you</div>
+        <h1>Fit the whole golfer.</h1>
+        <p class="formHeroLead">FORM connects your swing, equipment, preferences and playing habits to recommend what actually fits—from driver through shoes, ball, bag and beyond.</p>
+        <div class="formHeroActions">
+          <button class="formPrimaryBtn" data-page-nav="fitstart">Start your fitting</button>
+          <button class="formSecondaryBtn" data-page-nav="profile">Build My Golf profile</button>
+        </div>
+        <div class="formTrustLine">Free to use · No launch monitor required · Add detail only when it helps</div>
+      </div>
+      <div class="formHeroAside">
+        <div class="formAsideEyebrow">One golfer. Every recommendation.</div>
+        <h2>A connected profile—not a disconnected quiz.</h2>
+        <p>Start with one fitting. FORM remembers only what is useful, so future recommendations become more personal without forcing you to fill out everything at once.</p>
+        <div class="formAsideList">
+          <div><b>Equipment</b><span>Driver, ball, irons, wedges, putter and bag.</span></div>
+          <div><b>Preferences</b><span>Brands, looks, feel, budget and priorities.</span></div>
+          <div><b>Playing profile</b><span>Misses, tendencies, conditions and habits.</span></div>
+          <div><b>Ongoing fit</b><span>Re-evaluate only when something meaningful changes.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="formPrinciples">
+      <div><b>Personalized</b><span>Your profile, tendencies and priorities.</span></div>
+      <div><b>Independent</b><span>Fit first. Brand second.</span></div>
+      <div><b>Explainable</b><span>Understand why each recommendation wins.</span></div>
+      <div><b>Continuously Improving</b><span>Your fit evolves as your game and products change.</span></div>
+    </div>
+
+
+    <div class="formSectionHead">
+      <div><span>Fittings</span><h2>Choose what you want FORM to fit.</h2></div>
+      <p>Open one category for details. Everything else stays out of the way.</p>
+    </div>
+
+    <div class="homeFitAccordion">
+      <article class="homeFitItem open" data-home-fit="driver">
+        <button type="button" class="homeFitHeader" onclick="toggleHomeFit('driver')">
+          <span class="homeFitName">Driver</span>
+          <span class="homeFitMeta"><em>18–24 questions</em><em>8–12 min</em></span>
+          <b>−</b>
+        </button>
+        <div class="homeFitBody">
+          <p>Diagnose your miss, evaluate your current driver, and determine whether an adjustment or upgrade is actually worthwhile.</p>
+          <button class="formPrimaryBtn" onclick="openFit('driver')">Start Driver Fitting</button>
+        </div>
+      </article>
+
+      <article class="homeFitItem" data-home-fit="ball">
+        <button type="button" class="homeFitHeader" onclick="toggleHomeFit('ball')">
+          <span class="homeFitName">Golf Ball</span>
+          <span class="homeFitMeta"><em>14–18 questions</em><em>6–8 min</em></span>
+          <b>+</b>
+        </button>
+        <div class="homeFitBody">
+          <p>Balance driver flight, iron control, greenside performance, feel, conditions, and value.</p>
+          <button class="formPrimaryBtn" onclick="openFit('ball')">Start Golf Ball Fitting</button>
+        </div>
+      </article>
+
+      <article class="homeFitItem" data-home-fit="irons">
+        <button type="button" class="homeFitHeader" onclick="toggleHomeFit('irons')">
+          <span class="homeFitName">Irons</span>
+          <span class="homeFitMeta"><em>18–24 questions</em><em>8–12 min</em></span>
+          <b>+</b>
+        </button>
+        <div class="homeFitBody">
+          <p>Find the right blend of launch, forgiveness, turf interaction, distance, shape, and feel.</p>
+          <button class="formPrimaryBtn" onclick="openFit('irons')">Start Iron Fitting</button>
+        </div>
+      </article>
+
+      <article class="homeFitItem" data-home-fit="wedges">
+        <button type="button" class="homeFitHeader" onclick="toggleHomeFit('wedges')">
+          <span class="homeFitName">Wedges</span>
+          <span class="homeFitMeta"><em>16–20 questions</em><em>7–10 min</em></span>
+          <b>+</b>
+        </button>
+        <div class="homeFitBody">
+          <p>Build loft, bounce, grind, and gapping recommendations around your technique and conditions.</p>
+          <button class="formPrimaryBtn" onclick="openFit('wedges')">Start Wedge Fitting</button>
+        </div>
+      </article>
+
+      <article class="homeFitItem" data-home-fit="putter">
+        <button type="button" class="homeFitHeader" onclick="toggleHomeFit('putter')">
+          <span class="homeFitName">Putter</span>
+          <span class="homeFitMeta"><em>14–18 questions</em><em>6–9 min</em></span>
+          <b>+</b>
+        </button>
+        <div class="homeFitBody">
+          <p>Fit alignment, head shape, stability, feel, and stroke characteristics.</p>
+          <button class="formPrimaryBtn" onclick="openFit('putter')">Start Putter Fitting</button>
+        </div>
+      </article>
+
+      <article class="homeFitItem" data-home-fit="bags">
+        <button type="button" class="homeFitHeader" onclick="toggleHomeFit('bags')">
+          <span class="homeFitName">Golf Bag</span>
+          <span class="homeFitMeta"><em>10–14 questions</em><em>4–6 min</em></span>
+          <b>+</b>
+        </button>
+        <div class="homeFitBody">
+          <p>Fit carrying style, organization, storage, weight, and transportation needs.</p>
+          <button class="formPrimaryBtn" onclick="openFit('bags')">Start Golf Bag Fitting</button>
+        </div>
+      </article>
+
+      <article class="homeFitItem" data-home-fit="apparel">
+        <button type="button" class="homeFitHeader" onclick="toggleHomeFit('apparel')">
+          <span class="homeFitName">Shoes + Apparel</span>
+          <span class="homeFitMeta"><em>12–16 questions</em><em>5–7 min</em></span>
+          <b>+</b>
+        </button>
+        <div class="homeFitBody">
+          <p>Match fit, climate, walking habits, comfort, stability, and style.</p>
+          <button class="formPrimaryBtn" onclick="openFit('apparel')">Start Shoes + Apparel Fitting</button>
+        </div>
+      </article>
+
+      <article class="homeFitItem" data-home-fit="gloves">
+        <button type="button" class="homeFitHeader" onclick="toggleHomeFit('gloves')">
+          <span class="homeFitName">Gloves</span>
+          <span class="homeFitMeta"><em>8–10 questions</em><em>3–4 min</em></span>
+          <b>+</b>
+        </button>
+        <div class="homeFitBody">
+          <p>Dial in size, material, feel, durability, and weather performance.</p>
+          <button class="formPrimaryBtn" onclick="openFit('gloves')">Start Glove Fitting</button>
+        </div>
+      </article>
+    </div>
+
+    <div class="formSectionHead">
+      <div><span>More than a recommendation</span><h2>Know what to buy—and what to keep.</h2></div>
+    </div>
+
+    <div class="formValueGrid">
+      <div class="formValueCard"><span>01</span><h3>Grade what you own</h3><p>Every new product is compared against your current equipment, not against a generic benchmark.</p></div>
+      <div class="formValueCard"><span>02</span><h3>Explain the tradeoffs</h3><p>See why #1 won, what #2 does differently, and where uncertainty remains.</p></div>
+      <div class="formValueCard"><span>03</span><h3>Keep FORM working</h3><p>Save your fits and return when your game changes or a genuinely better-fitting product appears.</p></div>
+    </div>
+  </section>
+
+
+
+  <section id="page-fitstart" class="page">
+    <div class="fitStartShell">
+      <div class="fitStartIntro">
+        <div class="formEyebrow">Start Your Fit</div>
+        <h1>How would you like FORM to help today?</h1>
+        <p>Choose one fitting, optimize your full equipment setup, or build a complete golf profile that covers everything FORM can recommend.</p>
+      </div>
+
+      <div class="fitPathGrid">
+        <button class="fitPathCard active" data-fit-path="single" onclick="selectFitPath('single')">
+          <div class="fitPathLabel">Single Fit</div>
+          <h2>I need help with one thing.</h2>
+          <p>Choose one category and go directly into that fitting.</p>
+          <span>Best for a focused purchase</span>
+        </button>
+
+        <button class="fitPathCard recommended" data-fit-path="equipment" onclick="selectFitPath('equipment')">
+          <div class="fitPathLabel">FORM Equipment</div>
+          <h2>Optimize my entire bag.</h2>
+          <p>Driver, fairways and hybrids, irons, wedges, putter, golf ball and bag.</p>
+          <span>Recommended for serious golfers</span>
+        </button>
+
+        <button class="fitPathCard" data-fit-path="complete" onclick="selectFitPath('complete')">
+          <div class="fitPathLabel">FORM Complete</div>
+          <h2>Fit the whole golfer.</h2>
+          <p>Everything in FORM Equipment plus shoes, gloves, apparel and future lifestyle categories.</p>
+          <span>One profile for your whole game</span>
+        </button>
+      </div>
+
+      <div class="fitSelectionPanel">
+        <div class="fitSelectionTop">
+          <div>
+            <div class="formEyebrow">Choose categories</div>
+            <h2 id="fitSelectionTitle">Select one fitting.</h2>
+          </div>
+          <div class="fitSelectionCount"><b id="fitCategoryCount">0</b><span>selected</span></div>
+        </div>
+
+        <div id="fitCategoryPicker" class="fitCategoryPicker"></div>
+
+        <div class="fitDepthPanel">
+          <div>
+            <div class="formEyebrow">Choose your level</div>
+            <h2>How deep do you want to go?</h2>
+          </div>
+          <div class="fitDepthGrid">
+            <button class="fitDepth active" data-fit-depth="quick" onclick="selectFitDepth('quick')">
+              <b>Quick Fit</b>
+              <span>Ask only the questions needed for credible recommendations.</span>
+              <small>Usually 5–10 minutes per category</small>
+            </button>
+            <button class="fitDepth" data-fit-depth="complete" onclick="selectFitDepth('complete')">
+              <b>Complete Analysis</b>
+              <span>Build a deeper golfer profile and unlock more technical recommendations.</span>
+              <small>Best for multi-category fits</small>
+            </button>
+          </div>
+        </div>
+
+        <div class="fitStartFooter">
+          <div id="fitStartSummary">Choose at least one fitting to continue.</div>
+          <button id="beginSelectedFits" class="formPrimaryBtn" onclick="beginSelectedFits()" disabled>Begin fitting</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section id="page-fittings" class="page">
+    <div class="formPageHero">
+      <span class="formEyebrow">Fittings</span>
+      <h1>Choose the fitting you need.</h1>
+      <p>Each category is designed to stand on its own as a premium fitting service. Open one to see what it covers, what you’ll receive, and how long it typically takes.</p>
+    </div>
+
+    <div class="fitAccordion" id="fitAccordion">
+      <article class="fitAccordionItem open" data-fit-accordion="driver">
+        <button class="fitAccordionHeader" type="button" onclick="toggleFitAccordion('driver')">
+          <div>
+            <span class="fitAccordionEyebrow">Flagship</span>
+            <h2>Driver</h2>
+          </div>
+          <div class="fitAccordionMeta">
+            <span>8–12 min</span>
+            <span>18–24 questions</span>
+            <span>Current-driver grade</span>
+            <b class="fitAccordionIcon">−</b>
+          </div>
+        </button>
+        <div class="fitAccordionBody">
+          <p>Diagnose your miss, evaluate your current gamer, identify whether an adjustment may help, and determine whether upgrading is actually worthwhile.</p>
+          <div class="fitDeliverables">
+            <div><b>Head + model</b><span>Ranked recommendations across the eligible brand universe.</span></div>
+            <div><b>Current-driver grade</b><span>See how well your existing setup fits the same needs.</span></div>
+            <div><b>Upgrade level</b><span>Separate “best fit” from whether you should actually buy.</span></div>
+          </div>
+          <button class="formPrimaryBtn" onclick="openFit('driver')">Start Driver Fitting</button>
+        </div>
+      </article>
+
+      <article class="fitAccordionItem" data-fit-accordion="ball">
+        <button class="fitAccordionHeader" type="button" onclick="toggleFitAccordion('ball')">
+          <div>
+            <span class="fitAccordionEyebrow">Performance</span>
+            <h2>Golf Ball</h2>
+          </div>
+          <div class="fitAccordionMeta">
+            <span>6–8 min</span>
+            <span>14–18 questions</span>
+            <span>Tradeoff analysis</span>
+            <b class="fitAccordionIcon">+</b>
+          </div>
+        </button>
+        <div class="fitAccordionBody">
+          <p>Balance driver flight, iron control, greenside performance, feel, conditions and value to find the ball that best matches your full game.</p>
+          <div class="fitDeliverables">
+            <div><b>Ranked ball matches</b><span>See the strongest overall fits and close alternatives.</span></div>
+            <div><b>What you gain</b><span>Understand the strengths each recommendation adds.</span></div>
+            <div><b>What you give up</b><span>See the tradeoffs instead of receiving a generic winner.</span></div>
+          </div>
+          <button class="formPrimaryBtn" onclick="openFit('ball')">Start Golf Ball Fitting</button>
+        </div>
+      </article>
+
+      <article class="fitAccordionItem" data-fit-accordion="irons">
+        <button class="fitAccordionHeader" type="button" onclick="toggleFitAccordion('irons')">
+          <div>
+            <span class="fitAccordionEyebrow">Equipment</span>
+            <h2>Irons</h2>
+          </div>
+          <div class="fitAccordionMeta">
+            <span>8–12 min</span>
+            <span>18–24 questions</span>
+            <span>Category + head profile</span>
+            <b class="fitAccordionIcon">+</b>
+          </div>
+        </button>
+        <div class="fitAccordionBody">
+          <p>Find the right blend of launch, forgiveness, turf interaction, distance, shape, feel and visual confidence.</p>
+          <div class="fitDeliverables">
+            <div><b>Iron category</b><span>Players, players-distance, game-improvement or blended setup.</span></div>
+            <div><b>Head recommendations</b><span>Ranked model profiles based on your priorities.</span></div>
+            <div><b>Configuration guidance</b><span>Framework for shaft, lie, length and set makeup.</span></div>
+          </div>
+          <button class="formPrimaryBtn" onclick="openFit('irons')">Start Iron Fitting</button>
+        </div>
+      </article>
+
+      <article class="fitAccordionItem" data-fit-accordion="wedges">
+        <button class="fitAccordionHeader" type="button" onclick="toggleFitAccordion('wedges')">
+          <div>
+            <span class="fitAccordionEyebrow">Scoring</span>
+            <h2>Wedges</h2>
+          </div>
+          <div class="fitAccordionMeta">
+            <span>7–10 min</span>
+            <span>16–20 questions</span>
+            <span>Loft + sole matrix</span>
+            <b class="fitAccordionIcon">+</b>
+          </div>
+        </button>
+        <div class="fitAccordionBody">
+          <p>Build a wedge setup around your delivery, turf, sand, shot selection, distance gaps and confidence around the green.</p>
+          <div class="fitDeliverables">
+            <div><b>Loft matrix</b><span>Recommended gapping from pitching wedge through lob wedge.</span></div>
+            <div><b>Bounce + grind</b><span>Match sole design to turf, sand and technique.</span></div>
+            <div><b>Shot-role map</b><span>Understand what each wedge is intended to do.</span></div>
+          </div>
+          <button class="formPrimaryBtn" onclick="openFit('wedges')">Start Wedge Fitting</button>
+        </div>
+      </article>
+
+      <article class="fitAccordionItem" data-fit-accordion="putter">
+        <button class="fitAccordionHeader" type="button" onclick="toggleFitAccordion('putter')">
+          <div>
+            <span class="fitAccordionEyebrow">Putting</span>
+            <h2>Putter</h2>
+          </div>
+          <div class="fitAccordionMeta">
+            <span>6–9 min</span>
+            <span>14–18 questions</span>
+            <span>Shape + alignment profile</span>
+            <b class="fitAccordionIcon">+</b>
+          </div>
+        </button>
+        <div class="fitAccordionBody">
+          <p>Fit alignment, head shape, stability, feel and stroke characteristics rather than choosing solely by appearance.</p>
+          <div class="fitDeliverables">
+            <div><b>Head shape</b><span>Blade, mid-mallet or mallet profile.</span></div>
+            <div><b>Alignment system</b><span>Match visual cues to how you aim.</span></div>
+            <div><b>Stability + feel</b><span>Balance forgiveness with feedback and preference.</span></div>
+          </div>
+          <button class="formPrimaryBtn" onclick="openFit('putter')">Start Putter Fitting</button>
+        </div>
+      </article>
+
+      <article class="fitAccordionItem" data-fit-accordion="bags">
+        <button class="fitAccordionHeader" type="button" onclick="toggleFitAccordion('bags')">
+          <div>
+            <span class="fitAccordionEyebrow">Every round</span>
+            <h2>Golf Bag</h2>
+          </div>
+          <div class="fitAccordionMeta">
+            <span>4–6 min</span>
+            <span>10–14 questions</span>
+            <span>Carry + storage profile</span>
+            <b class="fitAccordionIcon">+</b>
+          </div>
+        </button>
+        <div class="fitAccordionBody">
+          <p>Fit carrying style, organization, storage, weight, walking habits and transportation needs.</p>
+          <div class="fitDeliverables">
+            <div><b>Bag type</b><span>Stand, cart, hybrid or travel-oriented recommendation.</span></div>
+            <div><b>Weight target</b><span>Balance durability, storage and portability.</span></div>
+            <div><b>Organization</b><span>Divider and pocket structure matched to how you play.</span></div>
+          </div>
+          <button class="formPrimaryBtn" onclick="openFit('bags')">Start Golf Bag Fitting</button>
+        </div>
+      </article>
+
+      <article class="fitAccordionItem" data-fit-accordion="apparel">
+        <button class="fitAccordionHeader" type="button" onclick="toggleFitAccordion('apparel')">
+          <div>
+            <span class="fitAccordionEyebrow">Head to toe</span>
+            <h2>Shoes + Apparel</h2>
+          </div>
+          <div class="fitAccordionMeta">
+            <span>5–7 min</span>
+            <span>12–16 questions</span>
+            <span>Comfort + conditions</span>
+            <b class="fitAccordionIcon">+</b>
+          </div>
+        </button>
+        <div class="fitAccordionBody">
+          <p>Match fit, climate, walking habits, stability, waterproofing, comfort and personal style.</p>
+          <div class="fitDeliverables">
+            <div><b>Shoe profile</b><span>Spiked vs. spikeless, stability, width and walking comfort.</span></div>
+            <div><b>Weather system</b><span>Recommendations for heat, rain, layering and travel.</span></div>
+            <div><b>Performance priorities</b><span>Separate functional needs from aesthetic preference.</span></div>
+          </div>
+          <button class="formPrimaryBtn" onclick="openFit('apparel')">Start Shoes + Apparel Fitting</button>
+        </div>
+      </article>
+
+      <article class="fitAccordionItem" data-fit-accordion="gloves">
+        <button class="fitAccordionHeader" type="button" onclick="toggleFitAccordion('gloves')">
+          <div>
+            <span class="fitAccordionEyebrow">Feel</span>
+            <h2>Gloves</h2>
+          </div>
+          <div class="fitAccordionMeta">
+            <span>3–4 min</span>
+            <span>8–10 questions</span>
+            <span>Size + material profile</span>
+            <b class="fitAccordionIcon">+</b>
+          </div>
+        </button>
+        <div class="fitAccordionBody">
+          <p>Dial in fit, feel, durability, material and weather performance.</p>
+          <div class="fitDeliverables">
+            <div><b>Size guidance</b><span>Standard vs. cadet and fit preference.</span></div>
+            <div><b>Material match</b><span>Cabretta, synthetic or hybrid construction.</span></div>
+            <div><b>Use-case fit</b><span>Practice, heat, rain and durability priorities.</span></div>
+          </div>
+          <button class="formPrimaryBtn" onclick="openFit('gloves')">Start Glove Fitting</button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="page-profile" class="page">
+    <div class="heroSite"><div class="eyebrow">My Profile</div><h1>Your golfer DNA.</h1><p class="heroSub">Update your tendencies, preferences and equipment whenever your game changes. FORM uses this profile across every fitting.</p></div>
+    <div class="profileGrid">
+      <div class="profileCard"><div class="avatar">DB</div><h3>Golfer Profile</h3><div class="fitMeta">Profile completeness · 72%</div><div class="statGrid"><div class="stat"><b>95–100</b><span>Driver mph</span></div><div class="stat"><b>14</b><span>Handicap</span></div><div class="stat"><b>R</b><span>Handed</span></div></div><button class="ghostBtn" style="margin-top:18px">Edit profile</button></div>
+      <div class="bagCard"><div class="eyebrow">My Bag</div><h2>Current equipment</h2><div class="bagRows">
+        <div class="bagRow"><small>Driver</small><b>Callaway Paradym · 10.5°</b><span class="gradePill">B+</span></div>
+        <div class="bagRow"><small>3 Wood</small><b>TaylorMade M2 HL</b><span class="gradePill">—</span></div>
+        <div class="bagRow"><small>Irons</small><b>Cobra King Forged Tec</b><span class="gradePill">—</span></div>
+        <div class="bagRow"><small>Putter</small><b>Ping PLD DS72</b><span class="gradePill">—</span></div>
+        <div class="bagRow"><small>Ball</small><b>Pro V1x</b><span class="gradePill">—</span></div>
+      </div><button class="solidBtn" style="margin-top:18px" data-page-nav="fittings">Fit another category</button></div>
+    </div>
+  </section>
+
+  <section id="page-resultsHub" class="page">
+    <div class="heroSite"><div class="eyebrow">My Fits</div><h1>Your recommendations, in one place.</h1><p class="heroSub">Track fit grades, upgrade value and saved recommendations across your whole bag and golf wardrobe.</p></div>
+    <div class="recommendStrip">
+      <div class="recCard"><div class="fitMeta">Driver</div><h3>Current fit: B+</h3><p>Upgrade value: Moderate. One current-generation model is worth testing against your gamer.</p><button class="ghostBtn" data-fit="driver">View driver fit</button></div>
+      <div class="recCard"><div class="fitMeta">Irons</div><h3>Not fit yet</h3><p>Complete your iron profile to compare your current set against current-generation options.</p><button class="ghostBtn" data-fit="irons">Start iron fit</button></div>
+      <div class="recCard"><div class="fitMeta">Putter</div><h3>Not fit yet</h3><p>Build a putter profile around aim, stroke, speed control and visual preference.</p><button class="ghostBtn" data-fit="putter">Start putter fit</button></div>
+    </div>
+  </section>
+
+
+  <section id="page-methodology" class="page">
+    <div class="heroSite">
+      <div class="eyebrow">How FORM Fits</div>
+      <h1>Evidence first. Personalization second.</h1>
+      <p class="heroSub">FORM separates product facts, observed performance evidence and our own fitting logic. That lets us explain why something fits you without pretending every data point is equally certain.</p>
+    </div>
+
+    <div class="methodGrid">
+      <div class="methodCard"><div class="methodNum">01</div><h3>Identify the golfer.</h3><p>We collect the minimum useful information about speed, delivery, strike, ball flight, current equipment, preferences and priorities. Exact launch-monitor data improves precision, but it is not required.</p></div>
+      <div class="methodCard"><div class="methodNum">02</div><h3>Describe the product.</h3><p>FORM stores objective specifications separately from performance traits. Manufacturer-published lofts and dimensions are facts; characteristics such as relative launch, spin and forgiveness require evidence or clearly labeled modeling.</p></div>
+      <div class="methodCard"><div class="methodNum">03</div><h3>Match—not rank.</h3><p>There is no universal “best driver” or “best ball.” FORM weights the product profile against the golfer profile, their strike pattern and what they ranked as most important.</p></div>
+      <div class="methodCard"><div class="methodNum">04</div><h3>Benchmark what you own.</h3><p>A recommendation has to beat the golfer’s current equipment by enough to matter. A newer product can score higher without earning an upgrade recommendation.</p></div>
+      <div class="methodCard"><div class="methodNum">05</div><h3>Show confidence.</h3><p>Recommendation confidence reflects both the quality of golfer inputs and the quality of product evidence. Missing data should lower confidence rather than disappear behind a precise-looking score.</p></div>
+      <div class="methodCard"><div class="methodNum">06</div><h3>Learn from outcomes.</h3><p>With permission, saved fits can be re-evaluated as the product database changes. FORM should retain recommendation snapshots so meaningful changes are explainable rather than silently overwriting the prior fit. Over time, opt-in anonymized outcomes can also help calibrate which recommendations actually perform better for different golfer profiles.</p></div>
+    </div>
+
+    <div class="sectionHead">
+      <div><div class="eyebrow">Data provenance</div><h2>Not all evidence is the same.</h2></div>
+      <p>Every important product trait should carry a provenance label so the user can see whether it is a published specification, a FORM inference, or independently validated evidence.</p>
+    </div>
+    <div class="sourceLegend">
+      <div class="sourceType"><b><span class="provBadge prov-official">Official spec</span></b><span>Objective manufacturer-published facts such as loft, head size, length, adjustability, construction and model availability.</span></div>
+      <div class="sourceType"><b><span class="provBadge prov-modeled">FORM modeled</span></b><span>Our own normalized interpretation of likely launch, spin, bias, forgiveness, feel or player profile when verified measurements are not yet available.</span></div>
+      <div class="sourceType"><b><span class="provBadge prov-independent">Independent / licensed</span></b><span>Performance evidence from a source we are permitted to use, a commercial data partnership, published testing with appropriate rights, or FORM’s own testing.</span></div>
+    </div>
+
+    <div class="sectionHead">
+      <div><div class="eyebrow">Rules of the model</div><h2>What FORM will—and won’t—do.</h2></div>
+    </div>
+    <div class="methodRule"><b>Manufacturer claims</b><p>Useful as intended-design context, but marketing language should not automatically become a measured performance fact.</p></div>
+    <div class="methodRule"><b>Independent testing</b><p>We will not copy or republish proprietary databases. Data will be used only when public use is permitted, licensed, partnered, or generated by FORM.</p></div>
+    <div class="methodRule"><b>Historical products</b><p>Older clubs can remain in the identification database even when they are no longer eligible for purchase recommendations.</p></div>
+    <div class="methodRule"><b>Current recommendations</b><p>FORM should recommend current-generation products by default, with previous-generation exceptions only when fit or value makes the case compelling.</p></div>
+    <div class="methodRule"><b>Precision</b><p>A 92/100 score is not a laboratory measurement. It is an interpretable model output. The interface should always pair scores with a confidence level and evidence quality.</p></div>
+    <div class="methodRule"><b>Question burden</b><p>FORM should ask a question only when the answer can realistically change the recommendation or confidence. A golfer fitting one category should never be forced to complete an unrelated profile.</p></div>
+    <div class="methodRule"><b>Progressive depth</b><p>The default experience should provide the shortest credible path to a recommendation. Technical golfers can voluntarily add launch-monitor data and open deeper analysis.</p></div>
+
+<h2>Affiliate revenue follows the fit. It does not determine the fit.</h2>
+      <p>FORM may earn a commission when a user purchases through an eligible link. The recommendation score should be calculated before affiliate availability or commission rate is considered. If the best-fit product has no affiliate program, it should still be allowed to rank first. A retailer fallback can be used for purchase routing without changing the fitting result.</p>
+    </div>
+
+    <div class="prototypeNote"><b>Current prototype status:</b> the equipment attribute layer contains a mix of official product identification data and FORM-modeled performance traits. Independent performance evidence has not yet been fully licensed or calibrated into the prototype. The production interface should expose this distinction exactly as shown above.</div>
+  </section>
+
+
+  <section id="page-watchfit" class="page">
+    <div class="heroSite">
+      <div class="eyebrow">Watch My Fit</div>
+      <h1>FORM keeps fitting after you leave.</h1>
+      <p class="heroSub">Save your equipment profile and FORM can re-evaluate it when meaningful new products enter the fitting database. The goal is not to email you about every launch—it is to tell you when the recommendation for you actually changes.</p>
+    </div>
+    <div class="sectionHead"><div><div class="eyebrow">Personalized monitoring</div><h2>What should trigger an update?</h2></div><p>Alerts are based on fit movement, not release calendars.</p></div>
+    <div class="triggerCard"><div class="triggerTop"><h3>A new #1 fit</h3><span class="triggerBadge">Primary trigger</span></div><div class="triggerMath">New product &gt; your previous best fit</div><div class="triggerWhy">A newly evaluated product becomes the highest-scoring match for your saved golfer profile.</div></div>
+    <div class="triggerCard"><div class="triggerTop"><h3>A meaningful upgrade appears</h3><span class="triggerBadge">High intent</span></div><div class="triggerMath">New fit − current equipment ≥ meaningful threshold</div><div class="triggerWhy">FORM previously thought your gamer was good enough to keep. A new product creates enough modeled improvement to justify testing again.</div></div>
+    <div class="triggerCard"><div class="triggerTop"><h3>Your fit materially changes</h3><span class="triggerBadge">Profile based</span></div><div class="triggerMath">New golfer data → materially different recommendation</div><div class="triggerWhy">If you update swing speed, strike pattern, priorities or current equipment, FORM can rerun the relevant fits.</div></div>
+
+    <div class="watchFitBox">
+      <div class="eyebrow">Save & monitor</div>
+      <h3>Keep FORM working for you.</h3>
+      <p>Save your fits and get a personalized update when FORM identifies a meaningfully better match. This is not a generic equipment newsletter.</p>
+      <div class="watchRow"><input id="watchEmail" type="email" placeholder="Email address"><button class="solidBtn" onclick="enableFitWatch()">Watch my fits</button></div>
+      <div class="watchPrefs">
+        <button class="watchPref active" data-watchcat="driver" onclick="toggleWatchCat(this)">Driver</button>
+        <button class="watchPref active" data-watchcat="irons" onclick="toggleWatchCat(this)">Irons</button>
+        <button class="watchPref active" data-watchcat="ball" onclick="toggleWatchCat(this)">Golf ball</button>
+        <button class="watchPref active" data-watchcat="wedges" onclick="toggleWatchCat(this)">Wedges</button>
+        <button class="watchPref active" data-watchcat="putter" onclick="toggleWatchCat(this)">Putter</button>
+      </div>
+      <div id="watchState" class="watchState">Not enabled</div>
+    </div>
+
+    
+    
+    <div class="emailPolicy">
+      <div class="eyebrow">Communication standard</div>
+      <h3>Silence is part of the product.</h3>
+      <p>FORM should not manufacture reasons to contact a golfer. After the initial fit follow-up, a product email should require a meaningful personalized signal. If nothing important changes, FORM should send nothing.</p>
+      <div class="policyRules">
+        <div class="policyRule"><b>Initial fit window</b><span>A limited number of useful follow-ups can help the golfer finish evaluating the original recommendation. They should add information, not simply repeat the result.</span></div>
+        <div class="policyRule"><b>After the initial window</b><span>New-product messages require a meaningful fit change, not merely a product launch or a retailer promotion.</span></div>
+        <div class="policyRule"><b>Frequency guardrail</b><span>Repeated marginal changes are suppressed or bundled. After the initial fit window, silence is the default unless FORM has a genuinely meaningful personalized update.</span></div>
+      </div>
+    </div>
+
+    <div class="sectionHead" style="margin-top:52px"><div><div class="eyebrow">Lifecycle engine</div><h2>Useful reasons to come back.</h2></div><p>FORM should earn the next email by having something specific to say.</p></div>
+    <div class="lifecycleGrid">
+      <div class="lifecycleCard"><div class="signal">Fit change</div><h3>A better product appears.</h3><p>Re-score saved profiles when a meaningful new product is added. Send only when it changes the user's recommendation or upgrade case.</p></div>
+      <div class="lifecycleCard"><div class="signal">Price signal</div><h3>A top fit becomes better value.</h3><p>If retailer feeds are available later, a meaningful price drop on a user's top-ranked product can create a high-intent return visit without changing the fit score.</p></div>
+      <div class="lifecycleCard"><div class="signal">Profile refresh</div><h3>Your swing may have changed.</h3><p>After enough time, invite the golfer to refresh a few high-impact inputs rather than forcing them through the entire fitting again.</p></div>
+      <div class="lifecycleCard"><div class="signal">Bag review</div><h3>Your annual FORM Bag Report.</h3><p>Summarize what still fits, what has been surpassed, and which category—if any—has the strongest reason to test something new.</p></div>
+    </div>
+
+    <div class="sectionHead" style="margin-top:48px"><div><div class="eyebrow">Example communication</div><h2>The email should feel like analysis.</h2></div></div>
+    <div class="emailPreview">
+      <div class="emailTop">FORM · Personalized fit update</div>
+      <div class="emailBody">
+        <div class="eyebrow">Your driver fit changed</div>
+        <h2>We told you to keep your driver. That's changed.</h2>
+        <p>When you completed your FORM fitting, your current driver was close enough to the best available matches that we didn't see a compelling reason to replace it. A newly evaluated model now creates a larger separation.</p>
+        <div class="scoreCompare"><div class="scoreSide"><span class="signal">Your driver</span><b>89</b><span>Still a good fit</span></div><div class="scoreArrow">→</div><div class="scoreSide"><span class="signal">New best fit</span><b>95</b><span>Meaningful test candidate</span></div></div>
+        <p><b>What changed:</b> the new model better matches your off-center strike pattern and dispersion priority without pushing launch outside your preferred window.</p>
+        <button class="solidBtn" onclick="showPage('resultsHub')">See my updated fit</button>
+      </div>
+    </div>
+
+    <div class="sectionHead" style="margin-top:48px"><div><div class="eyebrow">Fit history</div><h2>Recommendations should have memory.</h2></div><p>Instead of overwriting a fit, FORM should eventually retain snapshots so users can see why a recommendation changed.</p></div>
+    <div class="fitTimeline">
+      <div class="timelineItem"><div class="timelineDate">Original fit</div><div><h3>Keep current driver</h3><p>Current equipment 89 · Best alternative 91 · upgrade gap too small to recommend spending money.</p></div></div>
+      <div class="timelineItem"><div class="timelineDate">New release</div><div><h3>Profile automatically re-scored</h3><p>A new product enters the eligible recommendation database. The golfer does not need to retake the fitting.</p></div></div>
+      <div class="timelineItem"><div class="timelineDate">Meaningful change</div><div><h3>New best fit reaches 95</h3><p>The upgrade gap crosses FORM's notification threshold, creating a personalized return reason.</p></div></div>
+    </div>
+
+    <div class="prototypeNote"><b>Prototype behavior:</b> this screen saves the watch preference locally for testing. Production would require authenticated profiles, explicit email consent, unsubscribe controls, a product-ingestion pipeline, fit re-scoring, and an email delivery service.</div>
+  </section>
+
+  <section id="page-login" class="page">
+    <div class="accountBox"><div class="eyebrow">FORM account</div><h2>Save your golfer profile.</h2><p class="lead">Sign in to keep your bag, fit history and product alerts in one place.</p><label class="fitMeta">Email</label><input type="email" placeholder="you@example.com"><label class="fitMeta">Password</label><input type="password" placeholder="••••••••"><button class="solidBtn">Log in</button><button class="ghostBtn" style="width:100%;margin-top:8px">Create account</button></div>
+  </section>
+
+
+  <section id="page-categoryFit" class="page">
+    <div class="categoryFit">
+      <div class="catTop">
+        <button class="ghostBtn" data-page-nav="fittings">← All fittings</button>
+        <div class="fitMeta" id="catStepCount">01 / 05</div>
+      </div>
+      <div class="catProgress"><i id="catProgressBar" style="width:20%"></i></div>
+      <div id="catQuestionHost"></div>
+      <div class="catNav" id="catNav">
+        <button class="ghostBtn" id="catBack">← Back</button>
+        <button class="solidBtn" id="catNext">Continue →</button>
+      </div>
+    </div>
+  </section>
+  <section id="page-coming" class="page">
+    <div class="heroSite"><div class="eyebrow" id="comingEyebrow">Coming soon</div><h1 id="comingTitle">This fitting is being built.</h1><p class="heroSub" id="comingBody"></p><button class="ghostBtn" data-page-nav="fittings">← Back to fittings</button></div>
+  </section>
+</div>
+
+<div id="driverExperience" class="page">
 <div class="shell">
   <div class="topline">
     <div class="progressWrap"><div class="progress"><i id="progressBar"></i></div><div class="stepCount" id="stepCount">01 / 09</div></div>
@@ -101,8 +618,57 @@ h2{font-size:46px;line-height:1;margin:0}h3{font-size:26px;margin:0}
   <div class="fitStage">
     <main class="mainPane">
       <section id="step1" class="step">
-        <div class="eyebrow">Golfer DNA</div><h1>Which side do you play from?</h1><p class="lead">Handedness changes how FORM interprets physical shot direction. We save this once and use it everywhere.</p>
-        <div class="options" data-group="handed"><button class="opt on" data-v="right">Right-handed</button><button class="opt" data-v="left">Left-handed</button></div>
+        <div id="handedQuestion" class="openingQuestion">
+          <div class="eyebrow">Golfer DNA</div>
+          <h1>Which side do you play from?</h1>
+          <p class="lead">Handedness changes how FORM interprets physical shot direction. We ask once and use it throughout your profile.</p>
+          <div class="options" data-group="handed">
+            <button class="opt" data-v="right">Right-handed</button>
+            <button class="opt" data-v="left">Left-handed</button>
+          </div>
+        </div>
+
+        <div id="handedSummary" class="openingAnswerSummary hidden">
+          <div><span class="eyebrow">Handedness</span><b id="handedSummaryText">—</b></div>
+          <button type="button" onclick="editOpeningHandedness()">Edit</button>
+        </div>
+
+        <div id="brandQuestion" class="openingQuestion hidden">
+          <div id="brandScopePanel" class="brandScopePanel">
+  <div class="eyebrow">Brand scope</div>
+  <h3>Which brands should FORM consider?</h3>
+  <p>Leave this open for the most independent fit, or narrow the field if you already know which manufacturers you will—or won’t—buy.</p>
+
+  <div class="brandModeGrid">
+    <button type="button" class="brandMode active" data-brand-mode="all" onclick="setBrandMode('all')">
+      <b>All brands</b><span>Best overall fit across the full eligible market.</span>
+    </button>
+    <button type="button" class="brandMode" data-brand-mode="include" onclick="setBrandMode('include')">
+      <b>Only selected brands</b><span>Rank only manufacturers you choose.</span>
+    </button>
+    <button type="button" class="brandMode" data-brand-mode="exclude" onclick="setBrandMode('exclude')">
+      <b>Exclude selected brands</b><span>Consider everything except the brands you rule out.</span>
+    </button>
+    <button type="button" class="brandMode" data-brand-mode="single" onclick="setBrandMode('single')">
+      <b>One-brand fitting</b><span>Find the best fit within one manufacturer’s lineup.</span>
+    </button>
+  </div>
+
+  <div id="brandPickerWrap" class="brandPickerWrap hidden">
+    <div id="brandPicker" class="brandPicker"></div>
+    <div class="brandScopeHint" id="brandScopeHint"></div>
+  </div>
+
+  <div class="brandScopeActions">
+    <button type="button" class="brandScopeConfirm" onclick="confirmBrandScope()">Continue</button>
+  </div>
+</div>
+        </div>
+
+        <div id="brandOpeningSummary" class="openingAnswerSummary hidden">
+          <div><span class="eyebrow">Brand scope</span><b id="brandOpeningSummaryText">—</b></div>
+          <button type="button" onclick="editOpeningBrandScope()">Edit</button>
+        </div>
       </section>
 
       <section id="step2" class="step hidden">
@@ -140,9 +706,9 @@ h2{font-size:46px;line-height:1;margin:0}h3{font-size:26px;margin:0}
       <section id="step6" class="step hidden">
 <div class="eyebrow">Your priorities</div>
 <h1>What matters most in your next driver?</h1>
-<p class="lead">Rank only the factors you care about. FORM will weight them in that order instead of asking you the same goal questions twice.</p>
+<p class="lead">Rank these six factors from most important to least important. FORM will use the order as weighting instead of asking you about goals more than once.</p>
 <div class="priorityRank" id="priorityRank"></div>
-<div class="note">#1 carries the most weight. Leave anything you don't care about unranked.</div>
+<div class="note">#1 matters most. Every factor gets a rank, and changing one automatically swaps the other number.</div>
 </section>
 
       <section id="step7" class="step hidden">
@@ -179,8 +745,8 @@ h2{font-size:46px;line-height:1;margin:0}h3{font-size:26px;margin:0}
         <div class="readyBox"><div><h3>Ready to build your fit.</h3><p id="readyCopy">Your answers will be compared against current products and your current gamer.</p></div><button class="btn primary" onclick="showResults()">Generate My Fit →</button></div>
       </section>
 
-      <section id="results" class="step hidden">
-        <div class="resultsTop"><div><div class="eyebrow">Your fit</div><h2>Current-generation matches</h2></div><div><div class="headerMeta">Recommendation confidence</div><div class="conf" id="conf">—</div></div></div>
+      
+</div>
         <div id="keep" class="keep"></div><div id="resultList"></div>
       </section>
 
@@ -188,234 +754,26 @@ h2{font-size:46px;line-height:1;margin:0}h3{font-size:26px;margin:0}
     </main>
 </div>
 </div>
-<script>
-const products = [{"brand": "Titleist", "model": "GTS2", "generation": "current", "price": 699, "launch": 3, "spin": 3, "forgiveness": 4.5, "draw_bias": 0, "speed_fit": [80, 108], "player": "broad", "style": "classic"}, {"brand": "Titleist", "model": "GTS3", "generation": "current", "price": 699, "launch": 3, "spin": 2.5, "forgiveness": 3.7, "draw_bias": 0, "speed_fit": [90, 115], "player": "controlled", "style": "classic"}, {"brand": "Titleist", "model": "GTS4", "generation": "current", "price": 699, "launch": 2, "spin": 1.5, "forgiveness": 2.8, "draw_bias": 0, "speed_fit": [100, 125], "player": "lowspin", "style": "classic"}, {"brand": "Titleist", "model": "GT1", "generation": "current_special", "price": 449, "launch": 5, "spin": 3.5, "forgiveness": 4.3, "draw_bias": 0.5, "speed_fit": [65, 90], "player": "moderate_speed", "style": "classic"}, {"brand": "TaylorMade", "model": "Qi4D Max", "generation": "current", "price": 650, "launch": 4, "spin": 3, "forgiveness": 4.7, "draw_bias": 0.3, "speed_fit": [80, 108], "player": "broad", "style": "modern"}, {"brand": "TaylorMade", "model": "Qi4D", "generation": "current", "price": 650, "launch": 3, "spin": 2.5, "forgiveness": 4.0, "draw_bias": 0, "speed_fit": [88, 115], "player": "broad", "style": "modern"}, {"brand": "TaylorMade", "model": "Qi4D LS", "generation": "current", "price": 650, "launch": 2, "spin": 1.5, "forgiveness": 3.0, "draw_bias": 0, "speed_fit": [100, 125], "player": "lowspin", "style": "modern"}, {"brand": "TaylorMade", "model": "Qi4D Max Lite", "generation": "current", "price": 650, "launch": 5, "spin": 3.5, "forgiveness": 4.4, "draw_bias": 0.2, "speed_fit": [65, 90], "player": "moderate_speed", "style": "modern"}, {"brand": "Callaway", "model": "Quantum Max", "generation": "current", "price": 650, "launch": 4, "spin": 3, "forgiveness": 4.6, "draw_bias": 0.2, "speed_fit": [80, 110], "player": "broad", "style": "balanced"}, {"brand": "Callaway", "model": "Quantum Max D", "generation": "current", "price": 650, "launch": 4.5, "spin": 3, "forgiveness": 4.6, "draw_bias": 1.0, "speed_fit": [75, 105], "player": "slice_help", "style": "balanced"}, {"brand": "Callaway", "model": "Quantum Max Fast", "generation": "current", "price": 650, "launch": 5, "spin": 3.5, "forgiveness": 4.4, "draw_bias": 0.4, "speed_fit": [65, 90], "player": "moderate_speed", "style": "balanced"}, {"brand": "Callaway", "model": "Quantum Triple Diamond Max", "generation": "current", "price": 700, "launch": 3, "spin": 2, "forgiveness": 3.7, "draw_bias": 0, "speed_fit": [95, 120], "player": "controlled", "style": "balanced"}, {"brand": "Callaway", "model": "Quantum Triple Diamond", "generation": "current", "price": 700, "launch": 2, "spin": 1.5, "forgiveness": 2.9, "draw_bias": 0, "speed_fit": [100, 125], "player": "lowspin", "style": "balanced"}, {"brand": "Cobra", "model": "OPTM MAX-K", "generation": "current", "price": 599, "launch": 4, "spin": 3, "forgiveness": 4.9, "draw_bias": 0.2, "speed_fit": [80, 108], "player": "broad", "style": "edgy"}, {"brand": "Cobra", "model": "OPTM MAX-D", "generation": "current", "price": 599, "launch": 4.5, "spin": 3, "forgiveness": 4.7, "draw_bias": 1.0, "speed_fit": [75, 105], "player": "slice_help", "style": "edgy"}, {"brand": "Cobra", "model": "OPTM X", "generation": "current", "price": 599, "launch": 3, "spin": 2.5, "forgiveness": 4.0, "draw_bias": 0, "speed_fit": [88, 115], "player": "broad", "style": "edgy"}, {"brand": "Cobra", "model": "OPTM LS", "generation": "current", "price": 599, "launch": 2, "spin": 1.5, "forgiveness": 3.0, "draw_bias": 0, "speed_fit": [100, 125], "player": "lowspin", "style": "edgy"}, {"brand": "PING", "model": "G440 K", "generation": "current", "price": 649, "launch": 4, "spin": 3, "forgiveness": 5.0, "draw_bias": 0.1, "speed_fit": [80, 108], "player": "max_forgiveness", "style": "technical"}, {"brand": "PING", "model": "G440 MAX", "generation": "current", "price": 599, "launch": 4, "spin": 3, "forgiveness": 4.8, "draw_bias": 0.2, "speed_fit": [80, 108], "player": "broad", "style": "technical"}, {"brand": "PING", "model": "G440 SFT", "generation": "current", "price": 599, "launch": 4.5, "spin": 3, "forgiveness": 4.7, "draw_bias": 1.0, "speed_fit": [75, 105], "player": "slice_help", "style": "technical"}, {"brand": "PING", "model": "G440 LST", "generation": "current", "price": 599, "launch": 2.5, "spin": 1.5, "forgiveness": 3.4, "draw_bias": 0, "speed_fit": [100, 125], "player": "lowspin", "style": "technical"}, {"brand": "PING", "model": "G430 MAX 10K", "generation": "previous_limited", "price": 499, "launch": 4, "spin": 3, "forgiveness": 4.9, "draw_bias": 0.2, "speed_fit": [80, 108], "player": "broad", "style": "technical"}];
-const state={handed:'right',start:'straight',curve:'straight',costly:'two_way',strike:'heel',priority:'forgiveness',style:'balanced',current:'good',lm:'none',metrics:{speed:{mode:'unknown',value:null},spin:{mode:'unknown',value:null},aoa:{mode:'unknown',value:null},launch:{mode:'unknown',value:null}},currentClub:{brand:'',model:'',loft:'',flex:'',problems:[]},ranks:{dispersion:1,distance:2,forgiveness:3,launch:null,spin:null,feel:null,looks:null,brand:null,value:null}};
-let step=1;
+</div>
 
-document.querySelectorAll('[data-group]').forEach(g=>g.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
- g.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));b.classList.add('on');state[g.dataset.group]=b.dataset.v;
- if(['handed','start','curve'].includes(g.dataset.group)) updateDerived();
- if(g.dataset.group==='lm') renderLMInputs();
- 
-}));
 
-function physicalFinish(handed,curve){
- if(curve==='straight')return 'center'; if(curve==='varies')return 'varies';
- const leftForRH=['draw','hook'].includes(curve);
- return handed==='right'?(leftForRH?'left':'right'):(leftForRH?'right':'left');
-}
-function curveClass(c){if(['hook','draw'].includes(c))return'draw_curve';if(['fade','slice'].includes(c))return'fade_curve';return c}
-function normalizedStart(handed,start){
- if(start==='straight'||start==='varies')return start;
- if(handed==='right')return start==='left'?'pull':'push';
- return start==='left'?'push':'pull';
-}
-function startDescription(handed,start){
- if(start==='straight')return 'Mostly straight';
- if(start==='varies')return 'Varies / not sure';
- const golfTerm=normalizedStart(handed,start);
- return `${start.charAt(0).toUpperCase()+start.slice(1)} (${golfTerm})`;
-}
-function updateDerived(){
- const el=document.getElementById('derived'); if(!el)return;
- const startTerm=normalizedStart(state.handed,state.start);
- const startText=state.start==='varies'?'an uncertain start':state.start==='straight'?'a mostly straight start':`a physical start ${state.start} (${startTerm})`;
- el.innerHTML=`FORM reads this as <b>${startText}</b> with <b>${state.curve}</b> curvature for a <b>${state.handed}-handed</b> golfer. That pattern typically finishes physically <b>${physicalFinish(state.handed,state.curve)}</b>.`;
-}
-function golfer(){
- const speedMetric=state.metrics.speed;
- const speed = speedMetric.mode==='exact' ? (+speedMetric.value||null) :
-               speedMetric.mode==='range' ? ({'under80':77,'80-89':85,'90-99':95,'100-109':105,'110plus':113}[speedMetric.value]||null) :
-               speedMetric.mode==='general' ? ({'slow':78,'moderate':87,'average':95,'fast':105,'veryfast':115}[speedMetric.value]||null) : null;
- const spinMetric=state.metrics.spin;
- const spin = spinMetric.mode==='exact' ? ((+spinMetric.value||0)<2200?'low':(+spinMetric.value||0)>3000?'high':'mid') :
-              spinMetric.mode==='range' ? ({'under2000':'low','2000-2499':'low','2500-2999':'mid','3000-3499':'high','3500plus':'high'}[spinMetric.value]||'unknown') :
-              spinMetric.mode==='general' ? ({'verylow':'low','low':'low','average':'mid','high':'high','veryhigh':'high'}[spinMetric.value]||'unknown') : 'unknown';
- const trajMetric=state.metrics.launch;
- const traj = trajMetric.mode==='exact' ? ((+trajMetric.value||0)<11?'low':(+trajMetric.value||0)>16?'high':'mid') :
-              trajMetric.mode==='range' ? ({'under10':'low','10-12':'low','13-15':'mid','16-18':'high','19plus':'high'}[trajMetric.value]||'unknown') :
-              trajMetric.mode==='general' ? ({'verylow':'low','low':'low','mid':'mid','high':'high','veryhigh':'high'}[trajMetric.value]||'unknown') : 'unknown';
- return {handed:state.handed,start:state.start,startClass:normalizedStart(state.handed,state.start),curve:state.curve,curveClass:curveClass(state.curve),costly:state.costly,strike:state.strike,priority:state.priority,style:state.style,current:state.current,
- hcp:15,speed,spin,traj,lm:state.lm,metrics:state.metrics,currentClub:state.currentClub,ranks:state.ranks};
-}
+<div class="mobileNav">
+  <button data-page-nav="home">Home</button>
+  <button data-page-nav="fittings">Fittings</button>
+  <button data-page-nav="profile">Profile</button>
+  <button data-page-nav="resultsHub">My Fits</button>
+</div>
+<footer class="siteFooter">
+  <div class="siteFooterInner">
+    <div><div class="brand">FORM</div><div style="font-size:10px;margin-top:8px">Independent golf fitting intelligence.</div></div>
+    <div class="footerLinks"><button data-page-nav="fittings">Fittings</button><button data-page-nav="profile">My Profile</button><button data-page-nav="resultsHub">My Fits</button><button data-page-nav="methodology">How FORM Fits</button></div>
+  </div>
+</footer>
 
-const priorityOptions=[
-['dispersion','Dispersion / accuracy','Keep misses tighter'],
-['distance','Distance / speed','Maximize useful distance'],
-['forgiveness','Forgiveness','Protect off-center strikes'],
-['launch','Launch / trajectory','Get the flight window right'],
-['spin','Spin control','Avoid too much or too little spin'],
-['feel','Feel / sound','Make the club feel right'],
-['looks','Looks at address','Confidence when you set it down'],
-['brand','Brand preference','If performance is close'],
-['value','Price / value','Performance relative to cost']
-];
-
-const driverDB={
-'Callaway':{'Paradym':['9°','10.5°','12°'],'Paradym Ai Smoke Max':['9°','10.5°','12°'],'Elyte':['9°','10.5°','12°'],'Quantum Max':['9°','10.5°','12°'],'Other / older Callaway':["I don't know"]},
-'Titleist':{'TSR2':['8°','9°','10°','11°'],'TSR3':['8°','9°','10°','11°'],'GT2':['8°','9°','10°','11°'],'GT3':['8°','9°','10°','11°'],'GTS2':['8°','9°','10°','11°'],'GTS3':['8°','9°','10°','11°'],'Other / older Titleist':["I don't know"]},
-'PING':{'G425 Max':['9°','10.5°','12°'],'G430 Max':['9°','10.5°','12°'],'G430 Max 10K':['9°','10.5°','12°'],'G440 Max':['9°','10.5°','12°'],'G440 SFT':['9°','10.5°'],'G440 LST':['9°','10.5°'],'Other / older PING':["I don't know"]},
-'TaylorMade':{'Stealth 2':['9°','10.5°','12°'],'Qi10':['9°','10.5°','12°'],'Qi10 Max':['9°','10.5°','12°'],'Qi35':['9°','10.5°','12°'],'Qi4D':['9°','10.5°','12°'],'Qi4D Max':['9°','10.5°','12°'],'Other / older TaylorMade':["I don't know"]},
-'Cobra':{'Aerojet':['9°','10.5°','12°'],'Darkspeed X':['9°','10.5°','12°'],'Darkspeed Max':['9°','10.5°','12°'],'DS-ADAPT X':['9°','10.5°'],'OPTM X':['9°','10.5°'],'OPTM MAX-K':['9°','10.5°'],'Other / older Cobra':["I don't know"]},
-'Mizuno':{'ST-Z 230':['9.5°','10.5°','12°'],'ST-MAX 230':['9.5°','10.5°','12°'],'Other / older Mizuno':["I don't know"]},
-'Srixon':{'ZX5 Mk II':['9.5°','10.5°'],'ZXi Max':['9°','10.5°','12°'],'Other / older Srixon':["I don't know"]},
-'PXG':{'0311 GEN6':['7.5°','9°','10.5°'],'Black Ops':['8°','9°','10.5°','12°'],'Other / older PXG':["I don't know"]},
-'Wilson':{'Dynapower Carbon':['9°','10.5°'],'Dynapower Max':['9°','10.5°','12°'],'Other / older Wilson':["I don't know"]},
-'Other / not listed':{'Other / not sure':["I don't know"]}
-};
-
-function initPriorityRank(){
- const box=document.getElementById('priorityRank'); if(!box)return;
- box.innerHTML=priorityOptions.map(([id,label,sub])=>`<div class="priorityItem"><div><b>${label}</b><small>${sub}</small></div><select data-prank="${id}"><option value="">Not ranked</option>${[1,2,3,4,5].map(n=>`<option value="${n}" ${state.ranks[id]===n?'selected':''}>#${n}</option>`).join('')}</select></div>`).join('');
- box.querySelectorAll('[data-prank]').forEach(s=>s.onchange=()=>{const id=s.dataset.prank,val=s.value?+s.value:null;if(val)Object.keys(state.ranks).forEach(k=>{if(k!==id&&state.ranks[k]===val)state.ranks[k]=null});state.ranks[id]=val;initPriorityRank()});
-}
-function fillSelect(el,values,placeholder){el.innerHTML=`<option value="">${placeholder}</option>`+values.map(v=>`<option>${v}</option>`).join('')}
-function initCurrentClub(){
- const brand=document.getElementById('currentBrand'),model=document.getElementById('currentModel'),loft=document.getElementById('currentLoft'),flex=document.getElementById('currentFlex');if(!brand)return;
- fillSelect(brand,Object.keys(driverDB),"I don't know / select brand");brand.value=state.currentClub.brand;
- function models(){const vals=driverDB[state.currentClub.brand]?Object.keys(driverDB[state.currentClub.brand]):[];fillSelect(model,vals,"I don't know / select model");model.value=state.currentClub.model;lofts()}
- function lofts(){const vals=driverDB[state.currentClub.brand]?.[state.currentClub.model]||[];fillSelect(loft,vals,"I don't know / select loft");loft.value=state.currentClub.loft}
- brand.onchange=()=>{state.currentClub.brand=brand.value;state.currentClub.model='';state.currentClub.loft='';models()};
- model.onchange=()=>{state.currentClub.model=model.value;state.currentClub.loft='';lofts()};
- loft.onchange=()=>state.currentClub.loft=loft.value;flex.value=state.currentClub.flex||'';flex.onchange=()=>state.currentClub.flex=flex.value;models();
- const box=document.getElementById('problems');if(box)box.querySelectorAll('button').forEach(btn=>{btn.classList.toggle('on',state.currentClub.problems.includes(btn.dataset.v));btn.onclick=()=>{const a=state.currentClub.problems,v=btn.dataset.v,k=a.indexOf(v);k>=0?a.splice(k,1):a.push(v);btn.classList.toggle('on')}});
-}
-function rankedWeight(g,id){const r=g.ranks[id];return r?({1:7,2:5,3:3,4:2,5:1}[r]||0):0}
-function currentBenchmark(g){let b=82,c=g.currentClub;if(c.model)b+=3;if(g.current==='great')b+=6;else if(g.current==='good')b+=3;else if(g.current==='mixed')b-=3;else if(g.current==='poor')b-=8;if(c.problems.includes('dispersion'))b-=4;if(c.problems.includes('forgiveness'))b-=3;if(c.problems.includes('distance'))b-=3;if(c.problems.some(x=>x.startsWith('spin_')))b-=2;if(c.problems.some(x=>x.startsWith('launch_')))b-=2;return Math.max(64,Math.min(95,b))}
-function upgradeLevel(d){if(d>=10)return['HIGH','A materially better fit appears to be available.'];if(d>=5)return['MODERATE','There is enough projected improvement to justify a head-to-head test.'];if(d>=2)return['LOW','A new model may improve a few areas, but your current driver remains a strong fit.'];return['NO COMPELLING REASON','FORM would keep your current driver unless testing proves a meaningful gain.']}
-const metricDefs={
- speed:{label:'Club speed',unit:'mph',
-   exact:'e.g. 97',
-   range:[['under80','Under 80'],['80-89','80–89'],['90-99','90–99'],['100-109','100–109'],['110plus','110+']],
-   general:[['slow','Slow'],['moderate','Moderate'],['average','Average'],['fast','Fast'],['veryfast','Very fast']]},
- spin:{label:'Driver spin',unit:'rpm',
-   exact:'e.g. 2650',
-   range:[['under2000','Under 2,000'],['2000-2499','2,000–2,499'],['2500-2999','2,500–2,999'],['3000-3499','3,000–3,499'],['3500plus','3,500+']],
-   general:[['verylow','Very low / falls out'],['low','Low / penetrating'],['average','Average'],['high','High / climbs'],['veryhigh','Very high / balloons']]},
- aoa:{label:'Attack angle',unit:'degrees',
-   exact:'e.g. +3.2',
-   range:[['down4','More than 4° down'],['down2-4','2–4° down'],['down0-2','0–2° down'],['up0-2','0–2° up'],['up2-4','2–4° up'],['up4','More than 4° up']],
-   general:[['steep','Steep / clearly down'],['slightdown','Slightly down'],['neutral','Neutral'],['slightup','Slightly up'],['upward','Very upward']]},
- launch:{label:'Launch angle',unit:'degrees',
-   exact:'e.g. 13.8',
-   range:[['under10','Under 10°'],['10-12','10–12°'],['13-15','13–15°'],['16-18','16–18°'],['19plus','19°+']],
-   general:[['verylow','Very low'],['low','Low'],['mid','Mid'],['high','High'],['veryhigh','Very high']]}
-};
-
-function metricStrength(mode){
- return mode==='exact'?'High precision':mode==='range'?'Strong signal':mode==='general'?'Useful signal':'Unknown';
-}
-function renderMetric(def,id,mode){
- const m=state.metrics[id];
- let body='';
- if(mode==='exact'){
-   body=`<input class="metricInput" data-metric-input="${id}" inputmode="decimal" placeholder="${def.exact}" value="${m.value||''}">`;
- }else if(mode==='range'){
-   body=`<div class="metricChoices">${def.range.map(x=>`<button class="metricChoice ${m.value===x[0]?'on':''}" data-metric-pick="${id}" data-value="${x[0]}">${x[1]}</button>`).join('')}</div>`;
- }else if(mode==='general'){
-   body=`<div class="metricChoices">${def.general.map(x=>`<button class="metricChoice ${m.value===x[0]?'on':''}" data-metric-pick="${id}" data-value="${x[0]}">${x[1]}</button>`).join('')}</div>`;
- }else{
-   body=`<div class="note" style="margin-top:0">No problem. FORM will use other signals and may ask an easier follow-up if this becomes important.</div>`;
- }
- return `<div class="metricBox"><div class="metricTop"><b>${def.label}</b><span>${def.unit}</span></div>${body}<div class="signalStrength">${metricStrength(mode)}</div></div>`;
-}
-function renderLMInputs(){
- const box=document.getElementById('lmInputs'); if(!box)return;
- let mode=state.lm;
- if(mode==='none'){
-   ['speed','spin','aoa','launch'].forEach(id=>state.metrics[id]={mode:'unknown',value:null});
-   box.innerHTML=`<div class="derived"><b>No launch-monitor data needed.</b><br>FORM will keep learning from start direction, curvature, strike, trajectory and current equipment.</div>`;
-    return;
- }
- ['speed','spin','aoa','launch'].forEach(id=>{state.metrics[id].mode=mode;if(state.metrics[id].value===null)state.metrics[id].value=null;});
- box.innerHTML=Object.entries(metricDefs).map(([id,def])=>renderMetric(def,id,mode)).join('');
- document.querySelectorAll('[data-metric-input]').forEach(inp=>inp.oninput=()=>{state.metrics[inp.dataset.metricInput].value=inp.value||null;});
- document.querySelectorAll('[data-metric-pick]').forEach(btn=>btn.onclick=()=>{
-   const id=btn.dataset.metricPick;state.metrics[id].value=btn.dataset.value;
-   btn.parentElement.querySelectorAll('.metricChoice').forEach(x=>x.classList.remove('on'));btn.classList.add('on');
- });
- 
-}
-
-function eligible(p,g){
- let reasons=[];
- if(g.speed&&(g.speed<p.speed_fit[0]-8||g.speed>p.speed_fit[1]+8))reasons.push('speed');
- if(g.spin==='low'&&p.spin<=1.5)reasons.push('lowspin');
- if(g.costly==='hook'&&p.draw_bias>=.8)reasons.push('drawbias');
- if(g.hcp>=15&&p.forgiveness<2.9&&g.priority!=='control')reasons.push('demanding');
- return reasons.length===0;
-}
-function candidateN(){
- const g=golfer(); return products.filter(p=>p.generation!=='previous_limited'&&eligible(p,g)).length;
-}
-
-function renderReview(){
- const g=golfer(), clubName=[g.currentClub.brand,g.currentClub.model].filter(Boolean).join(' ')||'Unknown', row=(a,b,q='Profile')=>`<div class="reviewRow"><span>${a}</span><b>${b}<span class="quality">${q}</span></b></div>`;
- document.getElementById('reviewBall').innerHTML=row('Handedness',g.handed,'Saved')+row('Start direction',startDescription(g.handed,g.start),'Observed')+row('Curvature',g.curve,'Observed')+row('Physical finish',physicalFinish(g.handed,g.curve),'Derived');
- document.getElementById('reviewStrike').innerHTML=row('Costly miss',g.costly,'Observed')+row('Strike',g.strike,'Observed');
- const techRow=(label,id)=>{const m=g.metrics[id];return row(label,m.value||'Unknown',m.mode==='unknown'?'Unknown':m.mode.charAt(0).toUpperCase()+m.mode.slice(1));};
- document.getElementById('reviewTech').innerHTML=row('LM route',g.lm==='none'?'No launch-monitor data':g.lm,'Route')+techRow('Club speed','speed')+techRow('Spin','spin')+techRow('Attack angle','aoa')+techRow('Launch','launch');
- const ranked=Object.entries(g.ranks).filter(x=>x[1]).sort((a,b)=>a[1]-b[1]).map(x=>`#${x[1]} ${x[0]}`).join(', ')||'None ranked'; document.getElementById('reviewPrefs').innerHTML=row('Current driver',clubName,'Benchmark')+row('Current-club issues',g.currentClub.problems.join(', ')||'None specified','Context')+row('Priorities',ranked,'Ranked')+row('Style',g.style,'Preference');
-}
-function renderStep(){
- document.querySelectorAll('.step').forEach(x=>x.classList.add('hidden'));
- const id=step<=9?'step'+step:'results';document.getElementById(id).classList.remove('hidden');
- document.getElementById('progressBar').style.width=(Math.min(step,9)/9*100)+'%';
- document.getElementById('stepCount').textContent=String(Math.min(step,9)).padStart(2,'0')+' / 09';
- document.getElementById('backBtn').style.visibility=step===1?'hidden':'visible';
- document.getElementById('nextBtn').style.display=step===9?'none':'inline-block';
- document.getElementById('flowNav').style.display=step>9?'none':'flex';
- if(step===3)updateDerived(); if(step===5)renderLMInputs(); if(step===6)initPriorityRank(); if(step===8)initCurrentClub(); if(step===9)renderReview(); window.scrollTo({top:0,behavior:'smooth'});
-}
-function next(){if(step<9){step++;renderStep()}}
-function back(){if(step>1){step--;renderStep()}}
-function goTo(n){step=n;renderStep()}
-function score(p,g){
- let perf=80;if(g.speed){const mid=(p.speed_fit[0]+p.speed_fit[1])/2;perf-=Math.min(13,Math.abs(g.speed-mid)*.45)}
- if(g.costly==='slice'||g.curveClass==='fade_curve')perf+=p.draw_bias*7;
- if(g.costly==='hook'||g.curveClass==='draw_curve')perf-=p.draw_bias*7;
- if(g.costly==='two_way')perf+=(p.forgiveness-3.5)*3;
- if(['heel','toe','varied'].includes(g.strike))perf+=(p.forgiveness-3.5)*4;
- perf+=(p.forgiveness-3.5)*rankedWeight(g,'forgiveness');perf+=(p.forgiveness-3.5)*rankedWeight(g,'dispersion')*.8;
- if(g.priority==='control')perf+=['controlled','lowspin'].includes(p.player)?6:-2;
- perf+=rankedWeight(g,'distance')*(p.player==='lowspin'&&g.spin==='high'?1:.35);
- if(g.spin==='high'&&p.spin<=2)perf+=7;if(g.spin==='low'&&p.spin>=3)perf+=4;
- if(g.traj==='low'&&p.launch>=4)perf+=5;if(g.traj==='high'&&p.launch<=2.5)perf+=5;
- perf=Math.max(45,Math.min(98,perf));let pref=80;if(g.style!=='balanced')pref+=p.style===g.style?12:-3;
- let overall=perf*.85+pref*.15;if(p.generation==='previous_limited')overall-=7;
- return {perf:Math.round(perf),pref:Math.round(pref),overall:Math.round(Math.min(98,overall))}
-}
-function confidence(g){
- let c=72;
- if(g.curve!=='varies')c+=5;if(g.start!=='varies')c+=4;if(g.costly!=='other')c+=4;if(g.strike!=='unknown')c+=4;
- const modes=Object.values(g.metrics).map(m=>m.mode);
- c+=modes.filter(x=>x==='exact').length*3;
- c+=modes.filter(x=>x==='range').length*2;
- c+=modes.filter(x=>x==='general').length*1;
- if(g.curve==='straight'&&['hook','slice'].includes(g.costly))c-=6;
- return Math.max(72,Math.min(95,c));
-}
-function why(p,g){
- let r=[];if(p.forgiveness>=4.6&&(g.priority==='forgiveness'||g.strike!=='center'))r.push('high stability matches your strike and dispersion needs');
- if((g.costly==='slice'||g.curveClass==='fade_curve')&&p.draw_bias>=.8)r.push('draw help fits the slice/fade pattern');
- if((g.costly==='hook'||g.curveClass==='draw_curve')&&p.draw_bias<.5)r.push('neutral bias avoids adding hook tendency');
- if(g.spin==='high'&&p.spin<=2)r.push('lower-spin profile fits reported spin');if(g.spin==='low'&&p.spin>=3)r.push('avoids an overly low-spin head');
- if(g.traj==='low'&&p.launch>=4)r.push('higher-launch profile supports trajectory');if(g.style!=='balanced'&&p.style===g.style)r.push('product personality matches your preference');
- if(!r.length)r.push('balanced fit across speed, launch and forgiveness');return r.slice(0,3).join('; ')
-}
-function showResults(){
- const g=golfer();let rows=[];products.forEach(p=>{if(eligible(p,g))rows.push({p,s:score(p,g)})});rows.sort((a,b)=>b.s.overall-a.s.overall);
- const current=rows.filter(x=>x.p.generation!=='previous_limited').slice(0,5);const prev=rows.filter(x=>x.p.generation==='previous_limited')[0];
- step=10;document.querySelectorAll('.step').forEach(x=>x.classList.add('hidden'));document.getElementById('results').classList.remove('hidden');document.getElementById('flowNav').style.display='none';
- document.getElementById('progressBar').style.width='100%';document.getElementById('stepCount').textContent='FIT COMPLETE';document.getElementById('conf').textContent=confidence(g)+'%';
- document.getElementById('keep').innerHTML=g.current==='good'&&current[0].s.overall<90?'<b>Keep-current check:</b> your current driver already sounds reasonably well fit, and no candidate clears the prototype meaningful-upgrade threshold.':'<b>Upgrade check:</b> at least one current-generation profile scores strongly enough to justify testing against your current driver.';
- document.getElementById('resultList').innerHTML=current.map((x,i)=>`<div class="result"><div class="rank">${String(i+1).padStart(2,'0')}</div><div><h3>${x.p.brand} ${x.p.model}</h3><div class="meta">${x.p.generation.replace('_',' ')} · approx $${x.p.price}</div><div class="reason">${why(x.p,g)}</div><div class="tags"><span class="tag">Performance ${x.s.perf}</span><span class="tag">Preference ${x.s.pref}</span></div></div><div class="score">${x.s.overall}</div></div>`).join('');
- document.getElementById('oracleTitle').textContent='Fit synthesized.';document.getElementById('signalList').innerHTML='<div class="signal"><span class="dot on"></span><span>Eligibility filters applied</span></div><div class="signal"><span class="dot on"></span><span>Performance and preference scores combined</span></div><div class="signal"><span class="dot on"></span><span>Current-generation policy enforced</span></div><div class="signal"><span class="dot on"></span><span>Upgrade threshold checked</span></div>';
- document.getElementById('candidateCount').textContent=current.length;
- window.scrollTo({top:0,behavior:'smooth'});
-}
-updateDerived();renderStep();
-</script>
+<div id="savedToast" class="savedToast">Saved to your FORM profile</div>
+<script src="assets/catalog-data.js"></script>
+<script src="assets/app-1.js"></script>
+<script src="assets/app-2.js"></script>
+<script src="assets/app-3.js"></script>
 </body>
 </html>
