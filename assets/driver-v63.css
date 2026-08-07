@@ -1,0 +1,90 @@
+/* FORM 6.3 — centered fitting viewport and stable transitions */
+#driverExperience .step{animation:formV63Fade .16s ease!important}
+@keyframes formV63Fade{from{opacity:.55}to{opacity:1}}
+
+#driverExperience.active .shell{
+  min-height:calc(100svh - 68px);
+  padding-bottom:18px;
+  display:flex;
+  flex-direction:column;
+}
+#driverExperience.active .topline{flex:0 0 auto;padding:16px 0 8px}
+#driverExperience.active .fitStage{
+  flex:1;
+  min-height:0;
+  padding:6px 0 10px;
+}
+#driverExperience.active .mainPane{
+  width:100%;
+  max-width:900px;
+  min-height:calc(100svh - 150px);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+#driverExperience.active .step:not(.hidden){width:100%}
+#driverExperience.active .flowNav{
+  width:100%;
+  margin-top:16px;
+  padding-top:14px;
+}
+#driverExperience.active .lead{margin:18px 0 24px}
+#driverExperience.active .openingQuestion,
+#driverExperience.active #step2,
+#driverExperience.active #step3,
+#driverExperience.active #step4,
+#driverExperience.active #step5,
+#driverExperience.active #step6,
+#driverExperience.active #step7,
+#driverExperience.active #step8,
+#driverExperience.active #step9{
+  margin-left:auto;
+  margin-right:auto;
+}
+
+.metricModePicker{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin:0 0 12px;
+}
+.metricModeBtn{
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--muted);
+  padding:8px 10px;
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.metricModeBtn.on{
+  background:var(--deep);
+  border-color:var(--deep);
+  color:#fff;
+}
+
+.driverResultsLayout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 260px;
+  gap:24px;
+  align-items:start;
+}
+.driverResultsOracle{margin-top:20px}
+.resultRecovery{padding:28px 0}
+
+@media(max-width:900px){
+  #driverExperience.active .mainPane{min-height:calc(100svh - 145px)}
+  .driverResultsLayout{grid-template-columns:1fr}
+  .driverResultsOracle{display:none}
+}
+@media(max-width:600px){
+  #driverExperience.active .shell{min-height:calc(100svh - 68px);padding-bottom:10px}
+  #driverExperience.active .topline{padding:10px 0 6px}
+  #driverExperience.active .fitStage{padding:4px 0}
+  #driverExperience.active .mainPane{min-height:calc(100svh - 132px);justify-content:center}
+  #driverExperience.active .flowNav{margin-top:12px;padding-top:10px}
+  #driverExperience.active .lead{margin:14px 0 18px}
+  .metricModePicker{display:grid;grid-template-columns:1fr 1fr}
+  .metricModeBtn{text-align:center;min-height:40px}
+}
