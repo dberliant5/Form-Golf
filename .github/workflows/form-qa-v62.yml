@@ -1,0 +1,124 @@
+name: FORM v6.2 QA Patch
+
+on:
+  issues:
+    types: [opened, reopened]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  patch:
+    if: ${{ github.event.issue.title == 'FORM_QA_V62_APPLY' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply QA patch
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('assets/app-3.js')
+          s = p.read_text(encoding='utf-8')
+
+          # 1) Do not auto-confirm a saved brand scope when starting a new fitting.
+          s = re.sub(
+              r"\nsetTimeout\(\(\)=>\{\n  const saved=localStorage\.getItem\('formBrandScopeConfirmed'\);\n  if\(saved==='true' && brandScopeIsValid\(\)\)\{\n    formBrandScopeConfirmed=true;\n    confirmBrandScope\(\);\n  \}\n\},0\);\n",
+              "\n",
+              s,
+              count=1,
+          )
+
+          # 2) Make sparse data materially suppress recommendation strength.
+          s = re.sub(
+              r"function confidenceAdjustedDriverScore\(rawScore,confidence\)\{.*?\n\}",
+              """function confidenceAdjustedDriverScore(rawScore,confidence){
+  const conf=Math.max(0,Math.min(100,Number(confidence)||0));
+  const evidencePenalty=(100-conf)*0.52;
+  const evidenceCeiling=Math.min(99.5,58+conf*0.42);
+  const adjusted=Math.min(rawScore-evidencePenalty,evidenceCeiling);
+  return Math.max(50,Math.round(adjusted*10)/10);
+}""",
+              s,
+              count=1,
+              flags=re.S,
+          )
+
+          # 3) Tighten the result language around evidence strength.
+          s = s.replace("if(conf>=90)return {", "if(conf>=92)return {", 1)
+          s = s.replace("if(conf>=82)return {", "if(conf>=84)return {", 1)
+          s = s.replace(
+              "text:'FORM sees a likely direction, but the available information is not strong enough to support an elite score. Add launch-monitor data or current-club details later to improve the fit.'",
+              "text:'FORM sees a likely direction, but the available information is not strong enough to support an elite recommendation score. Add reliable data later and FORM will re-evaluate the fit.'",
+              1,
+          )
+          s = s.replace(
+              "text:'The available data suggests a starting point rather than a purchase-level conclusion. These drivers may fit better than shown, but FORM cannot make a strong recommendation until more information is added.'",
+              "text:'Treat this as a starting point, not a purchase-level conclusion. The best driver may fit better than the score shown, but FORM cannot support a stronger recommendation until more information is added.'",
+              1,
+          )
+
+          # 4) Never grade a manually entered/unverified bag model as though it were verified catalog data.
+          old = """    let score=null;
+    try{score=bagFitScore(cat,{brand:item.brand,model},profile,fits)}catch(e){}
+    const grade=score?fitLetter(score):'—';
+    let traits={pills:[],source:'Custom entry'};
+    try{if(item.model!=='__custom__')traits=attributePills(cat,{brand:item.brand,model})}catch(e){}"""
+          new = """    const verified=item.model!=='__custom__' && item.brand!=='Other / not listed';
+    let score=null;
+    if(verified){try{score=bagFitScore(cat,{brand:item.brand,model},profile,fits)}catch(e){}}
+    const grade=score?fitLetter(score):'—';
+    let traits={pills:[],source:verified?'Catalog entry':'Unverified manual entry'};
+    try{if(verified)traits=attributePills(cat,{brand:item.brand,model})}catch(e){}"""
+          if old in s:
+              s = s.replace(old, new, 1)
+
+          s = s.replace(
+              "${score?`<div class=\"bagGradeWhy\">Modeled fit score: <b>${score}/100</b>. FORM compares the product profile with your saved golfer profile and completed fittings.</div>`:''}",
+              "${score?`<div class=\"bagGradeWhy\">Modeled fit score: <b>${score}/100</b>. FORM compares the verified product profile with your saved golfer profile and completed fittings.</div>`:`<div class=\"bagGradeWhy\">Saved to your bag. FORM will not assign a fit grade until this product is verified in the equipment catalog.</div>`}",
+              1,
+          )
+
+          marker = '// FORM 6.2 QA PATCH'
+          if marker not in s:
+              s += r'''
+
+// FORM 6.2 QA PATCH
+// A new Driver Fitting always asks handedness and brand scope once, even if a previous fit was completed in this browser.
+const _openFitV62QA=openFit;
+openFit=function(id){
+  if(id==='driver'){
+    step=1;
+    state.handed=null;
+    formBrandScopeConfirmed=false;
+    localStorage.setItem('formBrandScopeConfirmed','false');
+    document.getElementById('results')?.classList.add('hidden');
+    const nav=document.getElementById('flowNav');
+    if(nav)nav.style.display='flex';
+  }
+  return _openFitV62QA(id);
+};
+'''
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          node --check assets/app-3.js
+
+      - name: Commit QA changes
+        run: |
+          git config user.name "FORM QA Bot"
+          git config user.email "actions@github.com"
+          rm -f .github/workflows/form-qa-v62.yml
+          git add assets/app-3.js .github/workflows/form-qa-v62.yml
+          git commit -m "FORM v6.2 driver and bag QA"
+          git push
+
+      - name: Close trigger issue
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue close "${{ github.event.issue.number }}" --comment "FORM v6.2 QA patch applied successfully."
