@@ -1,0 +1,33 @@
+name: Enable FORM 7.0 Driver Engine
+on:
+  push:
+    paths:
+      - '.github/workflows/enable-driver-engine-v70.yml'
+permissions:
+  contents: write
+jobs:
+  enable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate JS
+        run: node --check assets/driver-engine-v70.js
+      - name: Wire assets
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          if 'driver-engine-v70.css' not in s:
+              s=s.replace('</head>','<link rel="stylesheet" href="assets/driver-engine-v70.css?v=7.0">\n</head>')
+          if 'driver-engine-v70.js' not in s:
+              s=s.replace('</body>','<script src="assets/driver-engine-v70.js?v=7.0"></script>\n</body>')
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "FORM Build Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Enable FORM 7.0 granular driver engine"
+          git push
