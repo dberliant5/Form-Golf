@@ -2,7 +2,7 @@ name: FORM Deploy Relay
 
 on:
   issues:
-    types: [opened, edited]
+    types: [opened, edited, reopened]
 
 permissions:
   contents: write
@@ -24,31 +24,39 @@ jobs:
           ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
           python - <<'PY'
-          import os, re, base64, gzip, json, subprocess, time
+          import os, re, base64, gzip, json, subprocess, time, traceback
 
           issue_number = os.environ["ISSUE_NUMBER"]
           repository = os.environ["GITHUB_REPOSITORY"]
           body = os.environ.get("ISSUE_BODY", "")
 
-          for _ in range(150):
-              result = subprocess.run(
-                  ["gh", "api", f"repos/{repository}/issues/{issue_number}/comments", "--paginate"],
-                  capture_output=True,
-                  text=True,
-                  check=True,
-              )
-              comments = json.loads(result.stdout or "[]")
-              combined = body + "\n" + "\n".join(c.get("body", "") for c in comments)
-              match = re.search(r'FORM_PAYLOAD_START\s*(.*?)\s*FORM_PAYLOAD_END', combined, re.S)
-              if match:
-                  payload = re.sub(r'\s+', '', match.group(1))
-                  html = gzip.decompress(base64.b64decode(payload))
-                  open("index.html", "wb").write(html)
-                  print(f"Decoded {len(html):,} bytes into index.html")
-                  break
-              time.sleep(2)
-          else:
-              raise SystemExit("FORM payload was incomplete after waiting for issue comments.")
+          try:
+              for _ in range(150):
+                  result = subprocess.run(
+                      ["gh", "api", f"repos/{repository}/issues/{issue_number}/comments", "--paginate"],
+                      capture_output=True,
+                      text=True,
+                      check=True,
+                  )
+                  comments = json.loads(result.stdout or "[]")
+                  combined = body + "\n" + "\n".join(c.get("body", "") for c in comments)
+                  match = re.search(r'FORM_PAYLOAD_START\s*(.*?)\s*FORM_PAYLOAD_END', combined, re.S)
+                  if match:
+                      payload = re.sub(r'\s+', '', match.group(1))
+                      print(f"Found payload with {len(payload):,} characters across {len(comments)} comments")
+                      html = gzip.decompress(base64.b64decode(payload, validate=True))
+                      open("index.html", "wb").write(html)
+                      print(f"Decoded {len(html):,} bytes into index.html")
+                      break
+                  time.sleep(2)
+              else:
+                  raise RuntimeError("FORM payload was incomplete after waiting for issue comments.")
+          except Exception as exc:
+              message = f"FORM deployment decode failed: {type(exc).__name__}: {exc}"
+              print(message)
+              subprocess.run(["gh", "issue", "comment", issue_number, "--body", message], check=False)
+              traceback.print_exc()
+              raise
           PY
 
       - name: Publish index.html
@@ -64,10 +72,10 @@ jobs:
             git push
           fi
 
-      - name: Close deployment issue
-        if: always()
+      - name: Close successful deployment issue
+        if: success()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh issue close "${{ github.event.issue.number }}" \
-            --comment "FORM deployment workflow finished."
+            --comment "FORM deployment completed successfully."
