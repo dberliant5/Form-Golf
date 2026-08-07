@@ -1,0 +1,44 @@
+name: Apply FORM v6.3
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: ${{ github.event.head_commit.message == 'Wire FORM v6.3 runtime' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wire v6.3 assets
+        run: |
+          python scripts/apply-v63.py
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/form-smoke.yml')
+          s=p.read_text(encoding='utf-8')
+          if 'node --check assets/driver-v63.js' not in s:
+              s=s.replace('node --check assets/app-3.js','node --check assets/app-3.js\n          node --check assets/driver-v63.js')
+          if "'assets/driver-v63.css'" not in s:
+              s=s.replace("'assets/app-3.js']","'assets/app-3.js','assets/driver-v63.css','assets/driver-v63.js']")
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Validate
+        run: |
+          node --check assets/driver-v63.js
+          grep -q 'assets/driver-v63.css' index.html
+          grep -q 'assets/driver-v63.js' index.html
+
+      - name: Commit v6.3
+        run: |
+          git config user.name "FORM QA Bot"
+          git config user.email "actions@github.com"
+          rm -f .github/workflows/apply-v63.yml scripts/apply-v63.py
+          git add index.html .github/workflows/form-smoke.yml .github/workflows/apply-v63.yml scripts/apply-v63.py
+          git commit -m "FORM v6.3 driver experience fixes"
+          git push
