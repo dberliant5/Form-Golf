@@ -1,4 +1,4 @@
-// FORM 6.4 — driver experience fixes
+// FORM 6.5 — driver experience fixes
 (function(){
   'use strict';
 
@@ -33,7 +33,6 @@
 
   ensureResultsScaffold();
 
-  // Keep fitting navigation stationary rather than smooth-scrolling between questions.
   if(typeof showPage==='function'){
     const previousShowPage=showPage;
     showPage=function(name){
@@ -43,8 +42,6 @@
     };
   }
 
-  // Each measurement chooses its own precision. The first answer only sets a starting
-  // point; it never locks all four measurements to the same precision level.
   let lastGlobalLmMode=null;
   const ids=['speed','spin','aoa','launch'];
 
@@ -115,7 +112,6 @@
     };
   }
 
-  // Normalize the newer range/general keys into the scoring engine's expected signals.
   function normalizedGolfer(){
     const g=golfer();
     const sm=state.metrics.speed,sp=state.metrics.spin,lm=state.metrics.launch;
@@ -127,13 +123,36 @@
     return g;
   }
 
-  // Render results directly into a known-good scaffold. This avoids the malformed legacy
-  // results markup and removes dependencies on elements that no longer exist (e.g. #conf).
+  // Confidence reduces recommendation strength but must never erase the underlying
+  // separation between products. The previous hard ceiling flattened strong models
+  // to the same displayed score (e.g. 97.4 across the board).
+  confidenceAdjustedDriverScore=function(rawScore,confidence){
+    const conf=Math.max(0,Math.min(100,Number(confidence)||0));
+    const penalty=(100-conf)*0.38;
+    return Math.max(50,Math.min(99.5,Math.round((Number(rawScore)-penalty)*10)/10));
+  };
+
+  // Use the same confidence-adjusted score in the comparison tiles and round to one decimal.
+  driverTradeoffs=function(p,g,currentScore){
+    const conf=driverConfidenceV43(g);
+    const productScore=confidenceAdjustedDriverScore(driverScoreV43(p,g).overall,conf);
+    const delta=currentScore==null?null:Math.round((productScore-currentScore)*10)/10;
+    return [
+      ['Forgiveness',p.forgiveness>=4.7?'Excellent':p.forgiveness>=4?'Strong':'Moderate'],
+      ['Launch',p.launch>=4?'Higher':p.launch<=2.5?'Lower':'Mid'],
+      ['Spin',p.spin<=2?'Low':p.spin>=3.4?'Higher':'Mid'],
+      ['Vs. current',delta==null?'—':`${delta>0?'+':''}${delta.toFixed(1)}`]
+    ];
+  };
+
   showResults=function(){
     const results=ensureResultsScaffold();
     try{
       const raw=normalizedGolfer(),g=driverProfile(raw),rawRows=driverRankV43(g),conf=driverConfidenceV43(g);
       const rows=rawRows.map(x=>({...x,s:{...x.s,rawOverall:x.s.overall,overall:confidenceAdjustedDriverScore(x.s.overall,conf)}}));
+      // Re-sort after evidence adjustment as a guardrail, even though the monotonic penalty
+      // should preserve raw order.
+      rows.sort((a,b)=>b.s.overall-a.s.overall || b.s.rawOverall-a.s.rawOverall);
       const rawCurrent=currentDriverScoreV43(g),currentScore=confidenceAdjustedDriverScore(rawCurrent,conf);
       const currentName=[g.currentClub.brand,g.currentClub.model].filter(Boolean).join(' ')||'Your current driver';
       const tie=driverTieState(rawRows,conf),best=rows[0],delta=best?Math.round((best.s.overall-currentScore)*10)/10:0;
@@ -148,14 +167,14 @@
       document.getElementById('dataStrengthNote').innerHTML=`<b>${strength.label}</b><span>${strength.text}</span>`;
 
       const tiedRaw=tie.group||[],groupNames=tiedRaw.map(x=>`${x.p.brand} ${x.p.model}`).join(' · ');
-      document.getElementById('keep').innerHTML=`<div class="currentFitCard"><div class="currentFitTop"><div><div class="eyebrow">Your current driver</div><div class="currentFitName">${currentName}${g.currentClub.loft?` · ${g.currentClub.loft}`:''}</div></div><div class="gradeWrap"><div class="letterGrade">${fitLetter(currentScore)}</div><div><div class="headerMeta">Recommendation strength</div><div class="numericGrade">${currentScore}/100</div></div></div></div><div class="fitExplanation">FORM diagnoses your pattern as <b>${diag.label}</b>. This score combines modeled equipment fit with the amount and precision of information you provided.</div></div>${adjust?`<div class="adjustFirst"><div class="eyebrow">Before replacing it</div><h3>${adjust.title}</h3><p>${adjust.text}</p></div>`:''}<div class="upgradeSummary"><div class="upgradeSummaryTop"><div><div class="eyebrow">Upgrade recommendation</div><h3>${up.level}</h3></div><div class="deltaScore">${delta>0?'+':''}${delta} strength points</div></div><div class="fitExplanation">${up.text}</div></div>${tie.tie?`<div class="tieBanner"><b>Top fit group:</b> ${groupNames}. The available evidence does not justify pretending there is a clear single winner.</div>`:''}`;
+      document.getElementById('keep').innerHTML=`<div class="currentFitCard"><div class="currentFitTop"><div><div class="eyebrow">Your current driver</div><div class="currentFitName">${currentName}${g.currentClub.loft?` · ${g.currentClub.loft}`:''}</div></div><div class="gradeWrap"><div class="letterGrade">${fitLetter(currentScore)}</div><div><div class="headerMeta">Recommendation strength</div><div class="numericGrade">${currentScore}/100</div></div></div></div><div class="fitExplanation">FORM diagnoses your pattern as <b>${diag.label}</b>. This score combines modeled equipment fit with the amount and precision of information you provided.</div></div>${adjust?`<div class="adjustFirst"><div class="eyebrow">Before replacing it</div><h3>${adjust.title}</h3><p>${adjust.text}</p></div>`:''}<div class="upgradeSummary"><div class="upgradeSummaryTop"><div><div class="eyebrow">Upgrade recommendation</div><h3>${up.level}</h3></div><div class="deltaScore">${delta>0?'+':''}${delta.toFixed(1)} strength points</div></div><div class="fitExplanation">${up.text}</div></div>${tie.tie?`<div class="tieBanner"><b>Top fit group:</b> ${groupNames}. The available evidence does not justify pretending there is a clear single winner.</div>`:''}`;
       document.getElementById('resultList').innerHTML=rows.slice(0,5).map((x,i)=>{
         const tr=driverTradeoffs(x.p,g,currentScore),why=x.s.reasons.length?x.s.reasons.join('; '):'balanced match across the inputs provided';
         const isTie=tie.tie&&tiedRaw.some(z=>z.p.brand===x.p.brand&&z.p.model===x.p.model);
-        return `<div class="driverVerdict"><div class="verdictTop"><div><div class="recRank">${isTie?'Top fit group':'#'+(i+1)+' recommendation'}</div><h2>${x.p.brand} ${x.p.model}</h2><div class="fitGroup">${x.s.reasons.slice(0,3).map(r=>`<span>${r}</span>`).join('')}</div></div><div class="verdictScore">${x.s.overall}<small>Strength / 100</small></div></div><div class="tradeoffs">${tr.map(z=>`<div class="trade"><span>${z[0]}</span><b>${z[1]}</b></div>`).join('')}</div><div class="engineReason"><b>Why it ranks here:</b> ${why}.</div></div>`;
+        return `<div class="driverVerdict"><div class="verdictTop"><div><div class="recRank">${isTie?'Top fit group':'#'+(i+1)+' recommendation'}</div><h2>${x.p.brand} ${x.p.model}</h2><div class="fitGroup">${x.s.reasons.slice(0,3).map(r=>`<span>${r}</span>`).join('')}</div></div><div class="verdictScore">${x.s.overall.toFixed(1)}<small>Strength / 100</small></div></div><div class="tradeoffs">${tr.map(z=>`<div class="trade"><span>${z[0]}</span><b>${z[1]}</b></div>`).join('')}</div><div class="engineReason"><b>Why it ranks here:</b> ${why}.</div></div>`;
       }).join('')||'<div class="resultRecovery">No eligible driver candidates remained after the fit constraints. Return to your answers and broaden the brand scope.</div>';
       document.getElementById('oracleTitle').textContent='Fit synthesized.';
-      document.getElementById('signalList').innerHTML=`<div class="signal"><span class="dot on"></span><span>Miss pattern diagnosed from start + curve + strike</span></div><div class="signal"><span class="dot on"></span><span>Hard incompatibility constraints applied</span></div><div class="signal"><span class="dot on"></span><span>Each launch-monitor input weighted by its own precision</span></div>`;
+      document.getElementById('signalList').innerHTML=`<div class="signal"><span class="dot on"></span><span>Miss pattern diagnosed from start + curve + strike</span></div><div class="signal"><span class="dot on"></span><span>Hard incompatibility constraints applied</span></div><div class="signal"><span class="dot on"></span><span>Each launch-monitor input weighted by its own precision</span></div><div class="signal"><span class="dot on"></span><span>Evidence adjustment preserves product-to-product separation</span></div>`;
       document.getElementById('candidateCount').textContent=rows.length;
       try{saveFit('driver',{title:'Driver Fit',topMatch:best?`${best.p.brand} ${best.p.model}`:'',topScore:best?.s.overall||null,currentClub:currentName,currentScore,upgrade:up.level,dataStrength:strength.label,diagnosis:diag.label})}catch(e){}
       window.scrollTo({top:0,left:0,behavior:'auto'});
