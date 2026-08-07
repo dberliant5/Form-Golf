@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   deploy:
-    if: startsWith(github.event.issue.title, 'FORM_DEPLOY')
+    if: ${{ github.event_name == 'issues' && startsWith(github.event.issue.title, 'FORM_DEPLOY') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -27,11 +27,12 @@ jobs:
           import os, re, base64, gzip, json, subprocess, time
 
           issue_number = os.environ["ISSUE_NUMBER"]
+          repository = os.environ["GITHUB_REPOSITORY"]
           body = os.environ.get("ISSUE_BODY", "")
 
           for _ in range(150):
               result = subprocess.run(
-                  ["gh", "api", f"repos/${{GITHUB_REPOSITORY}}/issues/{issue_number}/comments", "--paginate"],
+                  ["gh", "api", f"repos/{repository}/issues/{issue_number}/comments", "--paginate"],
                   capture_output=True,
                   text=True,
                   check=True,
