@@ -10,88 +10,64 @@ permissions:
 
 jobs:
   deploy:
-    if: ${{ github.event_name == 'issues' && startsWith(github.event.issue.title, 'FORM_DEPLOY') }}
+    if: ${{ github.event_name == 'issues' && startsWith(github.event.issue.title, 'FORM_ARCHIVE_DEPLOY') }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Collect and decode FORM build
+      - name: Reconstruct split FORM build
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
-          ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
           python - <<'PY'
-          import os, re, base64, gzip, json, subprocess, time, traceback
-
-          issue_number = os.environ["ISSUE_NUMBER"]
-          repository = os.environ["GITHUB_REPOSITORY"]
-          body = os.environ.get("ISSUE_BODY", "")
-
-          def clean(value):
-              return re.sub(r'\s+', '', value or '')
-
-          def merge_overlap(left, right):
-              if not right:
-                  return left
-              anchor = right[:160]
-              position = left.find(anchor)
-              if position >= 0:
-                  print(f"Comments resume at payload character {position:,}")
-                  return left[:position] + right
-              for size in (4096, 2048, 1024, 512, 256, 128, 64, 32):
-                  if len(left) >= size and right.startswith(left[-size:]):
-                      return left + right[size:]
-              return left + right
-
-          try:
-              for _ in range(150):
-                  result = subprocess.run(
-                      ["gh", "api", f"repos/{repository}/issues/{issue_number}/comments", "--paginate"],
-                      capture_output=True,
-                      text=True,
-                      check=True,
-                  )
-                  comments = json.loads(result.stdout or "[]")
-
-                  body_part = body.split('FORM_PAYLOAD_START', 1)[-1]
-                  body_part = body_part.split('FORM_PAYLOAD_END', 1)[0]
-                  comment_text = "".join(c.get("body", "") for c in comments)
-                  comment_part = comment_text.split('FORM_PAYLOAD_END', 1)[0]
-
-                  left = clean(body_part)
-                  right = clean(comment_part)
-                  payload = merge_overlap(left, right)
-
-                  if 'FORM_PAYLOAD_END' in comment_text or 'FORM_PAYLOAD_END' in body:
-                      print(f"Reconstructed payload with {len(payload):,} characters across {len(comments)} comments")
-                      html = gzip.decompress(base64.b64decode(payload, validate=True))
-                      open("index.html", "wb").write(html)
-                      print(f"Decoded {len(html):,} bytes into index.html")
-                      break
-                  time.sleep(2)
-              else:
-                  raise RuntimeError("FORM payload was incomplete after waiting for issue comments.")
-          except Exception as exc:
-              message = f"FORM deployment decode failed: {type(exc).__name__}: {exc}"
-              print(message)
-              subprocess.run(["gh", "issue", "comment", issue_number, "--body", message], check=False)
-              traceback.print_exc()
-              raise
+          import base64, json, os, re, subprocess, tarfile, time
+          repo = os.environ['GITHUB_REPOSITORY']
+          issue = os.environ['ISSUE_NUMBER']
+          for _ in range(120):
+              result = subprocess.run(
+                  ['gh','api',f'repos/{repo}/issues/{issue}/comments','--paginate'],
+                  capture_output=True,text=True,check=True)
+              comments = json.loads(result.stdout or '[]')
+              parts = {}
+              total = None
+              for comment in comments:
+                  body = comment.get('body','')
+                  m = re.fullmatch(r'FORM_ARCHIVE_PART\s+(\d+)/(\d+)\s*\n([A-Za-z0-9+/=\s]+)', body, re.S)
+                  if not m: continue
+                  number, count = int(m.group(1)), int(m.group(2))
+                  total = count
+                  parts[number] = re.sub(r'\s+','',m.group(3))
+              if total and len(parts) == total:
+                  payload = ''.join(parts[i] for i in range(1,total+1))
+                  archive = base64.b64decode(payload, validate=True)
+                  open('/tmp/form-build.tar.gz','wb').write(archive)
+                  with tarfile.open('/tmp/form-build.tar.gz','r:gz') as tar:
+                      tar.extractall('.')
+                  print(f'Reconstructed {len(archive):,} archive bytes from {total} parts')
+                  break
+              time.sleep(2)
+          else:
+              raise RuntimeError('Timed out waiting for all FORM archive parts')
           PY
 
-      - name: Publish index.html
+      - name: Validate JavaScript
+        run: |
+          cat assets/app-1.js assets/app-2.js assets/app-3.js > /tmp/form-app.js
+          node --check /tmp/form-app.js
+          node --check assets/catalog-data.js
+
+      - name: Publish split FORM application
         run: |
           git config user.name "FORM Deploy Bot"
           git config user.email "actions@github.com"
-          git add index.html
-
+          git add index.html README.md assets/
           if git diff --cached --quiet; then
             echo "No changes to deploy."
           else
-            git commit -m "Deploy FORM v6.1 baseline"
+            git commit -m "Deploy split FORM v6.1 application"
             git push
           fi
 
@@ -99,6 +75,4 @@ jobs:
         if: success()
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          gh issue close "${{ github.event.issue.number }}" \
-            --comment "FORM deployment completed successfully."
+        run: gh issue close "${{ github.event.issue.number }}" --comment "Split FORM deployment completed successfully."
