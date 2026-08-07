@@ -1,31 +1,24 @@
-/* FORM 6.3 — centered fitting viewport and stable transitions */
+/* FORM 6.4 — compact fitting viewport, stable transitions, per-metric precision */
 #driverExperience .step{animation:formV63Fade .16s ease!important}
 @keyframes formV63Fade{from{opacity:.55}to{opacity:1}}
 
 #driverExperience.active .shell{
   min-height:calc(100svh - 68px);
-  padding-bottom:18px;
-  display:flex;
-  flex-direction:column;
+  padding-bottom:24px;
 }
-#driverExperience.active .topline{flex:0 0 auto;padding:16px 0 8px}
-#driverExperience.active .fitStage{
-  flex:1;
-  min-height:0;
-  padding:6px 0 10px;
-}
+#driverExperience.active .topline{padding:18px 0 8px}
+#driverExperience.active .fitStage{padding:0 0 12px}
 #driverExperience.active .mainPane{
   width:100%;
   max-width:900px;
-  min-height:calc(100svh - 150px);
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
+  min-height:0;
+  display:block;
+  padding-top:clamp(46px,7vh,88px);
 }
 #driverExperience.active .step:not(.hidden){width:100%}
 #driverExperience.active .flowNav{
   width:100%;
-  margin-top:16px;
+  margin-top:18px;
   padding-top:14px;
 }
 #driverExperience.active .lead{margin:18px 0 24px}
@@ -46,7 +39,7 @@
   display:flex;
   flex-wrap:wrap;
   gap:7px;
-  margin:0 0 12px;
+  margin:8px 0 14px;
 }
 .metricModeBtn{
   border:1px solid var(--line);
@@ -63,6 +56,7 @@
   border-color:var(--deep);
   color:#fff;
 }
+.metricPrecisionHelp{font-size:11px;color:var(--muted);margin:0 0 16px;line-height:1.55}
 
 .driverResultsLayout{
   display:grid;
@@ -74,15 +68,15 @@
 .resultRecovery{padding:28px 0}
 
 @media(max-width:900px){
-  #driverExperience.active .mainPane{min-height:calc(100svh - 145px)}
+  #driverExperience.active .mainPane{padding-top:44px}
   .driverResultsLayout{grid-template-columns:1fr}
   .driverResultsOracle{display:none}
 }
 @media(max-width:600px){
   #driverExperience.active .shell{min-height:calc(100svh - 68px);padding-bottom:10px}
   #driverExperience.active .topline{padding:10px 0 6px}
-  #driverExperience.active .fitStage{padding:4px 0}
-  #driverExperience.active .mainPane{min-height:calc(100svh - 132px);justify-content:center}
+  #driverExperience.active .fitStage{padding:0}
+  #driverExperience.active .mainPane{min-height:0;padding-top:30px}
   #driverExperience.active .flowNav{margin-top:12px;padding-top:10px}
   #driverExperience.active .lead{margin:14px 0 18px}
   .metricModePicker{display:grid;grid-template-columns:1fr 1fr}
