@@ -1,4 +1,4 @@
-name: Apply FORM 6.4 cache bust
+name: Apply FORM 6.5 cache bust
 on:
   push:
     branches: [main]
@@ -6,7 +6,7 @@ permissions:
   contents: write
 jobs:
   cache-bust:
-    if: github.event.head_commit.message == 'Apply FORM 6.4 cache bust'
+    if: github.event.head_commit.message == 'Trigger FORM 6.5 cache bust'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,14 +16,14 @@ jobs:
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text()
-          s=s.replace('assets/driver-v63.css"','assets/driver-v63.css?v=6.4"')
-          s=s.replace('assets/driver-v63.js"></script>','assets/driver-v63.js?v=6.4"></script>')
+          s=s.replace('assets/driver-v63.css?v=6.4','assets/driver-v63.css?v=6.5')
+          s=s.replace('assets/driver-v63.js?v=6.4','assets/driver-v63.js?v=6.5')
           p.write_text(s)
           PY
-          grep -q 'driver-v63.css?v=6.4' index.html
-          grep -q 'driver-v63.js?v=6.4' index.html
+          grep -q 'driver-v63.css?v=6.5' index.html
+          grep -q 'driver-v63.js?v=6.5' index.html
           git config user.name "FORM QA Bot"
           git config user.email "actions@github.com"
           git add index.html
-          git commit -m "Version FORM 6.4 driver assets"
+          git commit -m "Version FORM 6.5 driver assets"
           git push
