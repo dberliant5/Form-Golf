@@ -1,0 +1,37 @@
+name: Patch FORM 7.1 Variability Scoring
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-driver-variability-v71.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch engine
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('assets/driver-engine-v70.js')
+          s=p.read_text()
+          s=s.replace("lowSpin:g.spin==='low',highSpin:g.spin==='high',lowLaunch:g.traj==='low',highLaunch:g.traj==='high',", "lowSpin:g.spin==='low',highSpin:g.spin==='high',lowLaunch:g.traj==='low',highLaunch:g.traj==='high',\n    spinVariable:metric70('spin').value==='varies'||(g.currentClub?.problems||[]).includes('spin_varied'),\n    launchVariable:metric70('launch').value==='varies'||(g.currentClub?.problems||[]).includes('launch_varied'),")
+          s=s.replace("function spin70(p,n,caps){\n  if(!n.lowSpin&&!n.highSpin)return comp70('spin','Spin compatibility',11,84,'No strong spin problem identified.');", "function spin70(p,n,caps){\n  if(n.spinVariable){const s=58+caps.spinConsistency*9;return comp70('spin','Spin consistency',24+12*n.spinQ,s,'Spin varies significantly, so consistency across strike locations becomes a primary requirement.');}\n  if(!n.lowSpin&&!n.highSpin)return comp70('spin','Spin compatibility',11,84,'No strong spin problem identified.');")
+          s=s.replace("function launch70(p,n){\n  if(!n.lowLaunch&&!n.highLaunch)return comp70('launch','Launch compatibility',9,84,'No strong launch problem identified.');", "function launch70(p,n,caps){\n  if(n.launchVariable){const s=68+(caps.stability-3.5)*8+(caps.faceRetention-3.5)*6;return comp70('launch','Launch consistency',18+8*n.launchQ,s,'Launch varies significantly, so face stability and off-center retention become more important than targeting one launch window.');}\n  if(!n.lowLaunch&&!n.highLaunch)return comp70('launch','Launch compatibility',9,84,'No strong launch problem identified.');")
+          s=s.replace("const parts=[speed70(p,n),spin70(p,n,caps),launch70(p,n),stability70", "const parts=[speed70(p,n),spin70(p,n,caps),launch70(p,n,caps),stability70")
+          s=s.replace("if(n.smash&&n.smash<1.45)weight+=5;", "if(n.smash&&n.smash<1.45)weight+=5;\n  if(n.spinVariable)weight+=6;\n  if(n.launchVariable)weight+=4;")
+          p.write_text(s)
+          PY
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate
+        run: node --check assets/driver-engine-v70.js
+      - name: Commit
+        run: |
+          git config user.name "FORM Build"
+          git config user.email "actions@users.noreply.github.com"
+          git add assets/driver-engine-v70.js
+          git diff --cached --quiet || git commit -m "Score inconsistent spin and launch in FORM 7.1"
+          git push
