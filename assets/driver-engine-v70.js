@@ -84,6 +84,8 @@ function needs70(g){
     speedQ:q70(metric70('speed').mode),spinQ:q70(metric70('spin').mode),launchQ:q70(metric70('launch').mode),aoaQ:q70(metric70('aoa').mode),
     ballSpeedQ:q70(metric70('ballSpeed').mode),carryQ:q70(metric70('carry').mode),totalQ:q70(metric70('total').mode),
     lowSpin:g.spin==='low',highSpin:g.spin==='high',lowLaunch:g.traj==='low',highLaunch:g.traj==='high',
+    spinVariable:metric70('spin').value==='varies'||(g.currentClub?.problems||[]).includes('spin_varied'),
+    launchVariable:metric70('launch').value==='varies'||(g.currentClub?.problems||[]).includes('launch_varied'),
     offCenter:['heel','toe','varied'].includes(g.strike),twoWay:g.costly==='two_way'||g.strike==='varied',strike:g.strike,
     fade:g.curveClass==='fade_curve'||g.costly==='slice',draw:g.curveClass==='draw_curve'||g.costly==='hook',
     accuracyW:rankedWeight(g,'accuracy'),distanceW:rankedWeight(g,'distance'),flightW:rankedWeight(g,'flight'),style:g.style||'balanced'
@@ -99,13 +101,15 @@ function speed70(p,n){
   return comp70('speed','Speed / design fit',12+8*n.speedQ,s,`${n.speed} mph compared with this head's modeled speed window.`);
 }
 function spin70(p,n,caps){
+  if(n.spinVariable){const s=58+caps.spinConsistency*9;return comp70('spin','Spin consistency',24+12*n.spinQ,s,'Spin varies significantly, so consistency across strike locations becomes a primary requirement.');}
   if(!n.lowSpin&&!n.highSpin)return comp70('spin','Spin compatibility',11,84,'No strong spin problem identified.');
   let s=88;
   if(n.lowSpin){s=104-Math.max(0,3.3-(p.spin||3))*27;s+=(caps.spinConsistency-4)*5;if((p.spin||3)<=2.2)s-=15;}
   if(n.highSpin){s=104-Math.max(0,(p.spin||3)-2.4)*24;s+=(caps.spinConsistency-4)*4;if((p.spin||3)<=2.3)s+=4;}
   return comp70('spin','Spin compatibility',22+17*n.spinQ,s,n.lowSpin?'Low spin makes spin preservation and consistency a primary requirement.':'High spin makes spin reduction and consistency a primary requirement.');
 }
-function launch70(p,n){
+function launch70(p,n,caps){
+  if(n.launchVariable){const s=68+(caps.stability-3.5)*8+(caps.faceRetention-3.5)*6;return comp70('launch','Launch consistency',18+8*n.launchQ,s,'Launch varies significantly, so face stability and off-center retention become more important than targeting one launch window.');}
   if(!n.lowLaunch&&!n.highLaunch)return comp70('launch','Launch compatibility',9,84,'No strong launch problem identified.');
   const s=n.lowLaunch?62+(p.launch||3)*9:112-(p.launch||3)*9;
   return comp70('launch','Launch compatibility',15+11*n.launchQ,s,n.lowLaunch?'Low launch increases the value of launch support.':'High launch increases the value of flight control.');
@@ -140,6 +144,8 @@ function technology70(p,n,caps){
   if(n.offCenter||n.twoWay)weight+=7;
   if(n.lowSpin||n.highSpin)weight+=5;
   if(n.smash&&n.smash<1.45)weight+=5;
+  if(n.spinVariable)weight+=6;
+  if(n.launchVariable)weight+=4;
   const relevant=(caps.faceRetention*0.28+caps.spinConsistency*0.24+caps.stability*0.24+caps.adjustability*0.12+caps.aeroSpeed*0.12);
   const score=52+relevant*10;
   return comp70('technology','Technology relevant to your needs',weight,score,`${caps.evidence}: ${caps.source}`);
@@ -161,7 +167,7 @@ function interactions70(p,n,caps){
 }
 function scoreProduct70(p,g,modelLabel){
   const n=needs70(g),caps=productCaps70(p,modelLabel);
-  const parts=[speed70(p,n),spin70(p,n,caps),launch70(p,n),stability70(p,n,caps),direction70(p,n),efficiency70(p,n,caps),carry70(p,n,caps),technology70(p,n,caps),priorities70(p,n),preference70(p,n)];
+  const parts=[speed70(p,n),spin70(p,n,caps),launch70(p,n,caps),stability70(p,n,caps),direction70(p,n),efficiency70(p,n,caps),carry70(p,n,caps),technology70(p,n,caps),priorities70(p,n),preference70(p,n)];
   const hard=driverHardConstraints(p,g)||[];if(hard.length)return {overall:50,components:parts,interactions:[],hardConstraints:hard,reasons:hard,caps};
   const tw=parts.reduce((a,x)=>a+x.weight,0),base=parts.reduce((a,x)=>a+x.score*x.weight,0)/tw;
   const ints=interactions70(p,n,caps),ip=ints.reduce((a,x)=>a+x.points,0);
