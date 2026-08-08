@@ -1,0 +1,38 @@
+name: Enable FORM 7.1 Input Guardrails
+on:
+  push:
+    paths:
+      - '.github/workflows/enable-driver-input-v71.yml'
+permissions:
+  contents: write
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate scripts
+        run: |
+          node --check assets/driver-engine-v70.js
+          node --check assets/driver-input-guard-v71.js
+      - name: Wire v7.1
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          if 'driver-input-guard-v71.js' not in s:
+              s=s.replace('<script src="assets/driver-engine-v70.js?v=7.0"></script>', '<script src="assets/driver-engine-v70.js?v=7.1"></script>\n<script src="assets/driver-input-guard-v71.js?v=7.1"></script>')
+          else:
+              s=s.replace('driver-engine-v70.js?v=7.0','driver-engine-v70.js?v=7.1').replace('driver-input-guard-v71.js?v=7.0','driver-input-guard-v71.js?v=7.1')
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "FORM Build"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Enable FORM 7.1 input guardrails"
+          git push
