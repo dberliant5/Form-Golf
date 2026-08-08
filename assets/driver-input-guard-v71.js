@@ -1,4 +1,4 @@
-// FORM 7.1 — driver input integrity and conflict guardrails
+// FORM 7.2 — driver input integrity, conflict guardrails, and launch-monitor handoff
 (function(){
 'use strict';
 
@@ -19,6 +19,20 @@ if(typeof openFit==='function'){
   const priorOpen=openFit;
   openFit=function(id){if(id==='driver')resetCriticalAnswers();const out=priorOpen(id);if(id==='driver')setTimeout(()=>criticalGroups.forEach(removePreset),20);return out;};
 }
+
+function scrollToLmInputs(){
+  const box=document.getElementById('lmInputs');
+  if(!box)return;
+  const first=box.querySelector('.metricBox,.metric70Intro')||box;
+  requestAnimationFrame(()=>setTimeout(()=>first.scrollIntoView({behavior:'smooth',block:'start'}),70));
+}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-group="lm"] .opt');
+  if(!b)return;
+  const value=b.dataset.v;
+  if(value&&value!=='none')scrollToLmInputs();
+});
 
 function metricAnswered(id){const m=state.metrics?.[id];if(!m||m.mode==='unknown')return true;return m.value!==null&&m.value!==''&&m.value!=='unknown';}
 function numericExtra(id){const m=state.metrics?.[id];return m?.mode==='exact'&&m.value!=null?Number(m.value):null;}
@@ -87,7 +101,6 @@ function conflictMessage(chosen){
 document.addEventListener('click',e=>{
   const b=e.target.closest('#problems [data-v]');if(!b)return;
   const v=b.dataset.v;
-  // Dynamically added consistency buttons were not present when the legacy click handlers were bound.
   if(['spin_varied','launch_varied'].includes(v)){
     const turningOn=!b.classList.contains('on');b.classList.toggle('on',turningOn);
     state.currentClub.problems=state.currentClub.problems.filter(x=>x!==v);if(turningOn)state.currentClub.problems.push(v);
@@ -121,5 +134,5 @@ if(typeof metricDefs!=='undefined'){
   if(metricDefs.launch?.general&&!metricDefs.launch.general.some(x=>x[0]==='varies'))metricDefs.launch.general.splice(metricDefs.launch.general.length-1,0,['varies','Varies significantly']);
 }
 
-window.FORM_INPUT_GUARDS_V71={validateStep,classifySpin,classifyLaunch,validatePlausibility};
+window.FORM_INPUT_GUARDS_V72={validateStep,classifySpin,classifyLaunch,validatePlausibility,scrollToLmInputs};
 })();
