@@ -1,0 +1,39 @@
+name: Enable FORM Driver Evidence v8.0
+on:
+  push:
+    paths:
+      - '.github/workflows/enable-driver-evidence-v80.yml'
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate engine files
+        run: |
+          node --check assets/driver-evidence-v80.js
+          node --check assets/driver-engine-v80.js
+      - name: Wire v8.0 scripts
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          tags='''<script src="assets/driver-evidence-v80.js?v=8.0"></script>\n<script src="assets/driver-engine-v80.js?v=8.0"></script>'''
+          if 'driver-evidence-v80.js' not in s:
+              s=s.replace('</body>',tags+'\n</body>')
+          p.write_text(s)
+          PY
+          grep -q 'driver-evidence-v80.js?v=8.0' index.html
+          grep -q 'driver-engine-v80.js?v=8.0' index.html
+      - name: Commit
+        run: |
+          git config user.name 'dberliant5'
+          git config user.email 'dberliant5@gmail.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Enable evidence-driven Driver Engine v8.0'
+          git push
