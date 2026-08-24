@@ -20,12 +20,14 @@ function profileStrength(){
 function recommendationEvidence(s){
   const golfer=profileStrength();
   const product=clamp(Number(s?.evidenceQuality)||0,0,1);
-  // Recommendation support requires both sides, but complete golfer data should not be confused
-  // with sparse product evidence. Product evidence has a floor because FORM's catalog/model itself
-  // is usable evidence even before independent testing is connected.
   const productSupport=.45+.55*product;
   const combined=clamp(.58*golfer+.42*productSupport,0,1);
-  return {golfer:r1(golfer*100),product:r1(productSupport*100),combined:r1(combined*100),label:combined>=.85?'Strong':combined>=.72?'Good':combined>=.60?'Developing':'Limited'};
+  // Never call evidence "Strong" when the product side itself is still only modeled/developing.
+  // A complete golfer interview improves confidence in the golfer profile; it cannot manufacture club evidence.
+  let label=combined>=.85?'Strong':combined>=.72?'Good':combined>=.60?'Developing':'Limited';
+  if(productSupport<.75&&label==='Strong')label='Good';
+  if(golfer<.70&&['Strong','Good'].includes(label))label='Developing';
+  return {golfer:r1(golfer*100),product:r1(productSupport*100),combined:r1(combined*100),label};
 }
 function numeric(id){const m=metric(id);return m.mode==='exact'&&answered(m.value)?Number(m.value):null;}
 function classify(id){
@@ -35,28 +37,32 @@ function classify(id){
  return null;
 }
 function loftFit(p){
- const launch=classify('launch'),spin=classify('spin'),aoa=numeric('aoa');let loft=10.5,reasons=[];
+ const launch=classify('launch'),spin=classify('spin'),aoa=numeric('aoa');let loft=10.5,reasons=[],conflicts=[];
  if(launch==='low'){loft+=1;reasons.push('lower reported launch');}else if(launch==='high'){loft-=1;reasons.push('higher reported launch');}
  if(spin==='low'){loft+=.5;reasons.push('low reported spin');}else if(spin==='high'){loft-=.5;reasons.push('high reported spin');}
+ if((launch==='low'&&spin==='high')||(launch==='high'&&spin==='low'))conflicts.push('launch and spin point in competing loft directions');
  if(aoa!=null&&aoa<=-2){loft+=.5;reasons.push('downward attack angle');}else if(aoa!=null&&aoa>=4){loft-=.5;reasons.push('upward attack angle');}
  if(p?.player==='lowspin')loft+=.5;
  loft=Math.round(clamp(loft,8,12)*2)/2;
- // We do not yet have configuration inventory for every head, so present this as starting loft.
  const lo=clamp(loft-.5,8,12),hi=clamp(loft+.5,8,12);
- return {loft,range:`${lo.toFixed(1)}°–${hi.toFixed(1)}°`,reason:reasons.length?`Driven by ${reasons.slice(0,3).join(', ')}.`:'A neutral starting loft based on the information provided.'};
+ let reason=reasons.length?`Driven by ${reasons.slice(0,3).join(', ')}.`:'A neutral starting loft based on the information provided.';
+ if(conflicts.length)reason+=` ${conflicts[0][0].toUpperCase()+conflicts[0].slice(1)}, so launch-monitor validation matters more than the nominal loft.`;
+ return {loft,range:`${lo.toFixed(1)}°–${hi.toFixed(1)}°`,reason};
 }
 function shaftFit(){
  const m=metric('speed');let speed=numeric('speed');if(speed==null&&m.mode==='range')speed=({'under75':72,'75-84':80,'85-89':87,'90-94':92,'95-99':97,'100-104':102,'105-109':107,'110-114':112,'115plus':118})[m.value]||null;
- let flex='Regular',weight='55–65g',note='Starting recommendation; shaft flex is not standardized across manufacturers.';
- if(speed!=null){if(speed<80){flex='Senior / A';weight='45–55g';}else if(speed<92){flex='Regular';weight='50–60g';}else if(speed<105){flex='Stiff';weight='55–65g';}else{flex='X-Stiff';weight='60–70g';}}
- return {flex,weight,note};
+ if(speed==null)return {flex:'Speed needed',weight:'No defensible range yet',note:'FORM will not guess shaft flex or weight without usable club-speed information. Shaft feel and transition can refine this later.'};
+ let flex='Regular',weight='55–65g';
+ if(speed<80){flex='Senior / A';weight='45–55g';}else if(speed<92){flex='Regular';weight='50–60g';}else if(speed<105){flex='Stiff';weight='55–65g';}else{flex='X-Stiff';weight='60–70g';}
+ return {flex,weight,note:'Starting recommendation from club speed; flex is not standardized across manufacturers, and transition/feel can move the final build.'};
 }
 function decorate(){
+ const rows=ENG.winners(typeof normalizedGolferV69==='function'?normalizedGolferV69():golfer());
  document.querySelectorAll('#resultList .driverVerdict').forEach((card,i)=>{
-   const rows=ENG.winners(typeof normalizedGolferV69==='function'?normalizedGolferV69():golfer());const row=rows[i];if(!row)return;
+   const row=rows[i];if(!row)return;
    const evidence=recommendationEvidence(row.s),loft=loftFit(row.p),shaft=shaftFit();
    card.querySelector('.fitConfig81')?.remove();
-   const block=document.createElement('div');block.className='fitConfig81';block.innerHTML=`<div><span>Recommended starting loft</span><b>${loft.loft.toFixed(1)}°</b><small>Test window ${loft.range}. ${loft.reason}</small></div><div><span>Shaft starting point</span><b>${shaft.flex} · ${shaft.weight}</b><small>${shaft.note}</small></div><div><span>Evidence strength</span><b>${evidence.label} · ${Math.round(evidence.combined)}%</b><small>Golfer profile ${Math.round(evidence.golfer)}% · Product evidence ${Math.round(evidence.product)}%. This measures support for the recommendation, not fit quality.</small></div>`;
+   const block=document.createElement('div');block.className='fitConfig81';block.innerHTML=`<div><span>Recommended starting loft</span><b>${loft.loft.toFixed(1)}°</b><small>Test window ${loft.range}. ${loft.reason}</small></div><div><span>Shaft starting point</span><b>${shaft.flex}${shaft.weight.startsWith('No ')?'':` · ${shaft.weight}`}</b><small>${shaft.weight.startsWith('No ')?shaft.weight+'. ':''}${shaft.note}</small></div><div><span>Evidence strength</span><b>${evidence.label} · ${Math.round(evidence.combined)}%</b><small>Golfer profile ${Math.round(evidence.golfer)}% · Product evidence ${Math.round(evidence.product)}%. This measures support for the recommendation, not fit quality.</small></div>`;
    const top=card.querySelector('.verdictTop');top?.insertAdjacentElement('afterend',block);
    const badge=card.querySelector('.evidenceBadge');if(badge)badge.textContent=`${evidence.label} evidence · ${Math.round(evidence.combined)}%`;
  });
