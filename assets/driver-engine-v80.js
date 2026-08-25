@@ -34,8 +34,9 @@ function classifyMetric(id){
 function needProfile(g){
   const speed=g.speed||exactOrMid('speed');const bs=exactOrMid('ballSpeed');const carry=exactOrMid('carry');const smash=speed&&bs?bs/speed:null;
   const spin=classifyMetric('spin')||g.spin||null,launch=classifyMetric('launch')||g.traj||null;
-  const problems=g.currentClub?.problems||[];
-  return {speed,bs,carry,smash,spin,launch,spinVar:spin==='varies'||problems.includes('spin_varied'),launchVar:launch==='varies'||problems.includes('launch_varied'),strike:g.strike,offCenter:['toe','heel','varied'].includes(g.strike),twoWay:g.costly==='two_way'||g.strike==='varied',fade:g.curveClass==='fade_curve'||g.costly==='slice'||g.costly==='right',draw:g.curveClass==='draw_curve'||g.costly==='hook'||g.costly==='left',speedQ:q(metric('speed').mode),spinQ:q(metric('spin').mode),launchQ:q(metric('launch').mode),ballQ:q(metric('ballSpeed').mode),carryQ:q(metric('carry').mode)};
+  const problems=g.currentClub?.problems||[],curveFade=g.curveClass==='fade_curve',curveDraw=g.curveClass==='draw_curve',costlyFade=g.costly==='slice'||g.costly==='right',costlyDraw=g.costly==='hook'||g.costly==='left';
+  const twoWay=g.costly==='two_way'||g.strike==='varied',directionConflict=(curveFade&&costlyDraw)||(curveDraw&&costlyFade);
+  return {speed,bs,carry,smash,spin,launch,spinVar:spin==='varies'||problems.includes('spin_varied'),launchVar:launch==='varies'||problems.includes('launch_varied'),strike:g.strike,offCenter:['toe','heel','varied'].includes(g.strike),twoWay,directionConflict,fade:!twoWay&&!directionConflict&&(curveFade||costlyFade),draw:!twoWay&&!directionConflict&&(curveDraw||costlyDraw),accuracyW:typeof rankedWeight==='function'?rankedWeight(g,'accuracy'):0,distanceW:typeof rankedWeight==='function'?rankedWeight(g,'distance'):0,flightW:typeof rankedWeight==='function'?rankedWeight(g,'flight'):0,speedQ:q(metric('speed').mode),spinQ:q(metric('spin').mode),launchQ:q(metric('launch').mode),ballQ:q(metric('ballSpeed').mode),carryQ:q(metric('carry').mode)};
 }
 function part(key,label,weight,score,explanation,evidenceConfidence){return {key,label,weight:Math.max(0,weight),score:r1(clamp(score,0,100)),explanation,evidenceConfidence:r1(clamp(evidenceConfidence||0,0,1))};}
 
@@ -65,7 +66,9 @@ function speedPart(p,n,ev){
   return part('speed','Speed / design fit',n.speed?18+8*n.speedQ:8,s,n.speed?`${n.speed} mph is evaluated against this model's intended speed window and speed-potential evidence.`:'Club speed is unknown, so this category carries less weight.',Math.max(sw.confidence||0,conf(ev,'speedPotential')));
 }
 function directionPart(p,n,ev){
-  if(n.fade)return part('direction','Directional fit',20,val(ev,'drawHelp'),'Your right-miss pattern gives value to appropriate draw help, but FORM still penalizes excessive correction elsewhere.',conf(ev,'drawHelp'));
+  if(n.twoWay)return part('direction','Directional fit',18,val(ev,'neutralBias'),'Your two-way pattern makes strong directional correction risky, so FORM rewards neutral bias rather than trying to fix one side.',conf(ev,'neutralBias'));
+  if(n.directionConflict)return part('direction','Directional fit',14,val(ev,'neutralBias'),'Your normal curve and costly miss point in opposite directions, so FORM avoids forcing draw or fade correction from conflicting signals.',conf(ev,'neutralBias'));
+  if(n.fade)return part('direction','Directional fit',20,val(ev,'drawHelp'),'Your right-miss pattern gives value to appropriate draw help.',conf(ev,'drawHelp'));
   if(n.draw)return part('direction','Directional fit',20,val(ev,'neutralBias'),'Your left-miss pattern rewards a neutral head rather than added draw bias.',conf(ev,'neutralBias'));
   return part('direction','Directional fit',8,(val(ev,'neutralBias')+82)/2,'No dominant directional miss was identified.',conf(ev,'neutralBias'));
 }
@@ -81,19 +84,21 @@ function carryPart(p,n,ev){
   const ypm=n.carry/n.speed;let s=82;const launchNeed=n.launch==='low'?val(ev,'launchSupport'):n.launch==='high'?val(ev,'launchControl'):80;const spinNeed=n.spin==='low'?val(ev,'spinSupport'):n.spin==='high'?val(ev,'spinReduction'):80;s=launchNeed*.45+spinNeed*.4+val(ev,'speedPotential')*.15;if(ypm>=2.4&&ypm<=2.75)s=(s+90)/2;
   return part('carry','Carry efficiency',6+5*n.carryQ,s,`Carry (${n.carry} yd) is used only as a supporting output check, not as a stand-alone distance target.`,(conf(ev,'launchSupport')+conf(ev,'spinSupport')+conf(ev,'speedPotential'))/3);
 }
+function applyPriorityWeights(parts,n){
+  return parts.map(x=>{let add=0;if(['strike','direction'].includes(x.key))add+=n.accuracyW*.55;if(['speed','efficiency','carry'].includes(x.key))add+=n.distanceW*.45;if(['spin','launch'].includes(x.key))add+=n.flightW*.55;return {...x,weight:r1(x.weight+add)};});
+}
 
 function scoreOne(p,g){
   const n=needProfile(g),ev=E.evidenceFor(p),hard=typeof driverHardConstraints==='function'?driverHardConstraints(p,g):[];
   if(hard?.length)return {overall:50,components:[],hardConstraints:hard,evidence:ev};
-  const parts=[spinPart(p,n,ev),strikePart(p,n,ev),speedPart(p,n,ev),directionPart(p,n,ev),launchPart(p,n,ev),efficiencyPart(p,n,ev),carryPart(p,n,ev)].filter(Boolean);
+  const parts=applyPriorityWeights([spinPart(p,n,ev),strikePart(p,n,ev),speedPart(p,n,ev),directionPart(p,n,ev),launchPart(p,n,ev),efficiencyPart(p,n,ev),carryPart(p,n,ev)].filter(Boolean),n);
   const totalW=parts.reduce((a,x)=>a+x.weight,0);const base=parts.reduce((a,x)=>a+x.score*x.weight,0)/totalW;
-  // Evidence confidence limits false precision without flattening model differences.
   const evidenceQ=parts.reduce((a,x)=>a+x.evidenceConfidence*x.weight,0)/totalW;
   const neutralPull=(1-evidenceQ)*3.5;const adjusted=base>82?base-neutralPull:base;
   const overall=r1(clamp(100-(100-adjusted)*1.22,45,99.2));
-  const contributions=parts.map(x=>({...x,impact:r1((x.score-80)*x.weight/totalW)}));
+  const contributions=parts.map(x=>({...x,normalizedWeight:r1(x.weight/totalW*100),impact:r1((x.score-80)*x.weight/totalW)}));
   const strengths=contributions.slice().sort((a,b)=>b.impact-a.impact);const weaknesses=contributions.slice().sort((a,b)=>a.impact-b.impact);
-  return {overall,raw:r1(base),evidenceQuality:r1(evidenceQ),components:parts,strengths,weaknesses,hardConstraints:[],evidence:ev};
+  return {overall,raw:r1(base),evidenceQuality:r1(evidenceQ),components:contributions,strengths,weaknesses,hardConstraints:[],evidence:ev};
 }
 function winners(g){
   const rows=[];products.forEach(p=>{if(p.generation==='previous_limited')return;if(typeof productAllowedByBrandScope==='function'&&!productAllowedByBrandScope(p))return;const s=scoreOne(p,g);if(!s.hardConstraints.length)rows.push({p,s});});
@@ -132,7 +137,7 @@ showResults=function(){
     grid.innerHTML=rows.slice(0,5).map((row,i)=>{
       const prev=i?rows[i-1]:null,rankDiff=prev?compare(row.s,prev.s):[],curDiff=cur.detail?compare(row.s,cur.detail):[];const wins=curDiff.filter(x=>x.delta>0).slice(0,3),losses=curDiff.filter(x=>x.delta<0).slice(0,2);const strongest=row.s.strengths.slice(0,2),weak=row.s.weaknesses[0];
       const distinction=i===0?(rows[1]?compare(row.s,rows[1].s).filter(x=>x.delta>0).slice(0,3):[]):rankDiff.filter(x=>x.delta<0).slice(0,3);
-      return `<article class="result70Card ${i===0?'winner':''}"><div class="result70Top"><div><span class="result70Rank">${i===0?'#1 overall':'#'+(i+1)}</span><h3>${row.p.brand} ${row.p.model}</h3><small>${evidenceLabel(row.s)} · evidence ${Math.round(row.s.evidenceQuality*100)}%</small></div><div class="result70Score">${row.s.overall.toFixed(1)}<small>Fit / 100</small></div></div><div class="result70Why"><b>Why it fits you</b>${strongest.map(x=>`<p><span>${x.label}</span>${x.score.toFixed(1)}/100 — ${x.explanation}</p>`).join('')}</div><div class="result70Breakdown">${row.s.components.map(x=>`<div><span>${x.label}</span><b>${x.score.toFixed(1)}</b></div>`).join('')}</div><div class="result70Distinction"><b>${i===0?'Why it leads':'Why the club above leads'}</b><p>${distinction.length?distinction.map(x=>`${x.label} ${x.delta>0?'+':''}${x.delta.toFixed(1)}`).join(' · '):(weak?`${weak.label} is the biggest limiter in this fit.`:'The evidence does not justify a larger distinction.')}</p></div><div class="result70Current"><b>Compared with your current driver</b><p>${wins.length?`Modeled advantages: ${wins.map(x=>`${x.label} +${x.delta.toFixed(1)}`).join(' · ')}`:'FORM does not identify a meaningful modeled category advantage.'}</p>${losses.length?`<p class="tradeoff">Tradeoffs: ${losses.map(x=>`${x.label} ${x.delta.toFixed(1)}`).join(' · ')}</p>`:''}</div></article>`;
+      return `<article class="result70Card ${i===0?'winner':''}"><div class="result70Top"><div><span class="result70Rank">${i===0?'#1 overall':'#'+(i+1)}</span><h3>${row.p.brand} ${row.p.model}</h3><small>${evidenceLabel(row.s)} · evidence ${Math.round(row.s.evidenceQuality*100)}%</small></div><div class="result70Score">${row.s.overall.toFixed(1)}<small>Fit / 100</small></div></div><div class="result70Why"><b>Why it fits you</b>${strongest.map(x=>`<p><span>${x.label}</span>${x.score.toFixed(1)}/100 — ${x.explanation}</p>`).join('')}</div><div class="result70Breakdown">${row.s.components.map(x=>`<div><span>${x.label}<small>${x.normalizedWeight.toFixed(1)}% weight</small></span><b>${x.score.toFixed(1)}</b></div>`).join('')}</div><div class="result70Distinction"><b>${i===0?'Why it leads':'Why the club above leads'}</b><p>${distinction.length?distinction.map(x=>`${x.label} ${x.delta>0?'+':''}${x.delta.toFixed(1)}`).join(' · '):(weak?`${weak.label} is the biggest limiter in this fit.`:'The evidence does not justify a larger distinction.')}</p></div><div class="result70Current"><b>Compared with your current driver</b><p>${wins.length?`Modeled advantages: ${wins.map(x=>`${x.label} +${x.delta.toFixed(1)}`).join(' · ')}`:'FORM does not identify a meaningful modeled category advantage.'}</p>${losses.length?`<p class="tradeoff">Tradeoffs: ${losses.map(x=>`${x.label} ${x.delta.toFixed(1)}`).join(' · ')}</p>`:''}</div></article>`;
     }).join('');
     try{saveFit('driver',{title:'Driver Fit',engine:'8.0',topMatch:best?`${best.p.brand} ${best.p.model}`:'',topScore:best?.s.overall||null,currentClub:currentName,currentScore:cur.score,upgrade:decision.level})}catch(e){}
     window.scrollTo({top:0,left:0,behavior:'auto'});
