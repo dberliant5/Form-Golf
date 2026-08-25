@@ -44,10 +44,14 @@ function loftFit(p){
  return {loft,range:`${lo.toFixed(1)}°–${hi.toFixed(1)}°`,reason,conflict};
 }
 function shaftFit(){
- const m=metric('speed');let speed=numeric('speed');if(speed==null&&m.mode==='range')speed=({'under75':72,'75-84':80,'85-89':87,'90-94':92,'95-99':97,'100-104':102,'105-109':107,'110-114':112,'115plus':118})[m.value]||null;
+ const m=metric('speed'),g=golferNow();let speed=numeric('speed'),source='measured club speed';
+ if(speed==null&&m.mode==='range'){speed=({'under75':72,'75-84':80,'85-89':87,'90-94':92,'95-99':97,'100-104':102,'105-109':107,'110-114':112,'115plus':118})[m.value]||null;source='reported speed range';}
+ if(speed==null&&m.mode==='general'){speed=({'belowavg':82,'typical':92,'aboveavg':101,'fast':108,'veryfast':116})[m.value]||Number(g?.speed)||null;source='general speed profile';}
+ if(speed==null&&Number(g?.speed)){speed=Number(g.speed);source='golfer speed profile';}
  if(speed==null)return {flex:'Speed needed',weight:'No defensible range yet',note:'FORM will not guess shaft flex or weight without usable club-speed information.'};
  let flex='Regular',weight='55–65g';if(speed<80){flex='Senior / A';weight='45–55g';}else if(speed<92){flex='Regular';weight='50–60g';}else if(speed<105){flex='Stiff';weight='55–65g';}else{flex='X-Stiff';weight='60–70g';}
- return {flex,weight,note:'Starting point from club speed. Final flex/profile can move with transition, feel and delivery.'};
+ const precision=m.mode==='exact'?'':' This is intentionally broad because the speed input is not an exact measured average.';
+ return {flex,weight,note:`Starting point from ${source}. Final flex/profile can move with transition, feel and delivery.${precision}`};
 }
 function profileInsight(g){
  const launch=classify('launch'),spin=classify('spin'),strike=g?.strike,costly=g?.costly;
@@ -62,6 +66,29 @@ function profileInsight(g){
  if(costly==='two_way')bits.push('A two-way miss reduces the value of strongly draw-biased heads because correcting one side can worsen the other.');
  return bits.slice(0,2);
 }
+function componentMap(s){return Object.fromEntries((s?.components||[]).map(x=>[x.key,x]));}
+function weightedDifferences(a,b){
+ const A=componentMap(a),B=componentMap(b),keys=[...new Set([...Object.keys(A),...Object.keys(B)])];
+ return keys.map(key=>{const x=A[key],y=B[key];if(!x||!y)return null;const delta=r1((x.impact||0)-(y.impact||0));return {key,label:x.label||y.label,delta,scoreDelta:r1((x.score||0)-(y.score||0)),weight:x.normalizedWeight||0};}).filter(Boolean).filter(x=>Math.abs(x.delta)>=.15).sort((x,y)=>Math.abs(y.delta)-Math.abs(x.delta));
+}
+function separation(rows){
+ if(!rows?.length)return {label:'No ranking',gap:null,text:'No eligible models were available.'};
+ if(rows.length===1)return {label:'Single eligible fit',gap:null,text:'Only one eligible manufacturer result remains after the fitting constraints.'};
+ const gap=r1(rows[0].s.overall-rows[1].s.overall),ev=recommendationEvidence(rows[0].s);
+ if(gap<1.25)return {label:'Near-tie',gap,text:`Only ${gap.toFixed(1)} Fit points separate #1 and #2. Treat them as the same testing tier unless measured performance creates separation.`};
+ if(gap<2.75)return {label:'Narrow lead',gap,text:`The leader is ${gap.toFixed(1)} Fit points ahead. FORM sees a preference, not enough separation to imply a decisive performance advantage.`};
+ if(ev.combined<72)return {label:'Modeled lead',gap,text:`The leader is ${gap.toFixed(1)} Fit points ahead, but evidence is still developing. The ranking is useful for test order, not a guarantee.`};
+ return {label:'Meaningful lead',gap,text:`The leader is ${gap.toFixed(1)} Fit points ahead with enough recommendation support to justify testing it first.`};
+}
+function rewriteDistinctions(rows,cards){
+ cards.forEach((card,i)=>{
+   const box=card.querySelector('.result70Distinction');if(!box||!rows[i])return;
+   const other=i===0?rows[1]:rows[i-1];if(!other)return;
+   const lead=i===0?rows[i]:other,trail=i===0?other:rows[i],gap=r1(lead.s.overall-trail.s.overall),diff=weightedDifferences(lead.s,trail.s).filter(x=>x.delta>0).slice(0,3);
+   if(gap<1.25){box.innerHTML=`<b>${i===0?'Why it is #1 — for now':'Why the club above is essentially tied'}</b><p>The gap is only ${gap.toFixed(1)} Fit points. ${diff.length?`The largest weighted separation is ${diff.map(x=>`${x.label} +${x.delta.toFixed(1)} impact`).join(' · ')}.`:'Current evidence does not support a meaningful category separation.'} Test both before treating the rank order as decisive.</p>`;return;}
+   box.innerHTML=`<b>${i===0?'Why it leads':'Why the club above leads'}</b><p>${diff.length?diff.map(x=>`${x.label} +${x.delta.toFixed(1)} weighted impact`).join(' · '):`The ${gap.toFixed(1)}-point overall separation comes from several smaller weighted advantages rather than one dominant category.`}</p>`;
+ });
+}
 function decorate(){
  const g=golferNow(),rows=ENG.winners(g),cards=[...document.querySelectorAll('#result80Grid .result70Card')];
  if(!cards.length)return;
@@ -72,20 +99,21 @@ function decorate(){
    card.querySelector('.result70Top')?.insertAdjacentElement('afterend',block);
    const old=card.querySelector('.result70Top small');if(old)old.textContent=`${evidence.label} evidence · ${Math.round(evidence.combined)}%`;
  });
+ rewriteDistinctions(rows,cards);
  const head=document.querySelector('.results70Head');if(head&&!document.getElementById('fitSummary81')){
-   const insights=profileInsight(g),best=rows[0],bestEvidence=best?recommendationEvidence(best.s):null;
-   const panel=document.createElement('section');panel.id='fitSummary81';panel.className='fitSummary81';panel.innerHTML=`<div class="fitSummary81Kicker">FORM FIT ANALYSIS</div><div class="fitSummary81Grid"><div><span>Primary recommendation</span><b>${best?`${best.p.brand} ${best.p.model}`:'No eligible model'}</b><small>${best?`${best.s.overall.toFixed(1)} Fit Score · ${bestEvidence.label} evidence`:''}</small></div><div class="fitSummary81Narrative"><span>What FORM sees in your profile</span>${insights.length?insights.map(x=>`<p>${x}</p>`).join(''):'<p>Your answers do not point to one dominant launch, spin or strike constraint, so FORM is balancing speed, stability and directional fit.</p>'}</div></div>`;
+   const insights=profileInsight(g),best=rows[0],bestEvidence=best?recommendationEvidence(best.s):null,sep=separation(rows);
+   const panel=document.createElement('section');panel.id='fitSummary81';panel.className='fitSummary81';panel.innerHTML=`<div class="fitSummary81Kicker">FORM FIT ANALYSIS</div><div class="fitSummary81Grid"><div><span>Primary recommendation</span><b>${best?`${best.p.brand} ${best.p.model}`:'No eligible model'}</b><small>${best?`${best.s.overall.toFixed(1)} Fit Score · ${bestEvidence.label} evidence`:''}</small><div class="fitSeparation81"><span>Recommendation separation</span><strong>${sep.label}</strong><small>${sep.text}</small></div></div><div class="fitSummary81Narrative"><span>What FORM sees in your profile</span>${insights.length?insights.map(x=>`<p>${x}</p>`).join(''):'<p>Your answers do not point to one dominant launch, spin or strike constraint, so FORM is balancing speed, stability and directional fit.</p>'}</div></div>`;
    head.insertAdjacentElement('afterend',panel);
  }
  const current=document.querySelector('.current70');if(current){current.classList.add('current81Separated');const first=current.querySelector('span');if(first)first.textContent='Current-driver benchmark — separate from Fit Score';}
 }
 function styles(){if(document.getElementById('form81styles'))return;const s=document.createElement('style');s.id='form81styles';s.textContent=`
-.fitSummary81{margin:20px 0 26px;padding:24px;border:1px solid var(--line);background:linear-gradient(180deg,#fff,#fbfbf8)}.fitSummary81Kicker{font-size:8px;letter-spacing:.18em;font-weight:900;color:var(--muted);margin-bottom:14px}.fitSummary81Grid{display:grid;grid-template-columns:minmax(230px,.8fr) minmax(0,1.7fr);gap:28px}.fitSummary81 span,.fitConfig81 span{display:block;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}.fitSummary81 b{display:block;font-size:23px;margin:7px 0 5px}.fitSummary81 small{font-size:10px;color:var(--muted)}.fitSummary81Narrative p{margin:7px 0 0;font-size:12px;line-height:1.55;color:var(--deep)}
-.fitConfig81{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:14px 0}.fitConfig81>div{background:#fff;padding:14px}.fitConfig81 b{display:block;margin-top:5px;font-size:14px}.fitConfig81 small{display:block;margin-top:5px;font-size:9px;line-height:1.45;color:var(--muted)}.current81Separated{margin-top:22px;border-top:1px solid var(--line);padding-top:18px}
+.fitSummary81{margin:20px 0 26px;padding:26px;border:1px solid var(--line);background:linear-gradient(180deg,#fff,#fbfbf8)}.fitSummary81Kicker{font-size:8px;letter-spacing:.18em;font-weight:900;color:var(--muted);margin-bottom:14px}.fitSummary81Grid{display:grid;grid-template-columns:minmax(250px,.85fr) minmax(0,1.7fr);gap:32px}.fitSummary81 span,.fitConfig81 span{display:block;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}.fitSummary81 b{display:block;font-size:23px;margin:7px 0 5px}.fitSummary81 small{font-size:10px;color:var(--muted);line-height:1.5}.fitSummary81Narrative p{margin:7px 0 0;font-size:12px;line-height:1.6;color:var(--deep)}.fitSeparation81{margin-top:18px;padding-top:15px;border-top:1px solid var(--line)}.fitSeparation81 strong{display:block;margin:5px 0;font-size:13px}.fitSeparation81 small{display:block;max-width:310px}
+.fitConfig81{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:14px 0}.fitConfig81>div{background:#fff;padding:14px}.fitConfig81 b{display:block;margin-top:5px;font-size:14px}.fitConfig81 small{display:block;margin-top:5px;font-size:9px;line-height:1.45;color:var(--muted)}.current81Separated{margin-top:22px;border-top:1px solid var(--line);padding-top:18px}.result70Breakdown span small{display:block;margin-top:2px;font-size:8px;color:var(--muted);font-weight:500}
 @media(max-width:700px){.fitConfig81,.fitSummary81Grid{grid-template-columns:1fr}}
 `;document.head.appendChild(s);}
 styles();
 const prior=window.showResults;
 if(typeof prior==='function')window.showResults=function(){const out=prior.apply(this,arguments);setTimeout(decorate,0);return out;};
-window.FORM_DRIVER_CONFIG_V81={recommendationEvidence,loftFit,shaftFit,profileInsight,decorate};
+window.FORM_DRIVER_CONFIG_V81={recommendationEvidence,loftFit,shaftFit,profileInsight,weightedDifferences,separation,decorate};
 })();
