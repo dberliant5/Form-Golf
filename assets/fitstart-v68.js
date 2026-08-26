@@ -20,8 +20,6 @@
     requestAnimationFrame(()=>target.scrollIntoView({behavior:'smooth',block:'start'}));
   }
 
-  // FORM now uses one full credible fitting path. Depth can still adapt internally later,
-  // but golfers do not choose a lower-information "quick" mode up front.
   if(window.formFitStartState){
     window.formFitStartState.depth='complete';
   } else if(typeof formFitStartState!=='undefined'){
@@ -63,12 +61,13 @@
     };
   }
 
-  // Re-render once so the obsolete depth selector disappears immediately.
   setTimeout(()=>{if(typeof renderFitStart==='function')renderFitStart()},0);
 
-  // Load the post-v8.1 presentation/UX layer directly from the repository. The module waits
-  // for the driver engine/config dependencies before initializing, so it is safe to request here.
+  // Evidence calibration loads first so all later result renders use the stronger product layer.
+  if(!document.querySelector('script[data-form-driver-v83]')){
+    const e=document.createElement('script');e.src='assets/driver-evidence-v83.js?v=8.3';e.dataset.formDriverV83='true';document.head.appendChild(e);
+  }
   if(!document.querySelector('script[data-form-driver-v82]')){
-    const s=document.createElement('script');s.src='assets/driver-config-v82.js?v=8.2';s.dataset.formDriverV82='true';document.head.appendChild(s);
+    const s=document.createElement('script');s.src='assets/driver-config-v82.js?v=8.2.1';s.dataset.formDriverV82='true';document.head.appendChild(s);
   }
 })();
