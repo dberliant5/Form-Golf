@@ -1,7 +1,7 @@
 // FORM 8.1 — recommendation evidence strength + loft/configuration + shaft starting fit
 (function(){
 'use strict';
-const ENG=window.FORM_DRIVER_ENGINE_V80, E=window.FORM_DRIVER_EVIDENCE_V80;
+const ENG=window.FORM_DRIVER_ENGINE_V80,E=window.FORM_DRIVER_EVIDENCE_V80;
 if(!ENG||!E){console.error('FORM 8.1 requires Driver Engine/Evidence 8.0');return;}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const r1=v=>Math.round(v*10)/10;
@@ -10,7 +10,9 @@ function quality(mode){return ({exact:1,range:.84,general:.62,unknown:0}[mode]||
 function answered(v){return v!==null&&v!==undefined&&v!==''&&v!=='unknown';}
 function golferNow(){return typeof normalizedGolferV69==='function'?normalizedGolferV69():golfer();}
 function profileStrength(){
-  const required=[state?.start,state?.curve,state?.costly,state?.strike,state?.style,state?.current];
+  // Recommendation evidence must describe information that actually supports the new-head fit.
+  // Current-driver satisfaction and style preference are intentionally excluded here.
+  const required=[state?.start,state?.curve,state?.costly,state?.strike];
   const base=required.filter(answered).length/required.length;
   if(state?.lm==='none'||!state?.lm)return clamp(.62+.25*base,0,1);
   const core=['speed','spin','aoa','launch'];
@@ -54,8 +56,7 @@ function shaftFit(){
  return {flex,weight,note:`Starting point from ${source}. Final flex/profile can move with transition, feel and delivery.${precision}`};
 }
 function profileInsight(g){
- const launch=classify('launch'),spin=classify('spin'),strike=g?.strike,costly=g?.costly;
- const bits=[];
+ const launch=classify('launch'),spin=classify('spin'),strike=g?.strike,costly=g?.costly,bits=[];
  if(launch==='low'&&spin==='low')bits.push('Your delivery is a low-launch / low-spin profile, so FORM is prioritizing launch and spin preservation rather than chasing another low-spin head.');
  else if(launch==='high'&&spin==='high')bits.push('Your delivery is a high-launch / high-spin profile, so flight control and spin reduction carry more weight than raw forgiveness alone.');
  else if(launch==='low'&&spin==='high')bits.push('Your launch and spin are moving in opposite fitting directions, which makes configuration validation especially important.');
@@ -89,31 +90,45 @@ function rewriteDistinctions(rows,cards){
    box.innerHTML=`<b>${i===0?'Why it leads':'Why the club above leads'}</b><p>${diff.length?diff.map(x=>`${x.label} +${x.delta.toFixed(1)} weighted impact`).join(' · '):`The ${gap.toFixed(1)}-point overall separation comes from several smaller weighted advantages rather than one dominant category.`}</p>`;
  });
 }
+function currentReliability(g){
+ const cur=ENG.currentScore(g),brand=g?.currentClub?.brand,model=g?.currentClub?.model||'',clean=model.replace(/\s*\(20\d{2}\)\s*/,'').trim();
+ const exact=!!(brand&&model&&products.find(p=>p.brand===brand&&(p.model===clean||p.model===model)));
+ const year=E.yearFromLabel(model);
+ if(cur.score==null)return {...cur,exact:false,year,label:'Insufficient benchmark',note:'FORM does not have enough product information to grade this current driver defensibly.'};
+ if(exact)return {...cur,exact:true,year,label:'Direct product profile',note:'This current-driver benchmark uses the same FORM product profile used for current-generation recommendations.'};
+ return {...cur,exact:false,year,label:'Limited modeled benchmark',note:`FORM inferred this ${year?year+' ':''}driver's design traits from the available model information. The score is useful for test order, not a purchase claim.`};
+}
+function currentContext(g){
+ const labels={great:'Very well',good:'Pretty well',mixed:'Mixed',poor:'Not well'},problemLabels={distance:'not enough distance',forgiveness:'forgiveness',dispersion:'dispersion',spin_high:'too much spin',spin_low:'too little spin',launch_high:'launch too high',launch_low:'launch too low',feel:'feel / sound',looks:'looks at address'};
+ const bits=[];if(labels[g?.current])bits.push(`On-course report: ${labels[g.current]}`);(g?.currentClub?.problems||[]).slice(0,3).forEach(x=>bits.push(problemLabels[x]||String(x).replace(/_/g,' ')));
+ return bits;
+}
+function rewriteCurrentBenchmark(g,rows){
+ const box=document.querySelector('.current70');if(!box)return;box.classList.add('current81Separated');const panels=[...box.children],profile=currentReliability(g),first=panels[0],upgrade=panels[1];
+ const firstLabel=first?.querySelector('span');if(firstLabel)firstLabel.textContent='Current-driver benchmark — separate from Fit Score';
+ const firstMeta=first?.querySelector('em');if(firstMeta){firstMeta.textContent=profile.score==null?'Not enough product evidence':profile.exact?`${profile.score.toFixed(1)} / 100 · ${profile.label}`:`≈${Math.round(profile.score)} / 100 · ${profile.label}`;}
+ first?.querySelector('.currentBenchmarkNote81')?.remove();if(first){const note=document.createElement('small');note.className='currentBenchmarkNote81';note.textContent=profile.note;first.appendChild(note);const context=currentContext(g);if(context.length){const c=document.createElement('div');c.className='currentContext81';c.innerHTML=`<span>Reported experience · context only</span><b>${context.join(' · ')}</b><small>This context does not change any new-driver FORM Fit Score.</small>`;first.appendChild(c);}}
+ if(!upgrade)return;
+ const best=rows?.[0];if(!best||profile.score==null){upgrade.querySelector('b').textContent='Test before replacing';upgrade.querySelector('em').textContent='FORM can rank new drivers, but it cannot make a defensible upgrade claim without a usable current-driver benchmark.';return;}
+ if(profile.exact)return;
+ const gap=r1(best.s.overall-profile.score),wins=profile.detail?ENG.compare(best.s,profile.detail).filter(x=>x.delta>=4):[];
+ const title=gap<2.5||!wins.length?'No clear modeled upgrade':'Worth a side-by-side test';
+ const text=gap<2.5||!wins.length?`The modeled gap is ${gap.toFixed(1)} Fit points, and the limited historical benchmark does not support a stronger equipment claim.`:`FORM models a ${gap.toFixed(1)}-point fit advantage, but the current-driver profile is inferred rather than directly evidenced. Use this to prioritize a test—not to justify a purchase without measured validation.`;
+ upgrade.querySelector('b').textContent=title;upgrade.querySelector('em').textContent=text;
+}
 function decorate(){
- const g=golferNow(),rows=ENG.winners(g),cards=[...document.querySelectorAll('#result80Grid .result70Card')];
- if(!cards.length)return;
- cards.forEach((card,i)=>{
-   const row=rows[i];if(!row)return;const evidence=recommendationEvidence(row.s),loft=loftFit(row.p),shaft=shaftFit();
-   card.querySelector('.fitConfig81')?.remove();
-   const block=document.createElement('div');block.className='fitConfig81';block.innerHTML=`<div><span>Starting loft</span><b>${loft.loft.toFixed(1)}°</b><small>Test ${loft.range}. ${loft.reason}</small></div><div><span>Shaft starting point</span><b>${shaft.flex}${shaft.weight.startsWith('No ')?'':` · ${shaft.weight}`}</b><small>${shaft.weight.startsWith('No ')?shaft.weight+'. ':''}${shaft.note}</small></div><div><span>Evidence strength</span><b>${evidence.label} · ${Math.round(evidence.combined)}%</b><small>Golfer profile ${Math.round(evidence.golfer)}% · Product evidence ${Math.round(evidence.product)}%. This is support for the recommendation, not the Fit Score.</small></div>`;
-   card.querySelector('.result70Top')?.insertAdjacentElement('afterend',block);
-   const old=card.querySelector('.result70Top small');if(old)old.textContent=`${evidence.label} evidence · ${Math.round(evidence.combined)}%`;
- });
+ const g=golferNow(),rows=ENG.winners(g),cards=[...document.querySelectorAll('#result80Grid .result70Card')];if(!cards.length)return;
+ cards.forEach((card,i)=>{const row=rows[i];if(!row)return;const evidence=recommendationEvidence(row.s),loft=loftFit(row.p),shaft=shaftFit();card.querySelector('.fitConfig81')?.remove();const block=document.createElement('div');block.className='fitConfig81';block.innerHTML=`<div><span>Starting loft</span><b>${loft.loft.toFixed(1)}°</b><small>Test ${loft.range}. ${loft.reason}</small></div><div><span>Shaft starting point</span><b>${shaft.flex}${shaft.weight.startsWith('No ')?'':` · ${shaft.weight}`}</b><small>${shaft.weight.startsWith('No ')?shaft.weight+'. ':''}${shaft.note}</small></div><div><span>Evidence strength</span><b>${evidence.label} · ${Math.round(evidence.combined)}%</b><small>Golfer profile ${Math.round(evidence.golfer)}% · Product evidence ${Math.round(evidence.product)}%. This is support for the recommendation, not the Fit Score.</small></div>`;card.querySelector('.result70Top')?.insertAdjacentElement('afterend',block);const old=card.querySelector('.result70Top small');if(old)old.textContent=`${evidence.label} evidence · ${Math.round(evidence.combined)}%`;});
  rewriteDistinctions(rows,cards);
- const head=document.querySelector('.results70Head');if(head&&!document.getElementById('fitSummary81')){
-   const insights=profileInsight(g),best=rows[0],bestEvidence=best?recommendationEvidence(best.s):null,sep=separation(rows);
-   const panel=document.createElement('section');panel.id='fitSummary81';panel.className='fitSummary81';panel.innerHTML=`<div class="fitSummary81Kicker">FORM FIT ANALYSIS</div><div class="fitSummary81Grid"><div><span>Primary recommendation</span><b>${best?`${best.p.brand} ${best.p.model}`:'No eligible model'}</b><small>${best?`${best.s.overall.toFixed(1)} Fit Score · ${bestEvidence.label} evidence`:''}</small><div class="fitSeparation81"><span>Recommendation separation</span><strong>${sep.label}</strong><small>${sep.text}</small></div></div><div class="fitSummary81Narrative"><span>What FORM sees in your profile</span>${insights.length?insights.map(x=>`<p>${x}</p>`).join(''):'<p>Your answers do not point to one dominant launch, spin or strike constraint, so FORM is balancing speed, stability and directional fit.</p>'}</div></div>`;
-   head.insertAdjacentElement('afterend',panel);
- }
- const current=document.querySelector('.current70');if(current){current.classList.add('current81Separated');const first=current.querySelector('span');if(first)first.textContent='Current-driver benchmark — separate from Fit Score';}
+ const head=document.querySelector('.results70Head');if(head&&!document.getElementById('fitSummary81')){const insights=profileInsight(g),best=rows[0],bestEvidence=best?recommendationEvidence(best.s):null,sep=separation(rows);const panel=document.createElement('section');panel.id='fitSummary81';panel.className='fitSummary81';panel.innerHTML=`<div class="fitSummary81Kicker">FORM FIT ANALYSIS</div><div class="fitSummary81Grid"><div><span>Primary recommendation</span><b>${best?`${best.p.brand} ${best.p.model}`:'No eligible model'}</b><small>${best?`${best.s.overall.toFixed(1)} Fit Score · ${bestEvidence.label} evidence`:''}</small><div class="fitSeparation81"><span>Recommendation separation</span><strong>${sep.label}</strong><small>${sep.text}</small></div></div><div class="fitSummary81Narrative"><span>What FORM sees in your profile</span>${insights.length?insights.map(x=>`<p>${x}</p>`).join(''):'<p>Your answers do not point to one dominant launch, spin or strike constraint, so FORM is balancing speed, stability and directional fit.</p>'}</div></div>`;head.insertAdjacentElement('afterend',panel);}
+ rewriteCurrentBenchmark(g,rows);
 }
 function styles(){if(document.getElementById('form81styles'))return;const s=document.createElement('style');s.id='form81styles';s.textContent=`
-.fitSummary81{margin:20px 0 26px;padding:26px;border:1px solid var(--line);background:linear-gradient(180deg,#fff,#fbfbf8)}.fitSummary81Kicker{font-size:8px;letter-spacing:.18em;font-weight:900;color:var(--muted);margin-bottom:14px}.fitSummary81Grid{display:grid;grid-template-columns:minmax(250px,.85fr) minmax(0,1.7fr);gap:32px}.fitSummary81 span,.fitConfig81 span{display:block;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}.fitSummary81 b{display:block;font-size:23px;margin:7px 0 5px}.fitSummary81 small{font-size:10px;color:var(--muted);line-height:1.5}.fitSummary81Narrative p{margin:7px 0 0;font-size:12px;line-height:1.6;color:var(--deep)}.fitSeparation81{margin-top:18px;padding-top:15px;border-top:1px solid var(--line)}.fitSeparation81 strong{display:block;margin:5px 0;font-size:13px}.fitSeparation81 small{display:block;max-width:310px}
-.fitConfig81{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:14px 0}.fitConfig81>div{background:#fff;padding:14px}.fitConfig81 b{display:block;margin-top:5px;font-size:14px}.fitConfig81 small{display:block;margin-top:5px;font-size:9px;line-height:1.45;color:var(--muted)}.current81Separated{margin-top:22px;border-top:1px solid var(--line);padding-top:18px}.result70Breakdown span small{display:block;margin-top:2px;font-size:8px;color:var(--muted);font-weight:500}
+.fitSummary81{margin:20px 0 26px;padding:26px;border:1px solid var(--line);background:linear-gradient(180deg,#fff,#fbfbf8)}.fitSummary81Kicker{font-size:8px;letter-spacing:.18em;font-weight:900;color:var(--muted);margin-bottom:14px}.fitSummary81Grid{display:grid;grid-template-columns:minmax(250px,.85fr) minmax(0,1.7fr);gap:32px}.fitSummary81 span,.fitConfig81 span,.currentContext81 span{display:block;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}.fitSummary81 b{display:block;font-size:23px;margin:7px 0 5px}.fitSummary81 small{font-size:10px;color:var(--muted);line-height:1.5}.fitSummary81Narrative p{margin:7px 0 0;font-size:12px;line-height:1.6;color:var(--deep)}.fitSeparation81{margin-top:18px;padding-top:15px;border-top:1px solid var(--line)}.fitSeparation81 strong{display:block;margin:5px 0;font-size:13px}.fitSeparation81 small{display:block;max-width:310px}
+.fitConfig81{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:14px 0}.fitConfig81>div{background:#fff;padding:14px}.fitConfig81 b{display:block;margin-top:5px;font-size:14px}.fitConfig81 small{display:block;margin-top:5px;font-size:9px;line-height:1.45;color:var(--muted)}.current81Separated{margin-top:22px;border-top:1px solid var(--line);padding-top:18px}.currentBenchmarkNote81{display:block;margin-top:8px;max-width:560px;font-size:9px;line-height:1.5;color:var(--muted)}.currentContext81{margin-top:13px;padding-top:11px;border-top:1px solid var(--line)}.currentContext81 b{display:block;margin-top:4px;font-size:10px}.currentContext81 small{display:block;margin-top:4px;font-size:9px;color:var(--muted)}.result70Breakdown span small{display:block;margin-top:2px;font-size:8px;color:var(--muted);font-weight:500}
 @media(max-width:700px){.fitConfig81,.fitSummary81Grid{grid-template-columns:1fr}}
 `;document.head.appendChild(s);}
 styles();
-const prior=window.showResults;
-if(typeof prior==='function')window.showResults=function(){const out=prior.apply(this,arguments);setTimeout(decorate,0);return out;};
-window.FORM_DRIVER_CONFIG_V81={recommendationEvidence,loftFit,shaftFit,profileInsight,weightedDifferences,separation,decorate};
+const prior=window.showResults;if(typeof prior==='function')window.showResults=function(){const out=prior.apply(this,arguments);setTimeout(decorate,0);return out;};
+window.FORM_DRIVER_CONFIG_V81={recommendationEvidence,loftFit,shaftFit,profileInsight,weightedDifferences,separation,currentReliability,decorate};
 })();
