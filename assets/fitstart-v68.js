@@ -65,4 +65,10 @@
 
   // Re-render once so the obsolete depth selector disappears immediately.
   setTimeout(()=>{if(typeof renderFitStart==='function')renderFitStart()},0);
+
+  // Load the post-v8.1 presentation/UX layer directly from the repository. The module waits
+  // for the driver engine/config dependencies before initializing, so it is safe to request here.
+  if(!document.querySelector('script[data-form-driver-v82]')){
+    const s=document.createElement('script');s.src='assets/driver-config-v82.js?v=8.2';s.dataset.formDriverV82='true';document.head.appendChild(s);
+  }
 })();
