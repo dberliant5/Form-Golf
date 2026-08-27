@@ -1,18 +1,28 @@
-// FORM 8.5.1 — sole opening-flow authority + fit-start auto-advance
+// FORM 9.5.1 — fresh brand choice + hard results-handoff recovery
 (function(){'use strict';
 function init(){
   if(typeof state==='undefined'||typeof renderBrandScope!=='function'||typeof renderStep!=='function')return false;
   const handed=document.getElementById('handedQuestion'),brand=document.getElementById('brandQuestion'),hs=document.getElementById('handedSummary'),bs=document.getElementById('brandOpeningSummary'),flowNav=document.getElementById('flowNav');
   if(!handed||!brand)return false;
+  let brandChoiceMade=false;
+
   function hideGlobalNav(){if(flowNav)flowNav.style.display='none';}
   function showGlobalNav(){if(flowNav)flowNav.style.display='flex';}
   function hideOpening(){handed.classList.add('hidden');brand.classList.add('hidden');hs?.classList.add('hidden');bs?.classList.add('hidden');}
+  function brandNeedsAnswer(){const wrap=document.getElementById('brandPickerWrap')||brand;wrap?.classList.add('needsAnswer');setTimeout(()=>wrap?.classList.remove('needsAnswer'),900);}
+  function neutralizeBrandChoice(){
+    if(brandChoiceMade)return;
+    document.querySelectorAll('#brandQuestion [data-brand-mode]').forEach(x=>x.classList.remove('active','on'));
+    const confirm=document.querySelector('#brandQuestion .brandScopeConfirm');if(confirm)confirm.disabled=true;
+  }
   function showHand(){step=1;handed.classList.remove('hidden');brand.classList.add('hidden');hs?.classList.add('hidden');bs?.classList.add('hidden');hideGlobalNav();const sc=document.getElementById('stepCount');if(sc)sc.textContent='01 / 09';}
-  function showBrand(){step=1;handed.classList.add('hidden');brand.classList.remove('hidden');hs?.classList.add('hidden');bs?.classList.add('hidden');renderBrandScope();hideGlobalNav();requestAnimationFrame(()=>brand.scrollIntoView({behavior:'smooth',block:'start'}));}
+  function showBrand(){
+    step=1;handed.classList.add('hidden');brand.classList.remove('hidden');hs?.classList.add('hidden');bs?.classList.add('hidden');
+    renderBrandScope();neutralizeBrandChoice();hideGlobalNav();
+    requestAnimationFrame(()=>brand.scrollIntoView({behavior:'smooth',block:'start'}));
+  }
   function enterInterview(){
     hideOpening();
-    // Use the application's own navigation path, then verify Step 2 is visible. This avoids
-    // manually mutating DOM state in a way older wrappers can leave inconsistent.
     if(typeof goTo==='function')goTo(2);else{step=2;renderStep();}
     showGlobalNav();
     requestAnimationFrame(()=>{
@@ -22,34 +32,72 @@ function init(){
     });
   }
 
+  const priorSetBrandMode=window.setBrandMode;
+  if(typeof priorSetBrandMode==='function')window.setBrandMode=function(){brandChoiceMade=true;return priorSetBrandMode.apply(this,arguments);};
+  const priorToggleFitBrand=window.toggleFitBrand;
+  if(typeof priorToggleFitBrand==='function')window.toggleFitBrand=function(){brandChoiceMade=true;return priorToggleFitBrand.apply(this,arguments);};
+
   window.confirmBrandScope=function(){
-    if(typeof brandScopeIsValid==='function'&&!brandScopeIsValid()){
-      const wrap=document.getElementById('brandPickerWrap');wrap?.classList.add('needsAnswer');setTimeout(()=>wrap?.classList.remove('needsAnswer'),900);return;
-    }
+    if(!brandChoiceMade){brandNeedsAnswer();return;}
+    if(typeof brandScopeIsValid==='function'&&!brandScopeIsValid()){brandNeedsAnswer();return;}
     formBrandScopeConfirmed=true;
     if(typeof saveBrandScope==='function')saveBrandScope();
     enterInterview();
   };
 
-  // Replace original handedness buttons so legacy click handlers cannot also advance the flow.
   document.querySelectorAll('#handedQuestion [data-group="handed"] .opt').forEach(btn=>{
     const clone=btn.cloneNode(true);btn.replaceWith(clone);
     clone.onclick=()=>{clone.parentElement?.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));clone.classList.add('on');state.handed=clone.dataset.v;if(typeof updateDerived==='function')updateDerived();setTimeout(showBrand,40);};
   });
 
   const priorOpen=window.openFit;
-  if(typeof priorOpen==='function')window.openFit=function(id){const out=priorOpen.apply(this,arguments);if(id==='driver'){step=1;state.handed=null;formBrandScopeConfirmed=false;try{localStorage.setItem('formBrandScopeConfirmed','false')}catch(e){}setTimeout(showHand,80);}return out;};
+  if(typeof priorOpen==='function')window.openFit=function(id){
+    const out=priorOpen.apply(this,arguments);
+    if(id==='driver'){
+      step=1;state.handed=null;formBrandScopeConfirmed=false;brandChoiceMade=false;
+      try{
+        if(typeof formBrandScope!=='undefined'){formBrandScope.mode='all';formBrandScope.brands=[];}
+        localStorage.removeItem('formBrandScope');
+        localStorage.setItem('formBrandScopeConfirmed','false');
+      }catch(e){}
+      setTimeout(showHand,80);
+    }
+    return out;
+  };
 
   const priorNext=window.next;
   if(typeof priorNext==='function')window.next=function(){if(step===1){if(!state.handed){showHand();return;}if(!formBrandScopeConfirmed){showBrand();return;}}return priorNext.apply(this,arguments);};
 
-  // Driver category selection should take the golfer to the final Begin fitting CTA.
   document.addEventListener('click',e=>{
     if(!e.target.closest('#fitCategoryPicker button'))return;
     setTimeout(()=>{try{const selected=typeof formFitStartState!=='undefined'&&Array.isArray(formFitStartState.categories)&&formFitStartState.categories.includes('driver'),begin=document.getElementById('beginSelectedFits');if(selected&&begin&&!begin.disabled)begin.scrollIntoView({behavior:'smooth',block:'center'});}catch(err){}},150);
   },true);
 
-  window.FORM_DRIVER_FLOW_V85=true;window.FORM_DRIVER_FLOW_V851=true;return true;
+  // The normal final analysis stage lasts roughly one second. If it is still visible 2.5 seconds
+  // after reaching "Building your FORM report", treat that as a failed handoff and render results.
+  const recoveryObserver=new MutationObserver(()=>{
+    const overlay=document.getElementById('formAnalysis87'),title=document.getElementById('analysisTitle87');
+    if(!overlay||title?.textContent!=='Building your FORM report'||overlay.dataset.flowRecoveryArmed)return;
+    overlay.dataset.flowRecoveryArmed='true';
+    setTimeout(()=>{
+      const still=document.getElementById('formAnalysis87');
+      if(!still||document.querySelector('#result80Grid .result70Card'))return;
+      try{still.remove();}catch(e){}
+      window.__form87Building=false;
+      try{
+        if(typeof window.__FORM_BASE_SHOW_RESULTS==='function'){
+          window.__FORM_BASE_SHOW_RESULTS();
+          window.scrollTo({top:0,left:0,behavior:'auto'});
+          console.warn('FORM recovered a stalled final report handoff.');
+        }else if(typeof window.showResults==='function'){
+          const current=window.showResults;window.__form87Building=false;current();
+        }
+      }catch(err){console.error('FORM final-stage recovery failed',err);}
+    },2500);
+  });
+  const driver=document.getElementById('driverExperience');if(driver)recoveryObserver.observe(driver,{childList:true,subtree:true,characterData:true});
+
+  window.FORM_DRIVER_FLOW_V85=true;window.FORM_DRIVER_FLOW_V951=true;return true;
 }
 function boot(){let n=0,t=setInterval(()=>{n++;if(init()||n>100)clearInterval(t)},50);}
 if(document.readyState==='complete')setTimeout(boot,30);else window.addEventListener('load',()=>setTimeout(boot,30),{once:true});
