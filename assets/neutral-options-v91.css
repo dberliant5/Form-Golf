@@ -1,11 +1,10 @@
-/* FORM 9.2 — choice neutrality with premium contrast
+/* FORM 9.3.2 — choice neutrality with premium contrast
    Equal choices should feel intentional, not blank. Selection styling appears only after user action. */
 
 :root{
   --form-choice-deep:#29473d;
   --form-choice-mid:#3f6558;
   --form-choice-sage:#e7eee9;
-  --form-choice-blue:#e7eef0;
   --form-choice-stone:#f3f1eb;
   --form-choice-line:#c6d0ca;
 }
@@ -44,7 +43,7 @@
   background:var(--form-choice-stone);
 }
 
-/* Fit-path cards begin equal, but with enough tone to read as deliberate choices. */
+/* Fit-path cards begin equal, with enough tone to read as deliberate choices. */
 #page-fitstart .fitPathCard,
 #page-fitstart .fitPathCard.active,
 #page-fitstart .fitPathCard.recommended{
@@ -52,11 +51,6 @@
   color:var(--form-ink)!important;
   border:1px solid var(--form-choice-line)!important;
   box-shadow:0 5px 16px rgba(37,64,55,.055)!important;
-}
-#page-fitstart .fitPathCard:nth-child(even),
-#page-fitstart .fitPathCard.active:nth-child(even),
-#page-fitstart .fitPathCard.recommended:nth-child(even){
-  background:var(--form-choice-blue)!important;
 }
 #page-fitstart .fitPathCard:hover{
   border-color:var(--form-choice-mid)!important;
