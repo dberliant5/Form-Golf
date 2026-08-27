@@ -1,4 +1,4 @@
-// FORM 9.9 — direct results entrypoint, pre-rendered report, contradiction guards.
+// FORM 9.9.1 — direct results entrypoint, pre-rendered report, contradiction guards.
 (function(){
   'use strict';
 
@@ -11,9 +11,10 @@
     const buildStages=window.FORM_DRIVER_RESULTS_V87.buildStages;
     const enhance=window.FORM_DRIVER_RESULTS_V87.enhance;
     let sanitizedNotes=[];
+    const stateRef=()=>typeof state!=='undefined'?state:null;
 
     function metricNumber(id){
-      const m=window.state?.metrics?.[id];
+      const m=stateRef()?.metrics?.[id];
       if(!m||m.mode==='unknown'||m.value==null)return null;
       if(m.mode==='exact')return Number(m.value);
       const maps={
@@ -26,7 +27,7 @@
 
     function sanitizeContradictoryMetrics(){
       sanitizedNotes=[];
-      const metrics=window.state?.metrics;
+      const metrics=stateRef()?.metrics;
       if(!metrics)return;
       const speed=metricNumber('speed'),ball=metricNumber('ballSpeed'),carry=metricNumber('carry');
       if(speed&&ball){
@@ -115,7 +116,7 @@
       document.getElementById('formAnalysis87')?.remove();
       const stages=(typeof buildStages==='function'&&buildStages())||[{title:'Building your FORM report',detail:'Organizing your recommendations and tradeoffs.',ms:800}];
       const el=document.createElement('section');
-      el.id='formAnalysis87';el.className='formAnalysis87';el.dataset.controller='9.9';
+      el.id='formAnalysis87';el.className='formAnalysis87';el.dataset.controller='9.9.1';
       el.innerHTML='<div class="analysisMark87">FORM</div><div class="analysisKicker87">PERSONALIZED FIT ANALYSIS</div><h2 id="analysisTitle87"></h2><p id="analysisDetail87"></p><div class="analysisTrack87"><div id="analysisFill87"></div></div><div class="analysisLedger87"></div><button type="button" id="analysisReveal99" class="formPrimaryBtn" style="display:none;margin-top:24px">View my FORM report →</button>';
       main.appendChild(el);
       document.querySelectorAll('#driverExperience .step').forEach(x=>x.classList.add('hidden'));
@@ -166,7 +167,6 @@
       runOverlay();
     }
 
-    // Dedicated controller entrypoint. The review CTA no longer depends on a mutable inline showResults chain.
     window.FORM_START_DRIVER_RESULTS=startResults;
     window.showResults=startResults;
     document.addEventListener('click',function(e){
