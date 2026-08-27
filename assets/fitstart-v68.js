@@ -11,6 +11,6 @@
   const load=(key,src)=>{if(document.querySelector(`script[data-${key}]`))return;const s=document.createElement('script');s.src=src;s.setAttribute(`data-${key}`,'true');document.head.appendChild(s);};
   load('form-driver-v83','assets/driver-evidence-v83.js?v=8.3.1');
   load('form-driver-v82','assets/driver-config-v82.js?v=8.2.2');
-  load('form-driver-flow-v84','assets/driver-flow-hotfix-v84.js?v=8.4.1');
-  load('form-driver-flow-v85','assets/driver-flow-v85.js?v=8.5');
+  // v8.5.1 is the sole opening-flow controller. Do not load v8.4 in parallel.
+  load('form-driver-flow-v85','assets/driver-flow-v85.js?v=8.5.1');
 })();
