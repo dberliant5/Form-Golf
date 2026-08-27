@@ -1,43 +1,112 @@
-/* FORM 9.1 — choice neutrality
-   Before a user makes a choice, sibling options must share the same visual treatment.
-   Selection may be emphasized only after an explicit user action. */
+/* FORM 9.2 — choice neutrality with premium contrast
+   Equal choices should feel intentional, not blank. Selection styling appears only after user action. */
 
-/* Home hero CTAs are two choices, not a preselected answer. */
+:root{
+  --form-choice-deep:#29473d;
+  --form-choice-mid:#3f6558;
+  --form-choice-sage:#e7eee9;
+  --form-choice-blue:#e7eef0;
+  --form-choice-stone:#f3f1eb;
+  --form-choice-line:#c6d0ca;
+}
+
+/* Home hero: both CTAs carry equal visual weight. */
 .formHeroActions .formPrimaryBtn,
 .formHeroActions .formSecondaryBtn{
-  border:1px solid #aeb8ae!important;
-  background:transparent!important;
-  color:var(--form-ink)!important;
+  border:1px solid var(--form-choice-deep)!important;
+  background:var(--form-choice-deep)!important;
+  color:#fff!important;
+  box-shadow:0 7px 18px rgba(37,64,55,.10)!important;
 }
 .formHeroActions .formPrimaryBtn:hover,
 .formHeroActions .formSecondaryBtn:hover{
-  border-color:var(--form-green)!important;
-  background:var(--form-sage)!important;
+  background:var(--form-choice-mid)!important;
+  border-color:var(--form-choice-mid)!important;
+  transform:translateY(-1px);
 }
 
-/* Fit-path cards start visually equal. Do not style the default state as chosen. */
+/* Give major homepage blocks subtle surface separation so the layout is not white-on-white. */
+#page-home .heroSite{
+  position:relative;
+}
+#page-home .heroSite:before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:-34px -42px -28px -42px;
+  background:linear-gradient(135deg,rgba(231,238,233,.72),rgba(231,238,240,.48));
+  border:1px solid rgba(198,208,202,.65);
+}
+#page-home .trustBar,
+#page-home .productRoadmap,
+#page-home .featureGrid,
+#page-home .homePrinciples{
+  background:var(--form-choice-stone);
+}
+
+/* Fit-path cards begin equal, but with enough tone to read as deliberate choices. */
 #page-fitstart .fitPathCard,
 #page-fitstart .fitPathCard.active,
 #page-fitstart .fitPathCard.recommended{
-  background:#fff!important;
+  background:var(--form-choice-sage)!important;
   color:var(--form-ink)!important;
-  border-color:var(--form-line)!important;
-  box-shadow:none!important;
+  border:1px solid var(--form-choice-line)!important;
+  box-shadow:0 5px 16px rgba(37,64,55,.055)!important;
+}
+#page-fitstart .fitPathCard:nth-child(even),
+#page-fitstart .fitPathCard.active:nth-child(even),
+#page-fitstart .fitPathCard.recommended:nth-child(even){
+  background:var(--form-choice-blue)!important;
 }
 #page-fitstart .fitPathCard:hover{
-  border-color:#9eaaa0!important;
-  background:#f7f8f4!important;
+  border-color:var(--form-choice-mid)!important;
+  background:#dfe9e2!important;
+  transform:translateY(-1px);
 }
 #page-fitstart .fitPathCard.formUserSelected{
-  border-color:var(--form-green)!important;
-  background:var(--form-sage)!important;
+  border-color:var(--form-choice-deep)!important;
+  background:var(--form-choice-deep)!important;
+  color:#fff!important;
+  box-shadow:0 9px 24px rgba(37,64,55,.16)!important;
+}
+#page-fitstart .fitPathCard.formUserSelected *{
+  color:#fff!important;
 }
 
-/* Generic fitting answer groups: no first/default option should look selected unless the
-   underlying control is actually selected by the user. */
+/* Category choices also need separation from the canvas before selection. */
+#page-fitstart .fitCategoryChoice:not(.active){
+  background:#f7f8f5!important;
+  border-color:var(--form-choice-line)!important;
+}
+#page-fitstart .fitCategoryChoice:not(.active):hover{
+  background:var(--form-choice-sage)!important;
+  border-color:var(--form-choice-mid)!important;
+}
+
+/* Driver interview: neutral does not mean transparent. Every unanswered option shares the same soft surface. */
 #driverExperience .opt:not(.on),
 #driverExperience .metricChoice:not(.on),
 #driverExperience .multiOptions button:not(.on){
-  background:transparent!important;
+  background:#f5f7f4!important;
   color:inherit!important;
+  border-color:var(--form-choice-line)!important;
+}
+#driverExperience .opt:not(.on):hover,
+#driverExperience .metricChoice:not(.on):hover,
+#driverExperience .multiOptions button:not(.on):hover{
+  background:var(--form-choice-sage)!important;
+  border-color:var(--form-choice-mid)!important;
+}
+#driverExperience .opt.on,
+#driverExperience .metricChoice.on,
+#driverExperience .multiOptions button.on{
+  background:var(--form-choice-deep)!important;
+  color:#fff!important;
+  border-color:var(--form-choice-deep)!important;
+}
+
+/* Subtle section rhythm throughout fitting pages. */
+#page-fitstart .fitSelectionPanel,
+#driverExperience .mainPane{
+  background:linear-gradient(180deg,#fff 0%,#fbfcfa 100%);
 }
