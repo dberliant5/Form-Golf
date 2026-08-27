@@ -1,15 +1,61 @@
-// FORM 9.8 — pre-render the report, then use analysis as presentation only.
+// FORM 9.9 — direct results entrypoint, pre-rendered report, contradiction guards.
 (function(){
   'use strict';
 
   function init(){
-    if(window.FORM_DRIVER_RESULTS_CONTROLLER_V98) return true;
+    if(window.FORM_DRIVER_RESULTS_CONTROLLER_V99) return true;
     if(typeof window.__FORM_BASE_SHOW_RESULTS!=='function') return false;
     if(!window.FORM_DRIVER_RESULTS_V87) return false;
 
     const baseResults=window.__FORM_BASE_SHOW_RESULTS;
     const buildStages=window.FORM_DRIVER_RESULTS_V87.buildStages;
     const enhance=window.FORM_DRIVER_RESULTS_V87.enhance;
+    let sanitizedNotes=[];
+
+    function metricNumber(id){
+      const m=window.state?.metrics?.[id];
+      if(!m||m.mode==='unknown'||m.value==null)return null;
+      if(m.mode==='exact')return Number(m.value);
+      const maps={
+        speed:{under75:72,'75-84':80,'85-89':87,'90-94':92,'95-99':97,'100-104':102,'105-109':107,'110-114':112,'115plus':118},
+        ballSpeed:{under120:115,'120-129':125,'130-139':135,'140-149':145,'150-159':155,'160-169':165,'170plus':175},
+        carry:{under180:170,'180-199':190,'200-219':210,'220-239':230,'240-259':250,'260-279':270,'280plus':290}
+      };
+      return maps[id]?.[m.value]||null;
+    }
+
+    function sanitizeContradictoryMetrics(){
+      sanitizedNotes=[];
+      const metrics=window.state?.metrics;
+      if(!metrics)return;
+      const speed=metricNumber('speed'),ball=metricNumber('ballSpeed'),carry=metricNumber('carry');
+      if(speed&&ball){
+        const smash=ball/speed;
+        if(smash<1.12||smash>1.55){
+          metrics.ballSpeed={mode:'unknown',value:null};
+          sanitizedNotes.push(`Ball speed was excluded because it implied a ${smash.toFixed(2)} smash factor, outside a credible driver range.`);
+        }
+      }
+      if(speed&&carry){
+        const yardsPerMph=carry/speed;
+        if(yardsPerMph<1.45||yardsPerMph>3.15){
+          metrics.carry={mode:'unknown',value:null};
+          sanitizedNotes.push('Carry distance was excluded because it conflicted materially with the supplied club speed.');
+        }
+      }
+      window.FORM_DRIVER_SANITIZED_INPUTS=sanitizedNotes.slice();
+    }
+
+    function discloseSanitization(){
+      if(!sanitizedNotes.length)return;
+      const host=document.getElementById('dataStrengthNote')||document.querySelector('#results .dataStrengthNote');
+      if(!host||document.getElementById('formInputGuard99'))return;
+      const note=document.createElement('div');
+      note.id='formInputGuard99';
+      note.className='experienceSignal';
+      note.innerHTML='<b>Input consistency check</b><span>'+sanitizedNotes.join(' ')+' FORM treated the excluded value as unknown rather than allowing contradictory data to increase recommendation confidence.</span>';
+      host.insertAdjacentElement('afterend',note);
+    }
 
     function revealPreparedReport(){
       document.getElementById('formAnalysis87')?.remove();
@@ -25,30 +71,40 @@
       window.__form96Building=false;
       window.__form97Building=false;
       window.__form98Building=false;
+      window.__form99Building=false;
       try{enhance?.();}catch(e){console.warn('FORM results enhancement skipped',e);}
+      discloseSanitization();
       window.scrollTo({top:0,left:0,behavior:'auto'});
     }
 
+    function showPreparationError(err){
+      console.error('FORM report preparation failed',err);
+      const step9=document.getElementById('step9');
+      if(step9)step9.classList.remove('hidden');
+      const main=document.querySelector('#driverExperience .mainPane')||document.getElementById('driverExperience');
+      if(main){
+        let box=document.getElementById('formResultRecovery99');
+        if(!box){
+          box=document.createElement('section');
+          box.id='formResultRecovery99';box.className='resultRecovery';
+          box.innerHTML='<div class="eyebrow">Report could not open</div><h2>FORM kept your review screen available.</h2><p class="lead">The fitting data is still here. Try Generate My Fit again; FORM will not leave you on a loading screen when report preparation fails.</p>';
+          (step9||main).appendChild(box);
+        }
+      }
+    }
+
     function prepareReport(){
-      // Build the actual report first. The analysis screen is never responsible for computation/rendering.
+      sanitizeContradictoryMetrics();
       try{
         document.getElementById('formAnalysis87')?.remove();
         baseResults.call(window);
         const results=document.getElementById('results');
         if(results) results.classList.remove('hidden');
-        return !!(results && (results.textContent||'').trim().length);
+        const ready=!!(results && (results.textContent||'').trim().length);
+        if(!ready)showPreparationError(new Error('Results renderer returned an empty report.'));
+        return ready;
       }catch(err){
-        console.error('FORM report preparation failed',err);
-        const main=document.querySelector('#driverExperience .mainPane')||document.getElementById('driverExperience');
-        if(main){
-          let box=document.getElementById('formResultRecovery98');
-          if(!box){
-            box=document.createElement('section');
-            box.id='formResultRecovery98';box.className='resultRecovery';
-            box.innerHTML='<div class="eyebrow">Fit complete</div><h2>Your fit finished, but the report view hit an error.</h2><p class="lead">FORM stopped before the loading experience so you are not trapped. Refresh once to retry the report view.</p>';
-            main.appendChild(box);
-          }
-        }
+        showPreparationError(err);
         return false;
       }
     }
@@ -59,14 +115,14 @@
       document.getElementById('formAnalysis87')?.remove();
       const stages=(typeof buildStages==='function'&&buildStages())||[{title:'Building your FORM report',detail:'Organizing your recommendations and tradeoffs.',ms:800}];
       const el=document.createElement('section');
-      el.id='formAnalysis87';el.className='formAnalysis87';el.dataset.controller='9.8';
-      el.innerHTML='<div class="analysisMark87">FORM</div><div class="analysisKicker87">PERSONALIZED FIT ANALYSIS</div><h2 id="analysisTitle87"></h2><p id="analysisDetail87"></p><div class="analysisTrack87"><div id="analysisFill87"></div></div><div class="analysisLedger87"></div><button type="button" id="analysisReveal98" class="formPrimaryBtn" style="display:none;margin-top:24px">View my FORM report →</button>';
+      el.id='formAnalysis87';el.className='formAnalysis87';el.dataset.controller='9.9';
+      el.innerHTML='<div class="analysisMark87">FORM</div><div class="analysisKicker87">PERSONALIZED FIT ANALYSIS</div><h2 id="analysisTitle87"></h2><p id="analysisDetail87"></p><div class="analysisTrack87"><div id="analysisFill87"></div></div><div class="analysisLedger87"></div><button type="button" id="analysisReveal99" class="formPrimaryBtn" style="display:none;margin-top:24px">View my FORM report →</button>';
       main.appendChild(el);
       document.querySelectorAll('#driverExperience .step').forEach(x=>x.classList.add('hidden'));
       const nav=document.getElementById('flowNav');if(nav)nav.style.display='none';
       window.scrollTo({top:0,left:0,behavior:'smooth'});
 
-      const title=el.querySelector('#analysisTitle87'),detail=el.querySelector('#analysisDetail87'),fill=el.querySelector('#analysisFill87'),ledger=el.querySelector('.analysisLedger87'),reveal=el.querySelector('#analysisReveal98');
+      const title=el.querySelector('#analysisTitle87'),detail=el.querySelector('#analysisDetail87'),fill=el.querySelector('#analysisFill87'),ledger=el.querySelector('.analysisLedger87'),reveal=el.querySelector('#analysisReveal99');
       reveal.onclick=revealPreparedReport;
       let i=0,done=false;
       const complete=()=>{if(done)return;done=true;revealPreparedReport();};
@@ -88,26 +144,44 @@
           detail.textContent='Your fitting analysis is complete.';
           fill.style.width='100%';
           reveal.style.display='inline-flex';
-          // Automatic path plus explicit user-controlled escape hatch.
           requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>{clearTimeout(hardStop);complete();},650)));
         },Number(s.ms)||800);
       }
       render();
     }
 
-    window.showResults=function(){
-      if(window.__form98Building)return;
-      window.__form98Building=true;
+    function startResults(){
+      if(window.__form99Building)return;
+      window.__form99Building=true;
+      const cta=document.querySelector('#step9 .readyBox button');
+      const oldText=cta?.textContent;
+      if(cta){cta.disabled=true;cta.textContent='Preparing your fit…';}
       const prepared=prepareReport();
-      if(!prepared){window.__form98Building=false;return;}
-      // Hide the already-built report only while the analysis presentation is visible.
+      if(!prepared){
+        window.__form99Building=false;
+        if(cta){cta.disabled=false;cta.textContent=oldText||'Generate My Fit →';}
+        return;
+      }
       document.getElementById('results')?.classList.add('hidden');
       runOverlay();
-    };
+    }
+
+    // Dedicated controller entrypoint. The review CTA no longer depends on a mutable inline showResults chain.
+    window.FORM_START_DRIVER_RESULTS=startResults;
+    window.showResults=startResults;
+    document.addEventListener('click',function(e){
+      const button=e.target?.closest?.('#step9 .readyBox button');
+      if(!button)return;
+      e.preventDefault();
+      e.stopPropagation();
+      if(typeof e.stopImmediatePropagation==='function')e.stopImmediatePropagation();
+      startResults();
+    },true);
 
     window.FORM_DRIVER_RESULTS_CONTROLLER_V96=true;
     window.FORM_DRIVER_RESULTS_CONTROLLER_V97=true;
     window.FORM_DRIVER_RESULTS_CONTROLLER_V98=true;
+    window.FORM_DRIVER_RESULTS_CONTROLLER_V99=true;
     return true;
   }
 
