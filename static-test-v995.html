@@ -3,26 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>FORM 9.9.5 Static Test</title>
+<title>FORM 9.9.6 Static Tap Proxy</title>
 <style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff}
 #formFrame{display:block;border:0;width:100%;height:100%;min-height:100dvh;background:#fff}
-#diag{position:fixed;left:8px;bottom:8px;z-index:2147483647;padding:5px 8px;border-radius:999px;background:rgba(0,0,0,.78);color:#fff;font:11px/1.2 -apple-system,BlinkMacSystemFont,sans-serif;pointer-events:none;opacity:.72}
+#diag{position:fixed;left:8px;bottom:8px;z-index:2147483647;padding:5px 8px;border-radius:999px;background:rgba(0,0,0,.78);color:#fff;font:11px/1.2 -apple-system,BlinkMacSystemFont,sans-serif;pointer-events:none;opacity:.8}
+#tapProxy{position:fixed;z-index:2147483646;display:none;border:0;background:transparent;color:transparent;padding:0;margin:0;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 </style>
 </head>
 <body>
-<iframe id="formFrame" title="FORM" src="index.html?v=9.9.5-static"></iframe>
-<div id="diag">STATIC 9.9.5 · loading</div>
+<iframe id="formFrame" title="FORM" src="index.html?v=9.9.6-static"></iframe>
+<button id="tapProxy" type="button" aria-label="Generate My Fit"></button>
+<div id="diag">STATIC 9.9.6 · loading</div>
 <script>
 (function(){
 'use strict';
 var frame=document.getElementById('formFrame');
+var proxy=document.getElementById('tapProxy');
 var diag=document.getElementById('diag');
 var boundDoc=null;
-function setDiag(t){diag.textContent='STATIC 9.9.5 · '+t;}
+var lastButton=null;
+function setDiag(t){diag.textContent='STATIC 9.9.6 · '+t;}
 function startFit(w,b){
   if(b){b.disabled=false;b.textContent='Preparing your fit…';b.setAttribute('data-static-fired','1');}
-  setDiag('tap received');
+  setDiag('PARENT TAP RECEIVED');
+  proxy.style.display='none';
   setTimeout(function(){
     try{
       if(typeof w.FORM_START_DRIVER_RESULTS==='function'){w.FORM_START_DRIVER_RESULTS();setDiag('controller started');return;}
@@ -30,45 +35,64 @@ function startFit(w,b){
       if(typeof w.showResults==='function'){w.showResults();setDiag('showResults started');return;}
       throw new Error('No results function');
     }catch(err){
-      console.error('STATIC 9.9.5 Generate failure',err);
+      console.error('STATIC 9.9.6 Generate failure',err);
       if(b){b.disabled=false;b.textContent='Generate My Fit →';}
       setDiag('results function missing');
+      positionProxy();
     }
   },0);
+}
+function positionProxy(){
+  var w,d,b,r,fr;
+  try{w=frame.contentWindow;d=w.document;}catch(e){proxy.style.display='none';setDiag('frame access blocked');return;}
+  if(!d)return;
+  b=d.querySelector('#step9 .readyBox button');
+  if(!b || b.offsetParent===null){proxy.style.display='none';return;}
+  lastButton=b;
+  r=b.getBoundingClientRect();
+  fr=frame.getBoundingClientRect();
+  if(r.width<10||r.height<10){proxy.style.display='none';return;}
+  proxy.style.left=(fr.left+r.left)+'px';
+  proxy.style.top=(fr.top+r.top)+'px';
+  proxy.style.width=r.width+'px';
+  proxy.style.height=r.height+'px';
+  proxy.style.display='block';
+  proxy.setAttribute('aria-label',(b.textContent||'Generate My Fit').trim());
+  if(!b.dataset.proxyMarked){b.dataset.proxyMarked='1';setDiag('parent proxy armed');}
 }
 function bind(){
   var w,d;
   try{w=frame.contentWindow;d=w.document;}catch(e){setDiag('frame access blocked');return;}
-  if(!d||d===boundDoc)return;
-  boundDoc=d;
-  setDiag('app loaded');
-  function hit(e){
-    var t=e.target;
-    var b=t&&t.closest?t.closest('#step9 .readyBox button'):null;
-    if(!b)return;
-    e.preventDefault();
-    e.stopPropagation();
-    if(e.stopImmediatePropagation)e.stopImmediatePropagation();
-    startFit(w,b);
-  }
-  d.addEventListener('pointerdown',hit,true);
-  d.addEventListener('touchstart',hit,{capture:true,passive:false});
-  d.addEventListener('click',hit,true);
-  setInterval(function(){
-    try{
-      var b=d.querySelector('#step9 .readyBox button');
+  if(!d)return;
+  if(d!==boundDoc){
+    boundDoc=d;
+    setDiag('app loaded');
+    function hit(e){
+      var t=e.target;
+      var b=t&&t.closest?t.closest('#step9 .readyBox button'):null;
       if(!b)return;
-      b.disabled=false;
-      b.style.pointerEvents='auto';
-      b.style.touchAction='manipulation';
-      b.style.position='relative';
-      b.style.zIndex='2147483647';
-      b.onclick=function(e){if(e){e.preventDefault();e.stopPropagation();}startFit(w,b);return false;};
-    }catch(e){}
-  },250);
+      e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+      startFit(w,b);
+    }
+    d.addEventListener('pointerdown',hit,true);
+    d.addEventListener('touchstart',hit,{capture:true,passive:false});
+    d.addEventListener('click',hit,true);
+  }
+  positionProxy();
 }
+function proxyHit(e){
+  e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+  var w;try{w=frame.contentWindow;}catch(err){setDiag('frame access blocked');return false;}
+  startFit(w,lastButton);
+  return false;
+}
+proxy.addEventListener('pointerdown',proxyHit,{capture:true,passive:false});
+proxy.addEventListener('touchstart',proxyHit,{capture:true,passive:false});
+proxy.addEventListener('click',proxyHit,true);
 frame.addEventListener('load',function(){setDiag('frame loaded');bind();});
-setInterval(bind,500);
+setInterval(bind,150);
+window.addEventListener('resize',positionProxy);
+window.addEventListener('orientationchange',function(){setTimeout(positionProxy,250);});
 })();
 </script>
 </body>
