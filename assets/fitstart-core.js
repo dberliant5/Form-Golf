@@ -1,7 +1,7 @@
-// FORM 9.4.3 core — clear fitting-path taxonomy, strict scoping, honest customization
+// FORM 9.5 core — fitting-path taxonomy, strict scoping, honest customization, guarded results transition
 (function(){
   'use strict';
-  const neutral=document.createElement('link');neutral.rel='stylesheet';neutral.href='assets/neutral-options-v91.css?v=9.4.3';neutral.dataset.formNeutral='true';if(!document.querySelector('link[data-form-neutral]'))document.head.appendChild(neutral);
+  const neutral=document.createElement('link');neutral.rel='stylesheet';neutral.href='assets/neutral-options-v91.css?v=9.5';neutral.dataset.formNeutral='true';if(!document.querySelector('link[data-form-neutral]'))document.head.appendChild(neutral);
   const style=document.createElement('style');style.textContent=`#page-fitstart .fitDepthPanel{display:none!important}#page-fitstart .fitStartSummaryDepth{display:none!important}#page-fitstart .fitSelectionPanel{scroll-margin-top:86px}#page-fitstart #fitCategoryPicker{scroll-margin-top:94px}#page-fitstart .fitSelectionTop{margin-top:0}#page-fitstart .fitPathCard.recommended:before,#page-fitstart .fitPathCard.recommended:after{display:none!important;content:none!important}#page-fitstart .fitPathBullets{margin:18px 0 16px;padding:0;list-style:none;display:grid;gap:8px;text-align:left}#page-fitstart .fitPathBullets li{position:relative;padding-left:18px;font-size:13px;line-height:1.45}#page-fitstart .fitPathBullets li:before{content:'•';position:absolute;left:2px;font-weight:800;color:var(--form-choice-mid)}#page-fitstart .fitPathCard.formUserSelected .fitPathBullets li:before{color:#fff}#fitScopeHelp{margin:8px 0 0;font-size:13px;line-height:1.45;color:var(--form-muted)}`;document.head.appendChild(style);
 
   const EQUIPMENT_IDS=new Set(['driver','fairway','fairways','hybrid','hybrids','irons','wedges','putter','putters','ball','balls']);
@@ -62,7 +62,9 @@
   const load=(key,src)=>{if(document.querySelector(`script[data-${key}]`))return;const s=document.createElement('script');s.async=false;s.src=src;s.setAttribute(`data-${key}`,'true');document.head.appendChild(s);};
   load('form-driver-v83','assets/driver-evidence-v83.js?v=8.9.1');
   load('form-driver-v90','assets/driver-evidence-v90.js?v=9.0');
+  load('form-driver-results-base-v95','assets/driver-results-base-capture-v95.js?v=9.5');
   load('form-driver-results-v87','assets/driver-results-v87.js?v=8.7');
+  load('form-driver-results-watchdog-v95','assets/driver-results-watchdog-v95.js?v=9.5');
   load('form-driver-proven-v89','assets/driver-proven-v89.js?v=8.9');
   load('form-driver-flow-v85','assets/driver-flow-v85.js?v=8.5.1');
   load('form-driver-polish-v86','assets/driver-polish-v86.js?v=8.6');
