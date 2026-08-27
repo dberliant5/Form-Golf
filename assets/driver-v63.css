@@ -32,3 +32,10 @@
 .experienceSignal{display:grid;gap:4px;padding:12px 14px;margin-top:10px;background:#faf8f1;font-size:10px;line-height:1.5}.experienceSignal b{color:var(--deep)}.experienceSignal span{color:var(--muted)}
 @media(max-width:900px){#driverExperience.active .topline{padding:18px 20px 8px}#driverExperience.active .fitStage{padding:0 20px 12px}#driverExperience.active .mainPane{padding-top:30px}.driverResultsLayout{grid-template-columns:1fr}.driverResultsOracle{display:none}.fitBreakdown{grid-template-columns:repeat(3,1fr)}.fitBreakdown>div{border-bottom:1px solid var(--line)}}
 @media(max-width:600px){#driverExperience.active .shell{min-height:calc(100svh - 68px);padding-bottom:10px!important}#driverExperience.active .topline{padding:12px 16px 6px}#driverExperience.active .fitStage{padding:0 16px}#driverExperience.active .mainPane{min-height:0;padding-top:24px}#driverExperience.active .flowNav{margin-top:12px;padding-top:10px}#driverExperience.active .lead{margin:14px 0 18px}.metricAnswerRow{display:block}.metricModeSelectWrap{margin-top:10px}.metricModeSelect{width:100%}#step9 .reviewGroup{padding:18px!important}#step9 .reviewRows{grid-template-columns:1fr}#step9 .reviewRow>b{text-align:left}.fitBreakdown{grid-template-columns:1fr 1fr}.fitBreakdown span{min-height:0}}
+
+/* FORM 9.1 choice neutrality — all sibling choices begin visually equal. */
+.formHeroActions .formPrimaryBtn,.formHeroActions .formSecondaryBtn{border:1px solid #aeb8ae!important;background:transparent!important;color:var(--form-ink)!important}
+.formHeroActions .formPrimaryBtn:hover,.formHeroActions .formSecondaryBtn:hover{border-color:var(--form-green)!important;background:var(--form-sage)!important}
+#page-fitstart .fitPathCard,#page-fitstart .fitPathCard.active,#page-fitstart .fitPathCard.recommended{background:#fff!important;color:var(--form-ink)!important;border-color:var(--form-line)!important;box-shadow:none!important}
+#page-fitstart .fitPathCard:hover{border-color:#9eaaa0!important;background:#f7f8f4!important}
+#page-fitstart .fitPathCard.formUserSelected{border-color:var(--form-green)!important;background:var(--form-sage)!important}
