@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>FORM 9.9.7 Base Renderer Test</title>
+<title>FORM 9.9.8 Early Renderer Test</title>
 <style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff}
 #formFrame{display:block;border:0;width:100%;height:100%;min-height:100dvh;background:#fff}
@@ -12,37 +12,37 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff}
 </style>
 </head>
 <body>
-<iframe id="formFrame" title="FORM" src="index.html?v=9.9.7-base"></iframe>
+<iframe id="formFrame" title="FORM" src="index.html?v=9.9.8-early"></iframe>
 <button id="tapProxy" type="button" aria-label="Generate My Fit"></button>
-<div id="diag">STATIC 9.9.7 · loading</div>
+<div id="diag">STATIC 9.9.8 · loading</div>
 <script>
 (function(){
 'use strict';
 var frame=document.getElementById('formFrame'),proxy=document.getElementById('tapProxy'),diag=document.getElementById('diag'),lastButton=null,armed=false;
-function status(t){diag.textContent='STATIC 9.9.7 · '+t;}
+function status(t){diag.textContent='STATIC 9.9.8 · '+t;}
 function position(){
   try{
     var d=frame.contentWindow.document,b=d.querySelector('#step9 .readyBox button');
     if(!b||b.offsetParent===null){proxy.style.display='none';return;}
     lastButton=b;var r=b.getBoundingClientRect(),fr=frame.getBoundingClientRect();
     proxy.style.left=(fr.left+r.left)+'px';proxy.style.top=(fr.top+r.top)+'px';proxy.style.width=r.width+'px';proxy.style.height=r.height+'px';proxy.style.display='block';
-    if(!armed){armed=true;status('BASE PROXY ARMED');}
+    if(!armed){armed=true;status('EARLY PROXY ARMED');}
   }catch(e){status('frame access blocked');}
 }
 function run(e){
   if(e){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();}
   proxy.style.display='none';
   if(lastButton){lastButton.textContent='Preparing your fit…';lastButton.disabled=true;}
-  status('CALLING BASE RENDERER');
+  status('CALLING EARLY RENDERER');
   setTimeout(function(){
     try{
       var w=frame.contentWindow;
-      if(typeof w.__FORM_BASE_SHOW_RESULTS!=='function')throw new Error('Base renderer missing');
-      w.__FORM_BASE_SHOW_RESULTS.call(w);
-      status('BASE RENDERER RETURNED');
+      if(typeof w.__FORM_EARLY_DRIVER_RENDERER!=='function')throw new Error('Early renderer missing');
+      w.__FORM_EARLY_DRIVER_RENDERER.call(w);
+      status('EARLY RENDERER RETURNED');
     }catch(err){
-      console.error('FORM base renderer diagnostic failed',err);
-      status('BASE ERROR: '+(err&&err.message?err.message:'unknown'));
+      console.error('FORM early renderer diagnostic failed',err);
+      status('EARLY ERROR: '+(err&&err.message?err.message:'unknown'));
       if(lastButton){lastButton.textContent='Generate My Fit →';lastButton.disabled=false;}
       position();
     }
