@@ -1,0 +1,43 @@
+/* FORM 9.1 — choice neutrality
+   Before a user makes a choice, sibling options must share the same visual treatment.
+   Selection may be emphasized only after an explicit user action. */
+
+/* Home hero CTAs are two choices, not a preselected answer. */
+.formHeroActions .formPrimaryBtn,
+.formHeroActions .formSecondaryBtn{
+  border:1px solid #aeb8ae!important;
+  background:transparent!important;
+  color:var(--form-ink)!important;
+}
+.formHeroActions .formPrimaryBtn:hover,
+.formHeroActions .formSecondaryBtn:hover{
+  border-color:var(--form-green)!important;
+  background:var(--form-sage)!important;
+}
+
+/* Fit-path cards start visually equal. Do not style the default state as chosen. */
+#page-fitstart .fitPathCard,
+#page-fitstart .fitPathCard.active,
+#page-fitstart .fitPathCard.recommended{
+  background:#fff!important;
+  color:var(--form-ink)!important;
+  border-color:var(--form-line)!important;
+  box-shadow:none!important;
+}
+#page-fitstart .fitPathCard:hover{
+  border-color:#9eaaa0!important;
+  background:#f7f8f4!important;
+}
+#page-fitstart .fitPathCard.formUserSelected{
+  border-color:var(--form-green)!important;
+  background:var(--form-sage)!important;
+}
+
+/* Generic fitting answer groups: no first/default option should look selected unless the
+   underlying control is actually selected by the user. */
+#driverExperience .opt:not(.on),
+#driverExperience .metricChoice:not(.on),
+#driverExperience .multiOptions button:not(.on){
+  background:transparent!important;
+  color:inherit!important;
+}
