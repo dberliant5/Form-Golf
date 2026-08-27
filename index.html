@@ -5,6 +5,7 @@
 <title>FORM — Fit the Whole Golfer</title>
 <link rel="stylesheet" href="assets/form-base.css">
 <link rel="stylesheet" href="assets/form-responsive.css">
+<link rel="stylesheet" href="assets/neutral-options-v91.css?v=9.3.1">
 <link rel="stylesheet" href="assets/driver-v63.css?v=6.9">
 <link rel="stylesheet" href="assets/driver-engine-v70.css?v=7.0">
 </head>
@@ -180,29 +181,29 @@
       <div class="fitStartIntro">
         <div class="formEyebrow">Start Your Fit</div>
         <h1>How would you like FORM to help today?</h1>
-        <p>Choose one fitting, optimize your full equipment setup, or build a complete golf profile that covers everything FORM can recommend.</p>
+        <p>Choose one category, fit your full bag, or build a complete golfer profile.</p>
       </div>
 
       <div class="fitPathGrid">
-        <button class="fitPathCard active" data-fit-path="single" onclick="selectFitPath('single')">
-          <div class="fitPathLabel">Single Fit</div>
-          <h2>I need help with one thing.</h2>
-          <p>Choose one category and go directly into that fitting.</p>
-          <span>Best for a focused purchase</span>
+        <button class="fitPathCard" data-fit-path="single" onclick="selectFitPath('single')">
+          <div class="fitPathLabel">One fitting</div>
+          <h2>Fit one part of my game.</h2>
+          <p>Choose one category—such as driver, irons, wedges, putter or golf ball.</p>
+          <span>One category · start there</span>
         </button>
 
-        <button class="fitPathCard recommended" data-fit-path="equipment" onclick="selectFitPath('equipment')">
-          <div class="fitPathLabel">FORM Equipment</div>
-          <h2>Optimize my entire bag.</h2>
-          <p>Driver, fairways and hybrids, irons, wedges, putter, golf ball and bag.</p>
-          <span>Recommended for serious golfers</span>
+        <button class="fitPathCard" data-fit-path="equipment" onclick="selectFitPath('equipment')">
+          <div class="fitPathLabel">Full bag</div>
+          <h2>Fit all my equipment.</h2>
+          <p>Fit your driver through golf ball and bag as one connected equipment setup.</p>
+          <span>All equipment categories</span>
         </button>
 
         <button class="fitPathCard" data-fit-path="complete" onclick="selectFitPath('complete')">
-          <div class="fitPathLabel">FORM Complete</div>
-          <h2>Fit the whole golfer.</h2>
-          <p>Everything in FORM Equipment plus shoes, gloves, apparel and future lifestyle categories.</p>
-          <span>One profile for your whole game</span>
+          <div class="fitPathLabel">Full golfer</div>
+          <h2>Build my complete golf profile.</h2>
+          <p>Everything in Full Bag, plus shoes, gloves, apparel and broader golfer preferences.</p>
+          <span>Equipment + the rest of your game</span>
         </button>
       </div>
 
@@ -210,7 +211,7 @@
         <div class="fitSelectionTop">
           <div>
             <div class="formEyebrow">Choose categories</div>
-            <h2 id="fitSelectionTitle">Select one fitting.</h2>
+            <h2 id="fitSelectionTitle">Choose a fitting path above.</h2>
           </div>
           <div class="fitSelectionCount"><b id="fitCategoryCount">0</b><span>selected</span></div>
         </div>
@@ -237,7 +238,7 @@
         </div>
 
         <div class="fitStartFooter">
-          <div id="fitStartSummary">Choose at least one fitting to continue.</div>
+          <div id="fitStartSummary">Choose how you want FORM to help first.</div>
           <button id="beginSelectedFits" class="formPrimaryBtn" onclick="beginSelectedFits()" disabled>Begin fitting</button>
         </div>
       </div>
@@ -717,7 +718,6 @@
         <div class="eyebrow">Preference fit</div><h1>If performance is close, what feels like you?</h1><p class="lead">This is a tie-breaker, not a shortcut around performance.</p>
         <div class="options" data-group="style"><button class="opt on" data-v="balanced">No strong preference</button><button class="opt" data-v="classic">Classic & understated</button><button class="opt" data-v="technical">Engineered & purposeful</button><button class="opt" data-v="modern">Modern & cool</button><button class="opt" data-v="edgy">Edgy & different</button></div>
       </section>
-
       <section id="step8" class="step hidden">
 <div class="eyebrow">Current gamer baseline</div>
 <h1>What driver are we trying to beat?</h1>
@@ -775,7 +775,7 @@
 <script src="assets/app-2.js"></script>
 <script src="assets/app-3.js"></script>
 <script src="assets/driver-v63.js?v=6.9"></script><script src="assets/driver-engine-v67.js?v=6.9"></script>
-<script src="assets/fitstart-v68.js?v=6.8"></script>
+<script src="assets/fitstart-v68.js?v=9.3.1"></script>
 <script src="assets/driver-engine-v70.js?v=7.1"></script>
 <script src="assets/driver-input-guard-v71.js?v=7.3"></script>
 <script src="assets/driver-evidence-v80.js?v=8.0"></script>
