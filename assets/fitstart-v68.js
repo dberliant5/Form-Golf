@@ -9,8 +9,9 @@
   if(typeof renderFitStart==='function'){const originalRenderFitStart=renderFitStart;renderFitStart=function(){formFitStartState.depth='complete';originalRenderFitStart();document.querySelector('#page-fitstart .fitDepthPanel')?.remove();const summary=document.getElementById('fitStartSummary');if(summary){const count=(formFitStartState.categories||[]).filter(id=>!formFitCategoryMeta.find(x=>x.id===id)?.future).length,labels=(formFitStartState.categories||[]).filter(id=>!formFitCategoryMeta.find(x=>x.id===id)?.future).map(id=>formFitCategoryMeta.find(x=>x.id===id)?.label).filter(Boolean);summary.textContent=count?labels.join(', '):'Choose at least one fitting to continue.';}};}
   setTimeout(()=>{if(typeof renderFitStart==='function')renderFitStart()},0);
   const load=(key,src)=>{if(document.querySelector(`script[data-${key}]`))return;const s=document.createElement('script');s.src=src;s.setAttribute(`data-${key}`,'true');document.head.appendChild(s);};
-  load('form-driver-v83','assets/driver-evidence-v83.js?v=8.3.2');
+  load('form-driver-v83','assets/driver-evidence-v83.js?v=8.3.3');
   load('form-driver-results-v87','assets/driver-results-v87.js?v=8.7');
+  load('form-driver-quality-v88','assets/driver-quality-v88.js?v=8.8');
   load('form-driver-flow-v85','assets/driver-flow-v85.js?v=8.5.1');
   load('form-driver-polish-v86','assets/driver-polish-v86.js?v=8.6');
 })();
