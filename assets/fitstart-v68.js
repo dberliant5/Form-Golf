@@ -8,8 +8,10 @@
   if(typeof selectFitPath==='function'){const originalSelectFitPath=selectFitPath;selectFitPath=function(path){originalSelectFitPath(path);formFitStartState.depth='complete';if(typeof renderFitStart==='function')renderFitStart();if(path==='single')setTimeout(scrollToCategoryChoices,40);};}
   if(typeof renderFitStart==='function'){const originalRenderFitStart=renderFitStart;renderFitStart=function(){formFitStartState.depth='complete';originalRenderFitStart();document.querySelector('#page-fitstart .fitDepthPanel')?.remove();const summary=document.getElementById('fitStartSummary');if(summary){const count=(formFitStartState.categories||[]).filter(id=>!formFitCategoryMeta.find(x=>x.id===id)?.future).length,labels=(formFitStartState.categories||[]).filter(id=>!formFitCategoryMeta.find(x=>x.id===id)?.future).map(id=>formFitCategoryMeta.find(x=>x.id===id)?.label).filter(Boolean);summary.textContent=count?labels.join(', '):'Choose at least one fitting to continue.';}};}
   setTimeout(()=>{if(typeof renderFitStart==='function')renderFitStart()},0);
-  const load=(key,src)=>{if(document.querySelector(`script[data-${key}]`))return;const s=document.createElement('script');s.src=src;s.setAttribute(`data-${key}`,'true');document.head.appendChild(s);};
-  load('form-driver-v83','assets/driver-evidence-v83.js?v=8.9');
+  const load=(key,src)=>{if(document.querySelector(`script[data-${key}]`))return;const s=document.createElement('script');s.async=false;s.src=src;s.setAttribute(`data-${key}`,'true');document.head.appendChild(s);};
+  // Evidence layers must initialize in order: capability model -> proven-performance validation -> dimension calibration.
+  load('form-driver-v83','assets/driver-evidence-v83.js?v=8.9.1');
+  load('form-driver-v90','assets/driver-evidence-v90.js?v=9.0');
   load('form-driver-results-v87','assets/driver-results-v87.js?v=8.7');
   load('form-driver-proven-v89','assets/driver-proven-v89.js?v=8.9');
   load('form-driver-flow-v85','assets/driver-flow-v85.js?v=8.5.1');
