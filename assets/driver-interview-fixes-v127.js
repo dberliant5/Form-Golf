@@ -1,11 +1,11 @@
-// FORM 10.29 — explicit handedness Continue without persistent DOM observers.
+// FORM 10.30 — handedness stays on-screen until Continue is explicitly pressed.
 (function(){
 'use strict';
 function init(){
  if(typeof state==='undefined')return false;
  const driver=document.getElementById('driverExperience'),handed=document.getElementById('handedQuestion'),brand=document.getElementById('brandQuestion'),flow=document.getElementById('flowNav');
  if(!driver||!handed||!brand)return false;
- let confirmed=false;
+ let confirmed=false,guardTimer=null,guardStop=null;
  function keepHandedVisible(){
   if(confirmed)return;
   const parent=handed.closest('.step')||brand.closest('.step');
@@ -17,9 +17,17 @@ function init(){
   if(typeof step!=='undefined')step=1;
   const sc=document.getElementById('stepCount');if(sc)sc.textContent='01 / 09';
  }
+ function stopGuard(){if(guardTimer){clearInterval(guardTimer);guardTimer=null;}if(guardStop){clearTimeout(guardStop);guardStop=null;}}
+ function armGuard(){
+  stopGuard();confirmed=false;keepHandedVisible();
+  // Some legacy handlers advance on a later touch/click phase. Hold this screen only
+  // for a short, finite window; Continue immediately disables the guard.
+  guardTimer=setInterval(()=>{if(confirmed){stopGuard();return;}keepHandedVisible();},25);
+  guardStop=setTimeout(()=>{stopGuard();if(!confirmed)keepHandedVisible();},700);
+ }
  function showBrand(){
   if(!state.handed)return;
-  confirmed=true;
+  confirmed=true;stopGuard();
   const parent=brand.closest('.step');
   document.querySelectorAll('#driverExperience .step').forEach(x=>x.classList.add('hidden'));
   if(parent)parent.classList.remove('hidden');
@@ -39,31 +47,24 @@ function init(){
  function ownChoices(){
   const group=handed.querySelector('[data-group="handed"]');if(!group)return;
   [...group.querySelectorAll('.opt')].forEach(old=>{
-    if(old.dataset.formV129Owned)return;
-    const btn=old.cloneNode(true);btn.dataset.formV129Owned='1';old.replaceWith(btn);
+    if(old.dataset.formV130Owned)return;
+    const btn=old.cloneNode(true);btn.dataset.formV130Owned='1';old.replaceWith(btn);
     btn.classList.toggle('on',btn.dataset.v===state.handed);
     btn.addEventListener('click',e=>{
       e.preventDefault();e.stopImmediatePropagation();
-      confirmed=false;
       group.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));
       btn.classList.add('on');state.handed=btn.dataset.v;
       if(typeof updateDerived==='function')updateDerived();
-      ensureContinue();
-      // Legacy handlers may try to advance after selection. Restore only a few times,
-      // then stop completely so Brands and later questions are never observed/rewritten.
-      queueMicrotask(keepHandedVisible);
-      setTimeout(keepHandedVisible,0);
-      setTimeout(keepHandedVisible,40);
+      ensureContinue();armGuard();
     },true);
   });
   ensureContinue();
  }
  ownChoices();keepHandedVisible();
- // Re-own only when the handedness question is explicitly shown again (e.g. Back).
  driver.addEventListener('click',e=>{
    if(e.target.closest('.formBrandBottomBack')||e.target.closest('#backBtn'))setTimeout(()=>{if(!handed.classList.contains('hidden')){confirmed=false;ownChoices();keepHandedVisible();}},30);
  },true);
- window.FORM_DRIVER_INTERVIEW_FIXES_V129=true;
+ window.FORM_DRIVER_INTERVIEW_FIXES_V130=true;
  return true;
 }
 let n=0,t=setInterval(()=>{n++;if(init()||n>200)clearInterval(t)},50);
