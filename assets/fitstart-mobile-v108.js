@@ -1,11 +1,22 @@
-// FORM 10.12 — compact mobile prompt; fitting choices are visually primary.
+// FORM 10.17 — compact mobile prompt + high-contrast fitting selections.
 (function(){
 'use strict';
 function init(){
-  if(window.FORM_FITSTART_MOBILE_V112)return true;
+  if(window.FORM_FITSTART_MOBILE_V117)return true;
   const page=document.getElementById('page-fitstart');if(!page)return false;
   const style=document.createElement('style');
   style.textContent=`
+  #page-fitstart .fitCategoryChoice.active{
+    background:var(--deep,#263e33)!important;
+    border-color:var(--deep,#263e33)!important;
+    color:#fff!important;
+    box-shadow:inset 0 0 0 1px var(--deep,#263e33)!important;
+  }
+  #page-fitstart .fitCategoryChoice.active b,
+  #page-fitstart .fitCategoryChoice.active span,
+  #page-fitstart .fitCategoryChoice.active small{color:#fff!important}
+  #page-fitstart .fitCategoryChoice.active span{opacity:.86!important}
+  #page-fitstart .fitCategoryChoice.active small{opacity:.72!important}
   @media(max-width:640px){
     body.formFitStartActiveMobile .shell>div:first-child{display:none!important}
     #page-fitstart .fitStartShell{padding:8px 14px 22px!important;margin:0!important}
@@ -28,19 +39,12 @@ function init(){
     #page-fitstart .fitSelectionPanel{margin-top:10px!important;padding-top:10px!important}
   }`;
   document.head.appendChild(style);
-  function syncCopy(){
-    const h=page.querySelector('.fitStartIntro h1');
-    if(h&&h.textContent!=='How would you like FORM to help?')h.textContent='How would you like FORM to help?';
-  }
-  function sync(){
-    const mobile=window.matchMedia('(max-width:640px)').matches;
-    document.body.classList.toggle('formFitStartActiveMobile',mobile&&page.classList.contains('active'));
-    if(mobile)syncCopy();
-  }
+  function syncCopy(){const h=page.querySelector('.fitStartIntro h1');if(h&&h.textContent!=='How would you like FORM to help?')h.textContent='How would you like FORM to help?';}
+  function sync(){const mobile=window.matchMedia('(max-width:640px)').matches;document.body.classList.toggle('formFitStartActiveMobile',mobile&&page.classList.contains('active'));if(mobile)syncCopy();}
   new MutationObserver(sync).observe(page,{attributes:true,attributeFilter:['class']});
   window.addEventListener('resize',sync,{passive:true});
   sync();
-  window.FORM_FITSTART_MOBILE_V108=true;window.FORM_FITSTART_MOBILE_V109=true;window.FORM_FITSTART_MOBILE_V112=true;return true;
+  window.FORM_FITSTART_MOBILE_V108=true;window.FORM_FITSTART_MOBILE_V109=true;window.FORM_FITSTART_MOBILE_V112=true;window.FORM_FITSTART_MOBILE_V117=true;return true;
 }
 let n=0,t=setInterval(()=>{n++;if(init()||n>120)clearInterval(t)},50);
 })();
