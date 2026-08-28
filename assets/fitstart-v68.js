@@ -9,6 +9,12 @@
   s.src='assets/fitstart-core.js?v='+encodeURIComponent(build);
   s.dataset.formFitstartCore='true';
   s.onload=()=>{
+    const calibration=document.createElement('script');
+    calibration.async=false;
+    calibration.src='assets/driver-ranking-calibration-v101.js?v='+encodeURIComponent(build);
+    calibration.dataset.formDriverRankingCalibration='true';
+    document.head.appendChild(calibration);
+
     const flow=document.createElement('script');
     flow.async=false;
     flow.src='assets/driver-flow-v85.js?v='+encodeURIComponent(build);
@@ -20,6 +26,12 @@
     results.src='assets/driver-results-controller-v96.js?v='+encodeURIComponent(build);
     results.dataset.formResultsController='true';
     document.head.appendChild(results);
+
+    const transition=document.createElement('script');
+    transition.async=false;
+    transition.src='assets/driver-results-transition-v101.js?v='+encodeURIComponent(build);
+    transition.dataset.formDriverResultsTransition='true';
+    document.head.appendChild(transition);
   };
   document.head.appendChild(s);
 })();
