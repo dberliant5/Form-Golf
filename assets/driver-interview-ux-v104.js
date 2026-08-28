@@ -1,8 +1,8 @@
-// FORM 10.10 — stable interview navigation + range-first launch-monitor inputs.
+// FORM 10.17 — stable interview navigation + range-first launch-monitor inputs.
 (function(){
 'use strict';
 function init(){
-  if(window.FORM_DRIVER_INTERVIEW_UX_V110||typeof state==='undefined')return false;
+  if(window.FORM_DRIVER_INTERVIEW_UX_V117||typeof state==='undefined')return false;
   const driver=document.getElementById('driverExperience');if(!driver)return false;
   const handed=document.getElementById('handedQuestion'),brand=document.getElementById('brandQuestion'),flowNav=document.getElementById('flowNav');
   if(!handed||!brand)return false;
@@ -18,14 +18,14 @@ function init(){
     #driverExperience #brandQuestion .brandScopePanel>h1{font-family:Georgia,serif;font-size:clamp(34px,4.4vw,58px);font-weight:400;line-height:1.03;letter-spacing:-.035em;color:var(--deep);margin:0}
     #driverExperience #brandQuestion .brandScopePanel>.lead{margin:16px 0 24px;max-width:760px}
     #driverExperience #brandQuestion .brandModeGrid{margin-top:0}
-    #driverExperience #brandQuestion .brandScopeActions{display:flex;justify-content:flex-end;margin-top:20px}
-    #driverExperience #brandQuestion .brandScopeConfirm{min-width:150px}
+    #driverExperience #brandQuestion .brandScopeActions{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-top:20px}
+    #driverExperience #brandQuestion .brandScopeActions .brandScopeConfirm{width:auto!important;min-width:145px!important;max-width:145px!important;flex:0 0 145px!important;padding:15px 20px!important;margin-left:auto!important}
     @media(max-width:760px){
       #driverExperience .formOpeningContinue{margin-top:16px}
       #driverExperience .formOpeningContinue button{width:100%}
       #driverExperience #brandQuestion .brandScopePanel>h1{font-size:clamp(32px,10vw,44px)}
       #driverExperience #brandQuestion .brandScopeActions{margin-top:16px}
-      #driverExperience #brandQuestion .brandScopeConfirm{width:100%}
+      #driverExperience #brandQuestion .brandScopeActions .brandScopeConfirm{width:145px!important;min-width:145px!important;max-width:145px!important;flex-basis:145px!important}
     }
   `;document.head.appendChild(style);
 
@@ -38,6 +38,10 @@ function init(){
     if(confirm){
       if(!confirm.classList.contains('solidBtn'))confirm.classList.add('solidBtn');
       if(confirm.textContent!=='Continue →')confirm.textContent='Continue →';
+      confirm.style.setProperty('width','145px','important');
+      confirm.style.setProperty('min-width','145px','important');
+      confirm.style.setProperty('max-width','145px','important');
+      confirm.style.setProperty('flex','0 0 145px','important');
     }
   }
   function removeTopBacks(){driver.querySelectorAll('.formInlineBack').forEach(x=>x.remove());}
@@ -64,8 +68,8 @@ function init(){
     const b=wrap.querySelector('button');if(b&&b.disabled===!!state.handed)b.disabled=!state.handed;
   }
   function ownHandedChoiceEvents(){
-    const group=handed.querySelector('[data-group="handed"]');if(!group||group.dataset.formV110Owned==='true')return;
-    group.dataset.formV110Owned='true';
+    const group=handed.querySelector('[data-group="handed"]');if(!group||group.dataset.formV117Owned==='true')return;
+    group.dataset.formV117Owned='true';
     [...group.querySelectorAll('.opt')].forEach(old=>{
       const btn=old.cloneNode(true);old.replaceWith(btn);btn.classList.toggle('on',btn.dataset.v===state.handed);
       btn.onclick=()=>{group.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));btn.classList.add('on');state.handed=btn.dataset.v;if(typeof updateDerived==='function')updateDerived();ensureHandedContinue();};
@@ -100,7 +104,7 @@ function init(){
   document.addEventListener('click',e=>{if(e.target.closest('#driverExperience .brandScopeConfirm'))setTimeout(syncBottomNav,30);},true);
   const priorRender=window.renderStep;if(typeof priorRender==='function')window.renderStep=function(){const out=priorRender.apply(this,arguments);setTimeout(syncBottomNav,0);return out;};
 
-  window.FORM_DRIVER_INTERVIEW_UX_V104={version:'10.10'};window.FORM_DRIVER_INTERVIEW_UX_V105={version:'10.10'};window.FORM_DRIVER_INTERVIEW_UX_V106={version:'10.10'};window.FORM_DRIVER_INTERVIEW_UX_V107={version:'10.10'};window.FORM_DRIVER_INTERVIEW_UX_V110={version:'10.10'};return true;
+  window.FORM_DRIVER_INTERVIEW_UX_V104={version:'10.17'};window.FORM_DRIVER_INTERVIEW_UX_V105={version:'10.17'};window.FORM_DRIVER_INTERVIEW_UX_V106={version:'10.17'};window.FORM_DRIVER_INTERVIEW_UX_V107={version:'10.17'};window.FORM_DRIVER_INTERVIEW_UX_V110={version:'10.17'};window.FORM_DRIVER_INTERVIEW_UX_V117={version:'10.17'};return true;
 }
 let n=0,t=setInterval(()=>{n++;if(init()||n>160)clearInterval(t);},50);
 })();
