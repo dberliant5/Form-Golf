@@ -1,8 +1,16 @@
-// FORM 10.22 — shared test setup + apples-to-apples finalist scorecards + explainable confidence.
+// FORM 10.23 — shared test setup + golfer-friendly apples-to-apples finalist scorecards + explainable confidence.
 (function(){
 'use strict';
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-const SCORE_KEYS=['spin','strike','speed','direction','launch','efficiency'];
+const SCORE_KEYS=['speed','direction','strike','spin','launch','efficiency'];
+const SCORE_META={
+  speed:{label:'Distance',fallback:'How well this head supports distance potential for your speed and delivery. FORM uses the underlying speed/design-fit model here rather than treating raw carry as a stand-alone promise.'},
+  direction:{label:'Dispersion',fallback:'How well this head matches your directional pattern and helps keep shots clustered around your intended target.'},
+  strike:{label:'Forgiveness',fallback:'How well this head protects direction and stability when contact moves away from the center of the face.'},
+  spin:{label:'Spin Control',fallback:'How well this head manages spin for your profile—preserving enough spin when you run low and controlling excess spin when you run high.'},
+  launch:{label:'Launch',fallback:'How well this head supports the launch window your delivery needs without creating a conflicting flight condition.'},
+  efficiency:{label:'Ball Speed Retention',fallback:'How well this head preserves ball speed on imperfect contact, especially around your typical strike location.'}
+};
 function boot(){
   const ENG=window.FORM_DRIVER_ENGINE_V80,V81=window.FORM_DRIVER_CONFIG_V81;
   if(!ENG||!V81||typeof golfer!=='function')return false;
@@ -37,9 +45,10 @@ function boot(){
   function scorecard(row){
     const map=Object.fromEntries((row.s.components||[]).map(x=>[x.key,x]));
     return SCORE_KEYS.map(key=>{
-      const x=map[key];if(!x)return `<div><span class="report121MetricLabel">${esc(key)}</span><b>—</b><em>Not scored</em></div>`;
-      const tip=esc(x.explanation||'This score reflects how this head matches the golfer profile in this fitting dimension.');
-      return `<div><span class="report121MetricLabel">${esc(x.label)} <button type="button" class="report121Info" aria-label="Explain ${esc(x.label)}" aria-expanded="false">i</button><span class="report121Tip" role="tooltip">${tip}</span></span><b>${Math.round(x.score)}/100</b><em>${Math.round(x.normalizedWeight||0)}% weight</em></div>`;
+      const x=map[key],meta=SCORE_META[key];
+      if(!x)return `<div><span class="report121MetricLabel">${esc(meta.label)}</span><b>—</b><em>Not scored</em></div>`;
+      const tip=esc(`${meta.fallback}${x.explanation?` FORM detail: ${x.explanation}`:''}`);
+      return `<div><span class="report121MetricLabel">${esc(meta.label)} <button type="button" class="report121Info" aria-label="Explain ${esc(meta.label)}" aria-expanded="false">i</button><span class="report121Tip" role="tooltip">${tip}</span></span><b>${Math.round(x.score)}/100</b><em>${Math.round(x.normalizedWeight||0)}% weight</em></div>`;
     }).join('');
   }
   function apply(){
@@ -70,7 +79,7 @@ function boot(){
   apply();
   let queued=false;const obs=new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;apply();});});
   const driver=document.getElementById('driverExperience')||document.body;obs.observe(driver,{childList:true,subtree:true});
-  window.FORM_DRIVER_RESULTS_LAYOUT_V121=true;window.FORM_DRIVER_RESULTS_LAYOUT_V122=true;return true;
+  window.FORM_DRIVER_RESULTS_LAYOUT_V121=true;window.FORM_DRIVER_RESULTS_LAYOUT_V122=true;window.FORM_DRIVER_RESULTS_LAYOUT_V123=true;return true;
 }
 let n=0,t=setInterval(()=>{n++;if(boot()||n>160)clearInterval(t)},50);
 })();
