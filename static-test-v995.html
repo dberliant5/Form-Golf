@@ -9,12 +9,25 @@
 <body>
 <p>Opening FORM…</p>
 <script>
-(function(){
+(async function(){
   'use strict';
   var params=new URLSearchParams(location.search);
   var build=params.get('v')||('live-'+Date.now());
-  var target='index.html?v='+encodeURIComponent(build);
-  location.replace(target);
+  try{
+    var res=await fetch('index.html?html='+encodeURIComponent(build),{cache:'no-store'});
+    if(!res.ok)throw new Error('index '+res.status);
+    var html=await res.text();
+    // Rewrite every local asset URL to this test build so no stale hard-coded cache key survives.
+    html=html.replace(/(src|href)=(['"])(assets\/[^'"?#]+)(?:\?[^'"#]*)?\2/g,function(_,attr,q,path){
+      return attr+'='+q+path+'?v='+encodeURIComponent(build)+q;
+    });
+    // Make the rendered page retain the build in its URL-aware bootstrap logic.
+    html=html.replace('<head>','<head><script>try{history.replaceState(null,"",location.pathname+"?v='+encodeURIComponent(build)+'")}catch(e){}<\/script>');
+    document.open();document.write(html);document.close();
+  }catch(err){
+    document.body.innerHTML='<p>FORM failed to open. Please reload.</p>';
+    console.error(err);
+  }
 })();
 </script>
 </body>
