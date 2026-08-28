@@ -17,7 +17,7 @@ function init(){
     const offCenter=['toe','heel','varied'].includes(g?.strike),twoWay=g?.costly==='two_way'||g?.strike==='varied';
     const aw=1+strength(g,'accuracy')*.45;
     const dw=1+strength(g,'distance')*.40;
-    const fw=1+(offCenter?2.4:.8)+(twoWay?.7:0)+strength(g,'accuracy')*.15;
+    const fw=1+(offCenter?2.4:.8)+(twoWay?0.7:0)+strength(g,'accuracy')*.15;
     const score=(p.accuracy*aw+p.distance*dw+p.forgiveness*fw)/(aw+dw+fw);
     const weight=14+Math.max(strength(g,'accuracy'),strength(g,'distance'))*.7+(offCenter?2:0);
     return {key:'execution',label:'Proven execution',weight:r1(weight),score:r1(score),explanation:'Independent accuracy, distance and forgiveness results are blended to your stated priorities and strike needs. This prevents modeled design compatibility from masquerading as proven on-course execution.',evidenceConfidence:r1(clamp(Number(p.confidence)||0,0,1))};
