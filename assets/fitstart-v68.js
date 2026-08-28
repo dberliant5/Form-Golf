@@ -9,6 +9,12 @@
   s.src='assets/fitstart-core.js?v='+encodeURIComponent(build);
   s.dataset.formFitstartCore='true';
   s.onload=()=>{
+    const mobileStart=document.createElement('script');
+    mobileStart.async=false;
+    mobileStart.src='assets/fitstart-mobile-v108.js?v='+encodeURIComponent(build);
+    mobileStart.dataset.formFitstartMobile='true';
+    document.head.appendChild(mobileStart);
+
     const calibration=document.createElement('script');
     calibration.async=false;
     calibration.src='assets/driver-ranking-calibration-v101.js?v='+encodeURIComponent(build);
