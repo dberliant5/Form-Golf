@@ -3,14 +3,6 @@
   'use strict';
   const params=new URLSearchParams(window.location.search);
   const build=params.get('v')||'current';
-
-  // Capture the driver renderer immediately when fitstart loads. This runs before
-  // the later dynamically-loaded results wrappers, so it gives FORM a stable,
-  // non-recursive renderer entrypoint for diagnostics and recovery.
-  if(!window.__FORM_EARLY_DRIVER_RENDERER && typeof window.showResults==='function'){
-    window.__FORM_EARLY_DRIVER_RENDERER=window.showResults;
-  }
-
   if(document.querySelector('script[data-form-fitstart-core]'))return;
   const s=document.createElement('script');
   s.async=false;
