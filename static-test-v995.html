@@ -3,22 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>FORM 10.1 Calibrated Report Test</title>
+<title>FORM Live Build Test</title>
 <style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff}#formFrame{display:block;border:0;width:100%;height:100%;min-height:100dvh;background:#fff}#diag{position:fixed;left:8px;bottom:8px;z-index:2147483647;padding:6px 9px;border-radius:999px;background:rgba(0,0,0,.82);color:#fff;font:11px/1.2 -apple-system,BlinkMacSystemFont,sans-serif;pointer-events:none}#tapProxy{position:fixed;z-index:2147483646;display:none;border:0;background:transparent;padding:0;margin:0;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 </style>
 </head>
 <body>
-<iframe id="formFrame" title="FORM" src="index.html?v=10.1-calibrated"></iframe>
+<iframe id="formFrame" title="FORM"></iframe>
 <button id="tapProxy" type="button" aria-label="Generate My Fit"></button>
-<div id="diag">FORM 10.1 · loading</div>
+<div id="diag">FORM · loading</div>
 <script>
 (function(){
 'use strict';
+var params=new URLSearchParams(location.search),build=params.get('v')||('live-'+Date.now());
 var frame=document.getElementById('formFrame'),proxy=document.getElementById('tapProxy'),diag=document.getElementById('diag'),lastButton=null,armed=false,running=false;
-function status(t){diag.textContent='FORM 10.1 · '+t;}
-function position(){try{var d=frame.contentWindow.document,b=d.querySelector('#step9 .readyBox button');if(!b||b.offsetParent===null){proxy.style.display='none';return;}lastButton=b;var r=b.getBoundingClientRect(),fr=frame.getBoundingClientRect();proxy.style.left=(fr.left+r.left)+'px';proxy.style.top=(fr.top+r.top)+'px';proxy.style.width=r.width+'px';proxy.style.height=r.height+'px';proxy.style.display='block';if(!armed){armed=true;status('CALIBRATED FIT READY');}}catch(e){status('frame access blocked');}}
-function run(e){if(e){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();}if(running)return false;running=true;proxy.style.display='none';status('STARTING FORM ANALYSIS');setTimeout(function(){try{var w=frame.contentWindow;if(!lastButton)throw new Error('Generate button missing');if(!w.FORM_DRIVER_RESULTS_TRANSITION_V101)throw new Error('10.1 transition not ready');lastButton.dispatchEvent(new w.PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'touch'}));status('TRANSITION REQUEST SENT');}catch(err){console.error(err);status('ERROR: '+(err&&err.message?err.message:'unknown'));running=false;position();}},30);return false;}
+frame.src='index.html?v='+encodeURIComponent(build);
+document.title='FORM '+build+' Test';
+function status(t){diag.textContent='FORM '+build+' · '+t;}
+function position(){try{var d=frame.contentWindow.document,b=d.querySelector('#step9 .readyBox button');if(!b||b.offsetParent===null){proxy.style.display='none';return;}lastButton=b;var r=b.getBoundingClientRect(),fr=frame.getBoundingClientRect();proxy.style.left=(fr.left+r.left)+'px';proxy.style.top=(fr.top+r.top)+'px';proxy.style.width=r.width+'px';proxy.style.height=r.height+'px';proxy.style.display='block';if(!armed){armed=true;status('FIT READY');}}catch(e){status('frame access blocked');}}
+function run(e){if(e){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();}if(running)return false;running=true;proxy.style.display='none';status('STARTING FORM ANALYSIS');setTimeout(function(){try{var w=frame.contentWindow;if(!lastButton)throw new Error('Generate button missing');if(!w.FORM_DRIVER_RESULTS_TRANSITION_V101)throw new Error('results transition not ready');lastButton.dispatchEvent(new w.PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'touch'}));status('TRANSITION REQUEST SENT');}catch(err){console.error(err);status('ERROR: '+(err&&err.message?err.message:'unknown'));running=false;position();}},30);return false;}
 proxy.addEventListener('pointerdown',run,{capture:true,passive:false});proxy.addEventListener('touchstart',run,{capture:true,passive:false});proxy.addEventListener('click',run,true);frame.addEventListener('load',function(){status('frame loaded');setTimeout(position,800);});setInterval(function(){if(!running)position();},500);window.addEventListener('resize',position);
 })();
 </script>
