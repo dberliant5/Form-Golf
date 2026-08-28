@@ -21,6 +21,12 @@
     flow.dataset.formDriverFlowFresh='true';
     document.head.appendChild(flow);
 
+    const interview=document.createElement('script');
+    interview.async=false;
+    interview.src='assets/driver-interview-ux-v104.js?v='+encodeURIComponent(build);
+    interview.dataset.formDriverInterviewUx='true';
+    document.head.appendChild(interview);
+
     const results=document.createElement('script');
     results.async=false;
     results.src='assets/driver-results-controller-v96.js?v='+encodeURIComponent(build);
