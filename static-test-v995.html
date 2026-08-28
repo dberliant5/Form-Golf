@@ -21,6 +21,8 @@
     html=html.replace(/(src|href)=(['"])(assets\/[^'"?#]+)(?:\?[^'"#]*)?\2/g,function(_,attr,q,path){
       return attr+'='+q+path+'?v='+encodeURIComponent(build)+q;
     });
+    // Load the latest results-layout refinement explicitly in the live harness.
+    html=html.replace('</body>','<script src="assets/driver-results-layout-v121.js?v='+encodeURIComponent(build)+'"><\/script></body>');
     // Make the rendered page retain the build in its URL-aware bootstrap logic.
     html=html.replace('<head>','<head><script>try{history.replaceState(null,"",location.pathname+"?v='+encodeURIComponent(build)+'")}catch(e){}<\/script>');
     document.open();document.write(html);document.close();
