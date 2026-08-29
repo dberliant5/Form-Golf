@@ -16,6 +16,8 @@
   try{
     var responses=await Promise.all([
       fetch('index.html?html='+encodeURIComponent(build),{cache:'no-store'}),
+      fetch('assets/driver-evidence-v83.js?fresh='+Date.now(),{cache:'no-store'}),
+      fetch('assets/driver-evidence-v90.js?fresh='+Date.now(),{cache:'no-store'}),
       fetch('assets/driver-results-layout-v126.js?fresh='+Date.now(),{cache:'no-store'}),
       fetch('assets/driver-interview-fixes-v136.js?fresh='+Date.now(),{cache:'no-store'}),
       fetch('assets/driver-results-transition-v101.js?fresh='+Date.now(),{cache:'no-store'}),
@@ -24,25 +26,29 @@
       fetch('assets/driver-results-help-v138.js?fresh='+Date.now(),{cache:'no-store'})
     ]);
     if(!responses[0].ok)throw new Error('index '+responses[0].status);
-    if(!responses[1].ok)throw new Error('results layout '+responses[1].status);
-    if(!responses[2].ok)throw new Error('interview fixes '+responses[2].status);
-    if(!responses[3].ok)throw new Error('transition '+responses[3].status);
-    if(!responses[4].ok)throw new Error('engine hardening '+responses[4].status);
-    if(!responses[5].ok)throw new Error('results narrative '+responses[5].status);
-    if(!responses[6].ok)throw new Error('results help '+responses[6].status);
+    if(!responses[1].ok)throw new Error('evidence v83 '+responses[1].status);
+    if(!responses[2].ok)throw new Error('evidence v90 '+responses[2].status);
+    if(!responses[3].ok)throw new Error('results layout '+responses[3].status);
+    if(!responses[4].ok)throw new Error('interview fixes '+responses[4].status);
+    if(!responses[5].ok)throw new Error('transition '+responses[5].status);
+    if(!responses[6].ok)throw new Error('engine hardening '+responses[6].status);
+    if(!responses[7].ok)throw new Error('results narrative '+responses[7].status);
+    if(!responses[8].ok)throw new Error('results help '+responses[8].status);
     var html=await responses[0].text();
-    var resultsCode=await responses[1].text();
-    var interviewCode=await responses[2].text();
-    var transitionCode=await responses[3].text();
-    var hardeningCode=await responses[4].text();
-    var narrativeCode=await responses[5].text();
-    var helpCode=await responses[6].text();
+    var evidence83Code=await responses[1].text();
+    var evidence90Code=await responses[2].text();
+    var resultsCode=await responses[3].text();
+    var interviewCode=await responses[4].text();
+    var transitionCode=await responses[5].text();
+    var hardeningCode=await responses[6].text();
+    var narrativeCode=await responses[7].text();
+    var helpCode=await responses[8].text();
     html=html.replace(/(src|href)=(['"])(assets\/[^'"?#]+)(?:\?[^'"#]*)?\2/g,function(_,attr,q,path){
       return attr+'='+q+path+'?v='+encodeURIComponent(build)+q;
     });
     function safeScript(code){return String(code).replace(/<\/script/gi,'<\\/script');}
     html=html.replace('<head>','<head><script>'+safeScript(transitionCode)+'<\/script><script>try{history.replaceState(null,"",location.pathname+"?v='+encodeURIComponent(build)+'")}catch(e){}<\/script>');
-    html=html.replace('</body>','<script>'+safeScript(hardeningCode)+'<\/script><script>'+safeScript(resultsCode)+'<\/script><script>'+safeScript(narrativeCode)+'<\/script><script>'+safeScript(helpCode)+'<\/script><script>'+safeScript(interviewCode)+'<\/script></body>');
+    html=html.replace('</body>','<script>'+safeScript(evidence83Code)+'<\/script><script>'+safeScript(evidence90Code)+'<\/script><script>'+safeScript(hardeningCode)+'<\/script><script>'+safeScript(resultsCode)+'<\/script><script>'+safeScript(narrativeCode)+'<\/script><script>'+safeScript(helpCode)+'<\/script><script>'+safeScript(interviewCode)+'<\/script></body>');
     document.open();document.write(html);document.close();
   }catch(err){
     document.body.innerHTML='<p>FORM failed to open. Please reload.</p>';
