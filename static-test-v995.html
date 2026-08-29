@@ -17,7 +17,7 @@
     var responses=await Promise.all([
       fetch('index.html?html='+encodeURIComponent(build),{cache:'no-store'}),
       fetch('assets/driver-results-layout-v126.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-interview-fixes-v127.js?fresh='+Date.now(),{cache:'no-store'}),
+      fetch('assets/driver-interview-fixes-v135.js?fresh='+Date.now(),{cache:'no-store'}),
       fetch('assets/driver-results-transition-v101.js?fresh='+Date.now(),{cache:'no-store'}),
       fetch('assets/driver-engine-hardening-v129.js?fresh='+Date.now(),{cache:'no-store'})
     ]);
@@ -35,9 +35,7 @@
       return attr+'='+q+path+'?v='+encodeURIComponent(build)+q;
     });
     function safeScript(code){return String(code).replace(/<\/script/gi,'<\\/script');}
-    // Put the transition refinement first so any later legacy transition sees its guard.
     html=html.replace('<head>','<head><script>'+safeScript(transitionCode)+'<\/script><script>try{history.replaceState(null,"",location.pathname+"?v='+encodeURIComponent(build)+'")}catch(e){}<\/script>');
-    // Hardening loads after the base engine and before the final results/interview refinements execute.
     html=html.replace('</body>','<script>'+safeScript(hardeningCode)+'<\/script><script>'+safeScript(resultsCode)+'<\/script><script>'+safeScript(interviewCode)+'<\/script></body>');
     document.open();document.write(html);document.close();
   }catch(err){
