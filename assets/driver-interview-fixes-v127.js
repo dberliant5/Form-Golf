@@ -1,4 +1,4 @@
-// FORM 10.33 — driver-scoped handedness; selection and Continue are fully isolated from legacy global handlers.
+// FORM 10.34 — driver-scoped handedness with one standard-sized Continue button.
 (function(){
 'use strict';
 function init(){
@@ -14,19 +14,23 @@ function init(){
  legacyGroup.removeAttribute('data-group');
  legacyGroup.setAttribute('data-driver-handed-group','true');
 
- // Remove any Continue control owned by the old global opening-question logic.
- handed.querySelectorAll('.formOpeningContinue,.driverHandedContinueV133').forEach(x=>x.remove());
+ // The old opening-question script may recreate its own Continue later. Hide that
+ // legacy control only on handedness so there is always exactly one visible action.
+ document.getElementById('driverHandedV133Styles')?.remove();
+ document.getElementById('driverHandedV134Styles')?.remove();
+ const style=document.createElement('style');
+ style.id='driverHandedV134Styles';
+ style.textContent=`
+   #handedQuestion .formOpeningContinue{display:none!important}
+   #handedQuestion .driverHandedContinueV134{display:flex;justify-content:flex-end;align-items:center;margin-top:20px}
+   #handedQuestion .driverHandedContinueBtnV134{width:145px;min-width:145px;min-height:52px;padding:14px 18px;font-size:12px;line-height:1;font-weight:800;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
+   #handedQuestion .driverHandedContinueBtnV134[aria-disabled="true"]{opacity:.42;pointer-events:none}
+   @media(max-width:760px){#handedQuestion .driverHandedContinueV134{margin-top:16px}#handedQuestion .driverHandedContinueBtnV134{width:145px;min-width:145px;min-height:52px;padding:14px 16px;font-size:12px}}
+ `;
+ document.head.appendChild(style);
+ handed.querySelectorAll('.driverHandedContinueV133,.driverHandedContinueV134').forEach(x=>x.remove());
 
  let pendingHandedness=null;
- const style=document.createElement('style');
- style.id='driverHandedV133Styles';
- style.textContent=`
-   #handedQuestion .driverHandedContinueV133{display:flex;justify-content:flex-end;margin-top:20px}
-   #handedQuestion .driverHandedContinueBtnV133{min-width:150px;border:0;background:#244d3c;color:#fff;padding:16px 22px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
-   #handedQuestion .driverHandedContinueBtnV133[aria-disabled="true"]{background:#b9c1bc;color:#fff;cursor:default}
-   @media(max-width:760px){#handedQuestion .driverHandedContinueV133{margin-top:16px}#handedQuestion .driverHandedContinueBtnV133{width:100%}}
- `;
- document.getElementById(style.id)?.remove();document.head.appendChild(style);
 
  function keepDriverHandednessVisible(){
    const parent=handed.closest('.step')||brand.closest('.step');
@@ -54,15 +58,14 @@ function init(){
  }
 
  function ensureContinue(){
-   let wrap=handed.querySelector('.driverHandedContinueV133');
+   let wrap=handed.querySelector('.driverHandedContinueV134');
    if(!wrap){
-     wrap=document.createElement('div');wrap.className='driverHandedContinueV133';
-     const b=document.createElement('button');b.type='button';b.className='driverHandedContinueBtnV133';b.textContent='Continue →';
+     wrap=document.createElement('div');wrap.className='driverHandedContinueV134';
+     const b=document.createElement('button');b.type='button';b.className='solidBtn driverHandedContinueBtnV134';b.textContent='Continue →';
      wrap.appendChild(b);handed.appendChild(wrap);
    }
    const b=wrap.querySelector('button');
    const ready=!!pendingHandedness;
-   // Do not use the native disabled property: legacy scripts key off disabled opening controls.
    b.setAttribute('aria-disabled',ready?'false':'true');
    b.onclick=e=>{e.preventDefault();e.stopImmediatePropagation();if(!pendingHandedness)return;showDriverBrands();};
  }
@@ -94,7 +97,7 @@ function init(){
    },30);
  },true);
 
- window.FORM_DRIVER_INTERVIEW_FIXES_V133={version:'10.33',scope:'driver'};
+ window.FORM_DRIVER_INTERVIEW_FIXES_V134={version:'10.34',scope:'driver'};
  return true;
 }
 let n=0,t=setInterval(()=>{n++;if(init()||n>200)clearInterval(t)},50);
