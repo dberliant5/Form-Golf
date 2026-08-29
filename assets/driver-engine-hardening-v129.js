@@ -1,8 +1,8 @@
-// FORM 10.32 — scoring-boundary input integrity hardening.
+// FORM 10.39 — scoring-boundary input integrity + one-brand ranking hardening.
 (function(){
 'use strict';
 function init(){
-  if(window.FORM_DRIVER_ENGINE_HARDENING_V132)return true;
+  if(window.FORM_DRIVER_ENGINE_HARDENING_V139)return true;
   const ENG=window.FORM_DRIVER_ENGINE_V80;
   if(!ENG||typeof state==='undefined')return false;
   const MID={speed:{under75:72,'75-84':80,'85-89':87,'90-94':92,'95-99':97,'100-104':102,'105-109':107,'110-114':112,'115plus':118},ballSpeed:{under120:115,'120-129':125,'130-139':135,'140-149':145,'150-159':155,'160-169':165,'170plus':175},carry:{under180:170,'180-199':190,'200-219':210,'220-239':230,'240-259':250,'260-279':270,'280plus':290}};
@@ -52,16 +52,33 @@ function init(){
       return out;
     }finally{Object.keys(saved).forEach(id=>state.metrics[id]=saved[id]);}
   }
-  const original=window.FORM_DRIVER_ENGINE_HARDENING_V129?.original||{scoreOne:ENG.scoreOne,winners:ENG.winners,currentScore:ENG.currentScore};
+  const prior=window.FORM_DRIVER_ENGINE_HARDENING_V132||window.FORM_DRIVER_ENGINE_HARDENING_V129;
+  const original=prior?.original||{scoreOne:ENG.scoreOne,winners:ENG.winners,currentScore:ENG.currentScore};
+  function oneBrandScope(){
+    try{return typeof formBrandScope!=='undefined'&&formBrandScope.mode==='single'&&Array.isArray(formBrandScope.brands)&&formBrandScope.brands.length===1;}catch(e){return false;}
+  }
+  function oneBrandWinners(g){
+    if(typeof products==='undefined'||!Array.isArray(products))return original.winners(g);
+    const rows=[];
+    products.forEach(p=>{
+      if(p.generation==='previous_limited')return;
+      if(typeof productAllowedByBrandScope==='function'&&!productAllowedByBrandScope(p))return;
+      const s=original.scoreOne(p,g);
+      if(!s?.hardConstraints?.length)rows.push({p,s});
+    });
+    rows.sort((a,b)=>b.s.overall-a.s.overall);
+    return rows;
+  }
   if(typeof original.scoreOne==='function')ENG.scoreOne=(p,g)=>withIntegrity(()=>original.scoreOne(p,g));
-  if(typeof original.winners==='function')ENG.winners=g=>withIntegrity(()=>original.winners(g));
+  if(typeof original.winners==='function')ENG.winners=g=>withIntegrity(()=>oneBrandScope()?oneBrandWinners(g):original.winners(g));
   if(typeof original.currentScore==='function')ENG.currentScore=g=>withIntegrity(()=>original.currentScore(g));
   if(typeof window.driverScoreV43==='function')window.driverScoreV43=(p,g)=>ENG.scoreOne(p,g);
   if(typeof window.driverRankV43==='function')window.driverRankV43=g=>ENG.winners(g);
   if(typeof window.currentDriverScoreV43==='function')window.currentDriverScoreV43=g=>ENG.currentScore(g).score??75;
   window.FORM_DRIVER_INPUT_INTEGRITY_V129=integrity;
   window.FORM_DRIVER_INPUT_INTEGRITY_V132=integrity;
-  window.FORM_DRIVER_ENGINE_HARDENING_V132={version:'10.32',original};
+  window.FORM_DRIVER_INPUT_INTEGRITY_V139=integrity;
+  window.FORM_DRIVER_ENGINE_HARDENING_V139={version:'10.39',original,oneBrandScope};
   return true;
 }
 let n=0,t=setInterval(()=>{n++;if(init()||n>200)clearInterval(t)},50);
