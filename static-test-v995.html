@@ -17,7 +17,7 @@
     var responses=await Promise.all([
       fetch('index.html?html='+encodeURIComponent(build),{cache:'no-store'}),
       fetch('assets/driver-results-layout-v126.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-interview-fixes-v135.js?fresh='+Date.now(),{cache:'no-store'}),
+      fetch('assets/driver-interview-fixes-v136.js?fresh='+Date.now(),{cache:'no-store'}),
       fetch('assets/driver-results-transition-v101.js?fresh='+Date.now(),{cache:'no-store'}),
       fetch('assets/driver-engine-hardening-v129.js?fresh='+Date.now(),{cache:'no-store'})
     ]);
