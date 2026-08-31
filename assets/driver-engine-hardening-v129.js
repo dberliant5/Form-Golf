@@ -1,4 +1,4 @@
-// FORM 10.39 — scoring-boundary input integrity + one-brand ranking hardening.
+// FORM 10.43 — scoring-boundary input integrity + one-brand ranking hardening.
 (function(){
 'use strict';
 function init(){
@@ -15,20 +15,20 @@ function init(){
     const m=state?.metrics?.[id];if(!m||m.mode==='unknown'||m.value==null)return null;
     if(id==='launch'){
       if(m.mode==='exact'){const n=Number(m.value);if(!Number.isFinite(n))return null;return n<11?'low':n>17?'high':'mid';}
-      if(['under8','8-10','10-12','verylow','low'].includes(m.value))return'low';
-      if(['16-18','18-20','20plus','high','veryhigh'].includes(m.value))return'high';
+      if(['under8','8-10','verylow','low'].includes(m.value))return'low';
+      if(['18-20','20plus','high','veryhigh'].includes(m.value))return'high';
       return m.value==='varies'?'varies':'mid';
     }
     if(id==='spin'){
       if(m.mode==='exact'){const n=Number(m.value);if(!Number.isFinite(n))return null;return n<2100?'low':n>3000?'high':'mid';}
-      if(['under1500','1500-1749','1750-1999','2000-2249','verylow','low'].includes(m.value))return'low';
+      if(['under1500','1500-1749','1750-1999','verylow','low'].includes(m.value))return'low';
       if(['3000-3499','3500plus','high','veryhigh'].includes(m.value))return'high';
       return m.value==='varies'?'varies':'mid';
     }
     return null;
   }
   function integrity(){
-    const speed=value('speed'),ball=value('ballSpeed'),carry=value('carry'),notes=[],exclude=[];
+    const speed=value('speed'),ball=value('ballSpeed'),carry=value('carry'),notes=[],exclude=[],downgrade={};
     if(speed&&ball){
       const smash=ball/speed,rangeish=state.metrics?.speed?.mode!=='exact'||state.metrics?.ballSpeed?.mode!=='exact';
       const lo=rangeish?1.10:1.15,hi=rangeish?1.60:1.55;
@@ -39,14 +39,24 @@ function init(){
       const lo=rangeish?1.35:1.45,hi=rangeish?3.25:3.15;
       if(ypm<lo||ypm>hi){exclude.push('carry');notes.push('Carry was ignored because it conflicts materially with the supplied club speed.');}
     }
+    const launchMetric=state.metrics?.launch,spinMetric=state.metrics?.spin;
+    if(launchMetric?.mode==='range'&&['10-12','16-18'].includes(launchMetric.value)){
+      downgrade.launch={mode:'general',value:'mid'};
+      notes.push('Your launch range crosses a FORM fitting boundary, so it is treated as neutral rather than forcing a low- or high-launch recommendation.');
+    }
+    if(spinMetric?.mode==='range'&&spinMetric.value==='2000-2249'){
+      downgrade.spin={mode:'general',value:'mid'};
+      notes.push('Your spin range crosses a FORM fitting boundary, so it is treated as neutral rather than forcing a low-spin recommendation.');
+    }
     const launch=classify('launch'),spin=classify('spin');
     if((launch==='low'&&spin==='high')||(launch==='high'&&spin==='low'))notes.push('Launch and spin point in competing fitting directions, so configuration should be validated rather than treated as a one-variable loft fix.');
-    return {status:exclude.length?'adjusted':notes.length?'review':'passed',exclude:[...new Set(exclude)],notes,launchClass:launch,spinClass:spin};
+    return {status:exclude.length||Object.keys(downgrade).length?'adjusted':notes.length?'review':'passed',exclude:[...new Set(exclude)],downgrade,notes,launchClass:launch,spinClass:spin};
   }
   function withIntegrity(fn){
     const check=integrity(),saved={};
     try{
       check.exclude.forEach(id=>{if(state.metrics?.[id]){saved[id]=state.metrics[id];state.metrics[id]={mode:'unknown',value:null};}});
+      Object.keys(check.downgrade||{}).forEach(id=>{if(state.metrics?.[id]&&!saved[id])saved[id]=state.metrics[id];state.metrics[id]=check.downgrade[id];});
       const out=fn();
       if(out&&typeof out==='object')try{Object.defineProperty(out,'inputIntegrity',{value:check,enumerable:true,configurable:true});}catch(e){}
       return out;
@@ -78,7 +88,7 @@ function init(){
   window.FORM_DRIVER_INPUT_INTEGRITY_V129=integrity;
   window.FORM_DRIVER_INPUT_INTEGRITY_V132=integrity;
   window.FORM_DRIVER_INPUT_INTEGRITY_V139=integrity;
-  window.FORM_DRIVER_ENGINE_HARDENING_V139={version:'10.39',original,oneBrandScope};
+  window.FORM_DRIVER_ENGINE_HARDENING_V139={version:'10.43',original,oneBrandScope};
   return true;
 }
 let n=0,t=setInterval(()=>{n++;if(init()||n>200)clearInterval(t)},50);
