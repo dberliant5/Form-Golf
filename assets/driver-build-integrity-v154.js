@@ -1,9 +1,9 @@
-// FORM 10.61 — canonical live-build integrity guard.
-// Prevents silent fallback to stale interview/results/configuration layers.
+// FORM 10.66 — canonical live-build integrity guard.
+// Prevents silent fallback to stale interview/results/configuration/confidence layers.
 (function(){
 'use strict';
 function init(){
-  if(window.FORM_DRIVER_BUILD_INTEGRITY_V161)return true;
+  if(window.FORM_DRIVER_BUILD_INTEGRITY_V166)return true;
   const driver=document.getElementById('driverExperience');
   if(!driver||typeof state==='undefined')return false;
 
@@ -21,6 +21,7 @@ function init(){
     narrativeProsCons:true,
     calibratedConfiguration:true,
     leadingFitConfidence:true,
+    strikeAwareConfidence:true,
     mobileHorizontalOverflow:false
   };
 
@@ -100,6 +101,9 @@ function init(){
     if(setup&&window.FORM_DRIVER_RESULTS_CONFIDENCE_V158&&!setup.querySelector('.report121SetupGrid')?.dataset.formConfidence158){
       console.error('FORM integrity: leading-fit confidence calibration missing.');
     }
+    if(!window.FORM_DRIVER_CONFIDENCE_INPUT_QUALITY_V165){
+      console.error('FORM integrity: strike-source quality is not connected to recommendation confidence.');
+    }
     if(window.innerWidth<=820&&results.scrollWidth>results.clientWidth+2){
       console.error('FORM integrity: driver results have horizontal overflow at mobile width.',{scrollWidth:results.scrollWidth,clientWidth:results.clientWidth});
     }
@@ -114,6 +118,7 @@ function init(){
     if(!window.FORM_DRIVER_INTERVIEW_COPY_V156)missing.push('technical-profile copy');
     if(!window.FORM_DRIVER_CONFIG_BRIDGE_V157)missing.push('calibrated configuration bridge');
     if(!window.FORM_DRIVER_RANGE_FIRST_V160)missing.push('per-metric range-first/AoA bridge');
+    if(!window.FORM_DRIVER_CONFIDENCE_INPUT_QUALITY_V165)missing.push('strike-aware confidence');
     if(!window.FORM_DRIVER_RESULTS_CONFIDENCE_V158)missing.push('leading-fit confidence');
     if(missing.length)console.error('FORM integrity: required canonical layers missing: '+missing.join(', '));
   }
@@ -127,10 +132,11 @@ function init(){
   window.addEventListener('resize',verifyResults);
   setTimeout(function(){verifyLayers();enforceInterview();verifyResults();},1200);
   setTimeout(function(){verifyLayers();enforceInterview();verifyResults();},3500);
-  window.FORM_DRIVER_BUILD_INTEGRITY_V154={version:'10.61',expected:expected,verifyLayers:verifyLayers,verifyResults:verifyResults};
+  window.FORM_DRIVER_BUILD_INTEGRITY_V154={version:'10.66',expected:expected,verifyLayers:verifyLayers,verifyResults:verifyResults};
   window.FORM_DRIVER_BUILD_INTEGRITY_V159=window.FORM_DRIVER_BUILD_INTEGRITY_V154;
   window.FORM_DRIVER_BUILD_INTEGRITY_V160=window.FORM_DRIVER_BUILD_INTEGRITY_V154;
   window.FORM_DRIVER_BUILD_INTEGRITY_V161=window.FORM_DRIVER_BUILD_INTEGRITY_V154;
+  window.FORM_DRIVER_BUILD_INTEGRITY_V166=window.FORM_DRIVER_BUILD_INTEGRITY_V154;
   return true;
 }
 let n=0,t=setInterval(function(){n++;if(init()||n>240)clearInterval(t);},50);
