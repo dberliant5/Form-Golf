@@ -1,4 +1,4 @@
-// FORM 10.50 — strike-location reliability calibration.
+// FORM 10.63 — strike-location reliability calibration.
 // Ball flight is usually a more reliable observed outcome than an unverified heel/toe diagnosis,
 // but gear effect is not the only determinant of curvature. FORM therefore calibrates strike-side
 // confidence rather than assuming a conflicting strike report is impossible.
@@ -6,7 +6,7 @@
 (function(){
 'use strict';
 function init(){
-  if(window.FORM_DRIVER_STRIKE_RELIABILITY_V150)return true;
+  if(window.FORM_DRIVER_STRIKE_RELIABILITY_V163)return true;
   const ENG=window.FORM_DRIVER_ENGINE_V80;
   if(!ENG||typeof ENG.scoreOne!=='function'||typeof ENG.currentScore!=='function')return false;
   const priorScore=ENG.scoreOne.bind(ENG),priorCurrent=ENG.currentScore.bind(ENG);
@@ -36,6 +36,14 @@ function init(){
     if(raw==='repeated')return{key:'repeated',alpha:.72,label:'repeatedly seen or felt'};
     if(raw==='guess')return{key:'guess',alpha:.42,label:'best guess'};
     return{key:'unspecified',alpha:.5,label:'unverified'};
+  }
+  function conflictAlpha(src){
+    // A ball-flight contradiction lowers confidence in heel-vs-toe specificity, but does not
+    // prove the strike report is wrong because face-to-path can overwhelm horizontal gear effect.
+    if(src.key==='repeated')return .32;
+    if(src.key==='guess')return .15;
+    if(src.key==='unspecified')return .20;
+    return 1;
   }
   function avg(a,b){return Number.isFinite(+a)&&Number.isFinite(+b)?(+a+ +b)/2:Number.isFinite(+a)?+a:+b;}
   function genericDetail(heel,toe){
@@ -68,7 +76,7 @@ function init(){
     const src=sourceFor(g),conflict=strikeConflict(g),primary=priorScore(p,g);
     if(src.key==='confirmed')return annotate(primary,src,conflict,1);
     const heel=priorScore(p,{...g,strike:'heel'}),toe=priorScore(p,{...g,strike:'toe'}),generic=genericDetail(heel,toe);
-    const alpha=conflict?0:src.alpha;
+    const alpha=conflict?conflictAlpha(src):src.alpha;
     return annotate(mixDetail(primary,generic,alpha),src,conflict,alpha);
   }
   function calibrateCurrent(g){
@@ -76,13 +84,13 @@ function init(){
     const src=sourceFor(g),conflict=strikeConflict(g),primary=priorCurrent(g);
     if(!primary)return primary;if(src.key==='confirmed')return annotateCurrent(primary,src,conflict,1);
     const heel=priorCurrent({...g,strike:'heel'}),toe=priorCurrent({...g,strike:'toe'});
-    if(!heel?.detail||!toe?.detail)return annotateCurrent(primary,src,conflict,src.alpha);
-    const generic=genericDetail(heel.detail,toe.detail),alpha=conflict?0:src.alpha,detail=mixDetail(primary.detail,generic,alpha);
+    if(!heel?.detail||!toe?.detail)return annotateCurrent(primary,src,conflict,conflict?conflictAlpha(src):src.alpha);
+    const generic=genericDetail(heel.detail,toe.detail),alpha=conflict?conflictAlpha(src):src.alpha,detail=mixDetail(primary.detail,generic,alpha);
     return annotateCurrent({...primary,score:detail?.overall??primary.score,detail},src,conflict,alpha);
   }
   function noteFor(src,conflict,alpha){
     if(src.key==='confirmed'&&conflict)return 'Your strike location was retained because you marked it as confirmed. The conflicting curvature can still occur when face-to-path delivery outweighs horizontal gear effect.';
-    if(conflict)return 'FORM retained the fact that contact is off-center but removed the heel-vs-toe advantage because the unconfirmed strike side conflicts with the observed ball-flight pattern.';
+    if(conflict)return `FORM trusts the observed ball-flight pattern more, but it does not assume your reported strike side is impossible. Heel-vs-toe specificity is reduced to ${Math.round(alpha*100)}% while off-center contact remains fully relevant.`;
     if(alpha<.6)return 'FORM kept off-center contact in the fit but reduced heel-vs-toe specificity because the strike location is unverified.';
     if(alpha<.9)return 'FORM uses the reported strike side with moderate confidence because it is repeatedly observed but not directly confirmed.';
     return 'Strike location is treated as confirmed evidence.';
@@ -94,8 +102,9 @@ function init(){
   if(typeof window.driverScoreV43==='function')window.driverScoreV43=(p,g)=>ENG.scoreOne(p,g);
   if(typeof window.driverRankV43==='function')window.driverRankV43=g=>ENG.winners(g);
   if(typeof window.currentDriverScoreV43==='function')window.currentDriverScoreV43=g=>ENG.currentScore(g).score??75;
-  window.FORM_DRIVER_STRIKE_RELIABILITY_V150={version:'10.50',strikeConflict,sourceFor,priorScore,priorCurrent};
-  window.FORM_DRIVER_STRIKE_RELIABILITY_V149=window.FORM_DRIVER_STRIKE_RELIABILITY_V150;
+  window.FORM_DRIVER_STRIKE_RELIABILITY_V163={version:'10.63',strikeConflict,sourceFor,conflictAlpha,priorScore,priorCurrent};
+  window.FORM_DRIVER_STRIKE_RELIABILITY_V150=window.FORM_DRIVER_STRIKE_RELIABILITY_V163;
+  window.FORM_DRIVER_STRIKE_RELIABILITY_V149=window.FORM_DRIVER_STRIKE_RELIABILITY_V163;
   return true;
 }
 let n=0,t=setInterval(()=>{n++;if(init()||n>240)clearInterval(t);},50);
