@@ -1,4 +1,4 @@
-// FORM 10.37 — finalist-relative narrative Pros/Cons for driver recommendations.
+// FORM 10.64 — finalist-relative narrative Pros/Cons for driver recommendations.
 (function(){
 'use strict';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -9,8 +9,11 @@ function boot(){
  function comps(row){return Object.fromEntries((row.s.components||[]).map(x=>[x.key,x]));}
  function avg(rows,key,skip){const vals=rows.filter((_,i)=>i!==skip).map(r=>comps(r)[key]?.score).filter(Number.isFinite);return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;}
  function profile(){try{return golfer()}catch(e){return {}}}
- function needPhrase(key,g){
+ function needPhrase(key,g,row){
    if(key==='strike'){
+     const sr=row?.s?.strikeReliability,sideWeight=Number(sr?.sideWeight);
+     if(sr?.conflict&&Number.isFinite(sideWeight)&&sideWeight<50)return 'Your contact is still treated as off-center, but FORM is deliberately cautious about whether heel or toe is the repeatable side because that report conflicts with your observed ball flight.';
+     if(Number.isFinite(sideWeight)&&sideWeight<60&&['heel','toe'].includes(g.strike))return `You reported ${g.strike}-side contact, but FORM is using that side only as a low-confidence clue while keeping off-center forgiveness fully relevant.`;
      if(g.strike==='toe')return 'That matters because your contact tends to drift toward the toe, where keeping the head stable can protect both start line and usable speed.';
      if(g.strike==='heel')return 'That matters because your contact tends to drift toward the heel, so mishit stability is more important than a perfect center-strike number.';
      if(g.strike==='varied')return 'That matters because your strike moves around the face, making consistency across mishits a bigger priority than peak output.';
@@ -43,14 +46,14 @@ function boot(){
  function strongest(rows,i){const A=comps(rows[i]);return KEYS.map(k=>{const x=A[k],m=avg(rows,k,i);return x&&m!=null?{k,score:x.score,delta:x.score-m}:null}).filter(Boolean).sort((a,b)=>b.delta-a.delta);}
  function weakest(rows,i){const A=comps(rows[i]);return KEYS.map(k=>{const x=A[k],m=avg(rows,k,i);return x&&m!=null?{k,score:x.score,delta:x.score-m}:null}).filter(Boolean).sort((a,b)=>a.delta-b.delta);}
  function proText(row,rows,i,item,secondary){const g=profile(),name=`${row.p.brand} ${row.p.model}`,type=archetype(row),label=LABEL[item.k];
-   if(item.delta>2.5)return `${name} separates itself from this finalist group most clearly in ${label}. As a ${type} head, that gives it a distinct job in your test rather than making it another interchangeable option. ${needPhrase(item.k,g)}`;
+   if(item.delta>2.5)return `${name} separates itself from this finalist group most clearly in ${label}. As a ${type} head, that gives it a distinct job in your test rather than making it another interchangeable option. ${needPhrase(item.k,g,row)}`;
    if(secondary)return `Its second advantage is balance: ${label} holds up without creating an obvious penalty in the categories around it. That makes this a useful comparison head if the leader's more specialized strength does not translate to better shots for you.`;
-   return `${name} does not dominate one category, but its ${label} profile is one of the cleaner matches in this group. The appeal is the combination rather than a single headline number. ${needPhrase(item.k,g)}`;
+   return `${name} does not dominate one category, but its ${label} profile is one of the cleaner matches in this group. The appeal is the combination rather than a single headline number. ${needPhrase(item.k,g,row)}`;
  }
  function conText(row,rows,i,item,secondary){const g=profile(),name=`${row.p.brand} ${row.p.model}`,label=LABEL[item.k];
-   if(item.delta<-2.5)return `${label[0].toUpperCase()+label.slice(1)} is the clearest reason ${name} may lose a side-by-side test. It trails the other finalists here, so this is the area to watch rather than assuming its overall Fit Score tells the whole story. ${needPhrase(item.k,g)}`;
+   if(item.delta<-2.5)return `${label[0].toUpperCase()+label.slice(1)} is the clearest reason ${name} may lose a side-by-side test. It trails the other finalists here, so this is the area to watch rather than assuming its overall Fit Score tells the whole story. ${needPhrase(item.k,g,row)}`;
    if(secondary)return `There is also less separation in ${label}. That is not a flaw by itself, but it means this head needs to earn its place through the way the full ball flight looks and repeats—not because FORM sees a special advantage in this category.`;
-   return `${name} has no major red flag, but ${label} is the least compelling part of its profile relative to the other finalists. Treat that as the first thing to pressure-test during the fitting. ${needPhrase(item.k,g)}`;
+   return `${name} has no major red flag, but ${label} is the least compelling part of its profile relative to the other finalists. Treat that as the first thing to pressure-test during the fitting. ${needPhrase(item.k,g,row)}`;
  }
  function read(row,rows,i){const hi=strongest(rows,i),lo=weakest(rows,i);if(!hi.length||!lo.length)return '';
    const pros=[proText(row,rows,i,hi[0],false)];if(hi[1]&&hi[1].k!==hi[0].k)pros.push(proText(row,rows,i,hi[1],true));
@@ -59,7 +62,8 @@ function boot(){
  }
  function apply(){const results=document.getElementById('results');if(!results?.classList.contains('formReport100'))return;let rows=[];try{rows=ENG.winners(golfer()).slice(0,5)}catch(e){return}const cards=[...results.querySelectorAll('.report100Card')];if(!rows.length||!cards.length)return;cards.forEach((card,i)=>{if(!rows[i])return;const old=card.querySelector('.report128ClubRead');if(!old)return;const holder=document.createElement('div');holder.innerHTML=read(rows[i],rows,i);const fresh=holder.firstElementChild;if(fresh)old.replaceWith(fresh);});results.dataset.formNarrative136='1';}
  apply();let queued=false;new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;apply()})}).observe(document.getElementById('driverExperience')||document.body,{childList:true,subtree:true});
- window.FORM_DRIVER_RESULTS_NARRATIVE_V136=true;return true;
+ window.FORM_DRIVER_RESULTS_NARRATIVE_V164={version:'10.64'};
+ window.FORM_DRIVER_RESULTS_NARRATIVE_V136=window.FORM_DRIVER_RESULTS_NARRATIVE_V164;return true;
  }
 let n=0,t=setInterval(()=>{n++;if(boot()||n>160)clearInterval(t)},50);
 })();
