@@ -26,7 +26,8 @@
       fetch('assets/driver-results-narrative-v136.js?fresh='+Date.now(),{cache:'no-store'}),
       fetch('assets/driver-results-help-v138.js?fresh='+Date.now(),{cache:'no-store'}),
       fetch('assets/driver-results-evidence-copy-v140.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-results-upgrade-guard-v141.js?fresh='+Date.now(),{cache:'no-store'})
+      fetch('assets/driver-results-upgrade-guard-v141.js?fresh='+Date.now(),{cache:'no-store'}),
+      fetch('assets/driver-algorithm-calibration-v145.js?fresh='+Date.now(),{cache:'no-store'})
     ]);
     if(!responses[0].ok)throw new Error('index '+responses[0].status);
     if(!responses[1].ok)throw new Error('evidence v83 '+responses[1].status);
@@ -40,6 +41,7 @@
     if(!responses[9].ok)throw new Error('results help '+responses[9].status);
     if(!responses[10].ok)throw new Error('results evidence copy '+responses[10].status);
     if(!responses[11].ok)throw new Error('results upgrade guard '+responses[11].status);
+    if(!responses[12].ok)throw new Error('algorithm calibration '+responses[12].status);
     var html=await responses[0].text();
     var evidence83Code=await responses[1].text();
     var evidence90Code=await responses[2].text();
@@ -52,12 +54,13 @@
     var helpCode=await responses[9].text();
     var evidenceCopyCode=await responses[10].text();
     var upgradeGuardCode=await responses[11].text();
+    var calibrationCode=await responses[12].text();
     html=html.replace(/(src|href)=(['"])(assets\/[^'"?#]+)(?:\?[^'"#]*)?\2/g,function(_,attr,q,path){
       return attr+'='+q+path+'?v='+encodeURIComponent(build)+q;
     });
     function safeScript(code){return String(code).replace(/<\/script/gi,'<\\/script');}
     html=html.replace('<head>','<head><script>'+safeScript(transitionCode)+'<\/script><script>try{history.replaceState(null,"",location.pathname+"?v='+encodeURIComponent(build)+'")}catch(e){}<\/script>');
-    html=html.replace('</body>','<script>'+safeScript(evidence83Code)+'<\/script><script>'+safeScript(evidence90Code)+'<\/script><script>'+safeScript(hardeningCode)+'<\/script><script>'+safeScript(rankingCode)+'<\/script><script>'+safeScript(resultsCode)+'<\/script><script>'+safeScript(narrativeCode)+'<\/script><script>'+safeScript(helpCode)+'<\/script><script>'+safeScript(evidenceCopyCode)+'<\/script><script>'+safeScript(upgradeGuardCode)+'<\/script><script>'+safeScript(interviewCode)+'<\/script></body>');
+    html=html.replace('</body>','<script>'+safeScript(evidence83Code)+'<\/script><script>'+safeScript(evidence90Code)+'<\/script><script>'+safeScript(hardeningCode)+'<\/script><script>'+safeScript(rankingCode)+'<\/script><script>'+safeScript(resultsCode)+'<\/script><script>'+safeScript(narrativeCode)+'<\/script><script>'+safeScript(helpCode)+'<\/script><script>'+safeScript(evidenceCopyCode)+'<\/script><script>'+safeScript(upgradeGuardCode)+'<\/script><script>'+safeScript(calibrationCode)+'<\/script><script>'+safeScript(interviewCode)+'<\/script></body>');
     document.open();document.write(html);document.close();
   }catch(err){
     document.body.innerHTML='<p>FORM failed to open. Please reload.</p>';
