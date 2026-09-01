@@ -13,69 +13,44 @@
   'use strict';
   var params=new URLSearchParams(location.search);
   var build=params.get('v')||('live-'+Date.now());
+  var paths=[
+    'index.html',
+    'assets/driver-evidence-v83.js',
+    'assets/driver-evidence-v90.js',
+    'assets/driver-engine-hardening-v129.js',
+    'assets/driver-ranking-diversity-v142.js',
+    'assets/driver-score-calibration-v146.js',
+    'assets/driver-handedness-calibration-v148.js',
+    'assets/driver-strike-reliability-v149.js',
+    'assets/driver-priority-integrity-v151.js',
+    'assets/driver-results-controller-v96.js',
+    'assets/driver-results-transition-v101.js',
+    'assets/driver-results-layout-v126.js',
+    'assets/driver-results-narrative-v136.js',
+    'assets/driver-results-help-v138.js',
+    'assets/driver-results-evidence-copy-v140.js',
+    'assets/driver-results-upgrade-guard-v141.js',
+    'assets/driver-algorithm-calibration-v145.js',
+    'assets/driver-interview-fixes-v136.js',
+    'assets/driver-interview-ux-v104.js',
+    'assets/driver-interview-quality-v150.js',
+    'assets/driver-build-integrity-v154.js'
+  ];
   try{
-    var responses=await Promise.all([
-      fetch('index.html?html='+encodeURIComponent(build),{cache:'no-store'}),
-      fetch('assets/driver-evidence-v83.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-evidence-v90.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-results-layout-v126.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-interview-fixes-v136.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-interview-quality-v150.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-results-transition-v101.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-engine-hardening-v129.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-ranking-diversity-v142.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-score-calibration-v146.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-handedness-calibration-v148.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-strike-reliability-v149.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-priority-integrity-v151.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-results-narrative-v136.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-results-help-v138.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-results-evidence-copy-v140.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-results-upgrade-guard-v141.js?fresh='+Date.now(),{cache:'no-store'}),
-      fetch('assets/driver-algorithm-calibration-v145.js?fresh='+Date.now(),{cache:'no-store'})
-    ]);
-    if(!responses[0].ok)throw new Error('index '+responses[0].status);
-    if(!responses[1].ok)throw new Error('evidence v83 '+responses[1].status);
-    if(!responses[2].ok)throw new Error('evidence v90 '+responses[2].status);
-    if(!responses[3].ok)throw new Error('results layout '+responses[3].status);
-    if(!responses[4].ok)throw new Error('interview fixes '+responses[4].status);
-    if(!responses[5].ok)throw new Error('interview quality '+responses[5].status);
-    if(!responses[6].ok)throw new Error('transition '+responses[6].status);
-    if(!responses[7].ok)throw new Error('engine hardening '+responses[7].status);
-    if(!responses[8].ok)throw new Error('ranking diversity '+responses[8].status);
-    if(!responses[9].ok)throw new Error('score calibration '+responses[9].status);
-    if(!responses[10].ok)throw new Error('handedness calibration '+responses[10].status);
-    if(!responses[11].ok)throw new Error('strike reliability '+responses[11].status);
-    if(!responses[12].ok)throw new Error('priority integrity '+responses[12].status);
-    if(!responses[13].ok)throw new Error('results narrative '+responses[13].status);
-    if(!responses[14].ok)throw new Error('results help '+responses[14].status);
-    if(!responses[15].ok)throw new Error('results evidence copy '+responses[15].status);
-    if(!responses[16].ok)throw new Error('results upgrade guard '+responses[16].status);
-    if(!responses[17].ok)throw new Error('algorithm calibration '+responses[17].status);
-    var html=await responses[0].text();
-    var evidence83Code=await responses[1].text();
-    var evidence90Code=await responses[2].text();
-    var resultsCode=await responses[3].text();
-    var interviewCode=await responses[4].text();
-    var interviewQualityCode=await responses[5].text();
-    var transitionCode=await responses[6].text();
-    var hardeningCode=await responses[7].text();
-    var rankingCode=await responses[8].text();
-    var scoreCalibrationCode=await responses[9].text();
-    var handednessCode=await responses[10].text();
-    var strikeReliabilityCode=await responses[11].text();
-    var priorityIntegrityCode=await responses[12].text();
-    var narrativeCode=await responses[13].text();
-    var helpCode=await responses[14].text();
-    var evidenceCopyCode=await responses[15].text();
-    var upgradeGuardCode=await responses[16].text();
-    var calibrationCode=await responses[17].text();
+    var responses=await Promise.all(paths.map(function(path,i){
+      var q=i===0?'html='+encodeURIComponent(build):'fresh='+Date.now();
+      return fetch(path+'?'+q,{cache:'no-store'});
+    }));
+    responses.forEach(function(r,i){if(!r.ok)throw new Error(paths[i]+' '+r.status);});
+    var texts=await Promise.all(responses.map(function(r){return r.text();}));
+    var html=texts[0];
     html=html.replace(/(src|href)=(['"])(assets\/[^'"?#]+)(?:\?[^'"#]*)?\2/g,function(_,attr,q,path){
       return attr+'='+q+path+'?v='+encodeURIComponent(build)+q;
     });
     function safeScript(code){return String(code).replace(/<\/script/gi,'<\\/script');}
-    html=html.replace('<head>','<head><script>'+safeScript(transitionCode)+'<\/script><script>try{history.replaceState(null,"",location.pathname+"?v='+encodeURIComponent(build)+'")}catch(e){}<\/script>');
-    html=html.replace('</body>','<script>'+safeScript(evidence83Code)+'<\/script><script>'+safeScript(evidence90Code)+'<\/script><script>'+safeScript(hardeningCode)+'<\/script><script>'+safeScript(rankingCode)+'<\/script><script>'+safeScript(scoreCalibrationCode)+'<\/script><script>'+safeScript(handednessCode)+'<\/script><script>'+safeScript(strikeReliabilityCode)+'<\/script><script>'+safeScript(priorityIntegrityCode)+'<\/script><script>'+safeScript(resultsCode)+'<\/script><script>'+safeScript(narrativeCode)+'<\/script><script>'+safeScript(helpCode)+'<\/script><script>'+safeScript(evidenceCopyCode)+'<\/script><script>'+safeScript(upgradeGuardCode)+'<\/script><script>'+safeScript(calibrationCode)+'<\/script><script>'+safeScript(interviewCode)+'<\/script><script>'+safeScript(interviewQualityCode)+'<\/script></body>');
+    var injected=texts.slice(1).map(function(code){return '<script>'+safeScript(code)+'<\/script>';}).join('');
+    injected+='<script>try{history.replaceState(null,"",location.pathname+"?v='+encodeURIComponent(build)+'")}catch(e){}<\/script>';
+    html=html.replace('</body>',injected+'</body>');
     document.open();document.write(html);document.close();
   }catch(err){
     document.body.innerHTML='<p>FORM failed to open. Please reload.</p>';
