@@ -1,7 +1,8 @@
 {
-  "cleanUrls": true,
-  "rewrites": [
-    { "source": "/", "destination": "/static-test-v995.html" },
-    { "source": "/test", "destination": "/static-test-v995.html" }
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "routes": [
+    { "src": "/", "dest": "/static-test-v995.html" },
+    { "src": "/test", "dest": "/static-test-v995.html" },
+    { "handle": "filesystem" }
   ]
 }
