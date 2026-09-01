@@ -1,15 +1,30 @@
-// FORM 10.50 — interview quality calibration.
-// Replaces a low-value abstract style step with transition/tempo for shaft configuration,
-// and captures the source quality of heel/toe strike reports without adding a new step.
+// FORM 10.53 — interview quality calibration.
+// Captures strike-source quality, replaces an abstract style step with transition/tempo,
+// simplifies priority ranking to actual performance outcomes, and defaults brand scope to
+// the independent all-brand universe without making brand scope a required golfer input.
 (function(){
 'use strict';
 function init(){
-  if(window.FORM_DRIVER_INTERVIEW_QUALITY_V150)return true;
+  if(window.FORM_DRIVER_INTERVIEW_QUALITY_V153)return true;
   if(typeof state==='undefined')return false;
-  const step4=document.getElementById('step4'),step7=document.getElementById('step7');
-  if(!step4||!step7)return false;
+  const step4=document.getElementById('step4'),step6=document.getElementById('step6'),step7=document.getElementById('step7');
+  if(!step4||!step6||!step7)return false;
   state.strikeSource=state.strikeSource||'';
   state.transition=state.transition||'unknown';
+
+  // ----- Brand scope is a constraint, not a required golfer question. Default to all brands. -----
+  const brand=document.getElementById('brandQuestion');
+  function defaultAllBrands(){
+    if(!brand||brand.classList.contains('hidden'))return;
+    let empty=true;try{empty=!formBrandScope?.mode;}catch(e){}
+    if(!empty)return;
+    const all=brand.querySelector('[data-brand-mode="all"]');if(all)all.click();
+  }
+  if(brand){
+    const all=brand.querySelector('[data-brand-mode="all"] b');if(all)all.textContent='All brands — recommended';
+    new MutationObserver(defaultAllBrands).observe(brand,{attributes:true,attributeFilter:['class']});
+    setTimeout(defaultAllBrands,0);
+  }
 
   // ----- Strike source: ask how the golfer knows, not how confident they feel. -----
   let sourceBox=document.getElementById('strikeSourceV150');
@@ -34,8 +49,24 @@ function init(){
     e.preventDefault();e.stopPropagation();state.strikeSource=b.dataset.v;syncSource();
   },true));
   const strikeGroup=step4.querySelector('[data-group="strike"]');
-  strikeGroup?.addEventListener('click',()=>setTimeout(syncSource,0),true);
-  syncSource();
+  strikeGroup?.addEventListener('click',()=>setTimeout(syncSource,0),true);syncSource();
+
+  // ----- Performance priorities only. Feel/looks/value should not occupy performance-weight slots. -----
+  const PERF=[['accuracy','Accuracy / forgiveness','Keep misses tighter and protect off-center strikes'],['distance','Distance','Maximize useful distance'],['flight','Ball flight','Get launch and spin into the right window']];
+  step6.querySelector('h1').textContent='What matters most in driver performance?';
+  step6.querySelector('.lead').textContent='Rank the three outcomes that can legitimately change head-fit weighting. Price, looks and feel belong in separate preference or shopping logic—not inside the absolute performance score.';
+  const note=step6.querySelector('.note');if(note)note.textContent='#1 carries the most emphasis. FORM still evaluates all three; this ranking changes emphasis, not whether a dimension exists.';
+  function perfOrder(){return PERF.map(x=>x[0]).sort((a,b)=>(Number(state.ranks?.[a])||99)-(Number(state.ranks?.[b])||99));}
+  function normalizePerfRanks(){const o=perfOrder();o.forEach((k,i)=>state.ranks[k]=i+1);state.ranks.feel=4;state.ranks.looks=5;state.ranks.value=6;}
+  function renderPerformancePriorities(){
+    normalizePerfRanks();const box=document.getElementById('priorityRank');if(!box)return;
+    box.innerHTML=PERF.map(([id,label,sub])=>`<div class="priorityItem"><div><b>${label}</b><small>${sub}</small></div><div class="rankSelectWrap"><select data-perf-rank="${id}">${[1,2,3].map(n=>`<option value="${n}" ${state.ranks[id]===n?'selected':''}>${n}</option>`).join('')}</select></div></div>`).join('');
+    box.querySelectorAll('[data-perf-rank]').forEach(sel=>sel.onchange=()=>{
+      const id=sel.dataset.perfRank,next=Number(sel.value),old=state.ranks[id];
+      const swap=PERF.map(x=>x[0]).find(k=>k!==id&&state.ranks[k]===next);state.ranks[id]=next;if(swap)state.ranks[swap]=old;renderPerformancePriorities();
+    });
+  }
+  window.initPriorityRank=renderPerformancePriorities;renderPerformancePriorities();
 
   // ----- Replace abstract style preference with transition/tempo. -----
   step7.innerHTML=`<div class="eyebrow">Shaft starting point</div>
@@ -49,40 +80,32 @@ function init(){
     </div>
     <div class="note">Transition is used only for the recommended shaft profile and weight window—not the absolute FORM Fit Score.</div>`;
   function syncTransition(){step7.querySelectorAll('.opt').forEach(b=>b.classList.toggle('on',b.dataset.v===state.transition));}
-  step7.querySelectorAll('[data-transition-v150] .opt').forEach(b=>b.addEventListener('click',e=>{
-    e.preventDefault();e.stopPropagation();state.transition=b.dataset.v;syncTransition();
-  },true));
-  syncTransition();
+  step7.querySelectorAll('[data-transition-v150] .opt').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();state.transition=b.dataset.v;syncTransition();},true));syncTransition();
 
-  // Clarify the six-way ranking until the ranking UI itself is simplified.
-  const step6=document.getElementById('step6');
-  if(step6){
-    const lead=step6.querySelector('.lead');if(lead)lead.textContent='Rank what matters to you. Accuracy/forgiveness, distance and ball flight set the performance emphasis. Feel, looks and value are preference context and should not distort the underlying head-fit score.';
-    const note=step6.querySelector('.note');if(note)note.textContent='FORM preserves your full preference order, but only performance priorities change absolute head-fit weighting. Preference priorities are used separately when comparing close fits and purchase context.';
-  }
-
-  // Keep the review screen honest about what Step 7 now captures.
+  // ----- Keep review screen aligned with the revised questions. -----
   const priorReview=typeof window.renderReview==='function'?window.renderReview:null;
   if(priorReview){
     window.renderReview=function(){
       const out=priorReview.apply(this,arguments);
       setTimeout(()=>{
-        const prefs=document.getElementById('reviewPrefs');if(!prefs)return;
-        [...prefs.querySelectorAll('.reviewRow')].forEach(row=>{
-          const label=row.querySelector('span');if(label?.textContent?.trim()==='Style'){
-            label.textContent='Shaft transition';const b=row.querySelector('b');if(b)b.childNodes[0].nodeValue=({smooth:'Smooth / gradual',neutral:'Moderate / neutral',aggressive:'Quick / aggressive',unknown:'Varies / not sure'})[state.transition]||'Varies / not sure';
-          }
-        });
+        const prefs=document.getElementById('reviewPrefs');
+        if(prefs){
+          [...prefs.querySelectorAll('.reviewRow')].forEach(row=>{
+            const label=row.querySelector('span')?.textContent?.trim(),b=row.querySelector('b');
+            if(label==='Style'){row.querySelector('span').textContent='Shaft transition';if(b){const q=b.querySelector('.quality');b.textContent=({smooth:'Smooth / gradual',neutral:'Moderate / neutral',aggressive:'Quick / aggressive',unknown:'Varies / not sure'})[state.transition]||'Varies / not sure';if(q)b.appendChild(q);}}
+            if(label==='Priorities'&&b){const q=b.querySelector('.quality');const labels={accuracy:'Accuracy / forgiveness',distance:'Distance',flight:'Ball flight'};b.textContent=perfOrder().map((k,i)=>`#${i+1} ${labels[k]}`).join(', ');if(q)b.appendChild(q);}
+          });
+        }
         const strike=document.getElementById('reviewStrike');
         if(strike&&['heel','toe'].includes(state.strike)&&!strike.querySelector('[data-form-strike-source]')){
           const label=({confirmed:'Confirmed impact evidence',repeated:'Repeatedly seen / felt',guess:'Best guess','':'Unverified'})[state.strikeSource]||'Unverified';
           strike.insertAdjacentHTML('beforeend',`<div class="reviewRow" data-form-strike-source><span>Strike evidence</span><b>${label}<span class="quality">Source</span></b></div>`);
         }
-      },0);
-      return out;
+      },0);return out;
     };
   }
-  window.FORM_DRIVER_INTERVIEW_QUALITY_V150={version:'10.50'};
+  window.FORM_DRIVER_INTERVIEW_QUALITY_V153={version:'10.53',performancePriorities:PERF.map(x=>x[0])};
+  window.FORM_DRIVER_INTERVIEW_QUALITY_V150=window.FORM_DRIVER_INTERVIEW_QUALITY_V153;
   return true;
 }
 let n=0,t=setInterval(()=>{n++;if(init()||n>240)clearInterval(t);},50);
