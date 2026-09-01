@@ -1,24 +1,26 @@
-// FORM 10.54 — canonical live-build integrity guard.
-// Prevents silent fallback to stale interview/results layers.
+// FORM 10.59 — canonical live-build integrity guard.
+// Prevents silent fallback to stale interview/results/configuration layers.
 (function(){
 'use strict';
 function init(){
-  if(window.FORM_DRIVER_BUILD_INTEGRITY_V154)return true;
+  if(window.FORM_DRIVER_BUILD_INTEGRITY_V159)return true;
   const driver=document.getElementById('driverExperience');
   if(!driver||typeof state==='undefined')return false;
 
   const expected={
     rangeFirst:true,
+    technicalPrompt:'What driver numbers do you know?',
     styleQuestion:false,
     transitionQuestion:true,
     performancePriorities:['accuracy','distance','flight'],
     sharedSetup:true,
     golferFacingLabels:['Distance','Dispersion','Forgiveness','Spin Control','Launch','Ball Speed Retention'],
-    narrativeProsCons:true
+    narrativeProsCons:true,
+    calibratedConfiguration:true,
+    leadingFitConfidence:true
   };
 
   function enforceInterview(){
-    // Exact launch-monitor mode is intentionally not a user-facing option. Driver numbers vary swing to swing.
     driver.querySelectorAll('[data-group="lm"] .opt[data-v="exact"]').forEach(function(el){
       el.style.setProperty('display','none','important');el.setAttribute('aria-hidden','true');
     });
@@ -33,7 +35,11 @@ function init(){
       if(state.metrics[id]?.mode==='exact'){state.metrics[id].mode='range';state.metrics[id].value=null;}
     });
 
-    // Step 7 must be transition/tempo, never the retired Classic/Engineered/Modern/Edgy style question.
+    const step5=document.getElementById('step5');
+    if(step5&&window.FORM_DRIVER_INTERVIEW_COPY_V156&&step5.querySelector('h1')?.textContent!==expected.technicalPrompt){
+      console.error('FORM integrity: technical-profile wording regressed.');
+    }
+
     const step7=document.getElementById('step7');
     if(step7&&!step7.querySelector('[data-transition-v150]')&&window.FORM_DRIVER_INTERVIEW_QUALITY_V153){
       console.error('FORM integrity: transition question missing after interview-quality layer initialized.');
@@ -42,10 +48,11 @@ function init(){
       console.error('FORM integrity: retired style question is visible.');
     }
 
-    // Only the three performance outcomes may occupy priority slots.
     const priority=document.getElementById('priorityRank');
     if(priority){
-      [...priority.querySelectorAll('[data-perf-rank]')].forEach(function(sel){
+      const sels=[...priority.querySelectorAll('[data-perf-rank]')];
+      if(sels.length&&sels.length!==3)console.error('FORM integrity: performance priority count is not three.');
+      sels.forEach(function(sel){
         if(!expected.performancePriorities.includes(sel.dataset.perfRank))console.error('FORM integrity: non-performance priority in scoring rank.',sel.dataset.perfRank);
       });
     }
@@ -64,7 +71,11 @@ function init(){
       const labels=[...card.querySelectorAll('.report128MetricLabel')].map(function(x){return (x.textContent||'').replace(/\bi\b$/,'').trim();});
       if(labels.length&&expected.golferFacingLabels.some(function(x){return !labels.includes(x);})){console.error('FORM integrity: golfer-facing result labels incomplete.',labels);}
     });
-    if(!results.querySelector('.report121Setup'))console.error('FORM integrity: shared Test setup block missing.');
+    const setup=results.querySelector('.report121Setup');
+    if(!setup)console.error('FORM integrity: shared Test setup block missing.');
+    if(setup&&window.FORM_DRIVER_RESULTS_CONFIDENCE_V158&&!setup.querySelector('.report121SetupGrid')?.dataset.formConfidence158){
+      console.error('FORM integrity: leading-fit confidence calibration missing.');
+    }
   }
 
   function verifyLayers(){
@@ -73,6 +84,9 @@ function init(){
     if(!window.FORM_DRIVER_RESULTS_LAYOUT_V128)missing.push('results layout');
     if(!window.FORM_DRIVER_INTERVIEW_UX_V120)missing.push('range-first interview UX');
     if(!window.FORM_DRIVER_INTERVIEW_QUALITY_V153)missing.push('interview quality');
+    if(!window.FORM_DRIVER_INTERVIEW_COPY_V156)missing.push('technical-profile copy');
+    if(!window.FORM_DRIVER_CONFIG_BRIDGE_V157)missing.push('calibrated configuration bridge');
+    if(!window.FORM_DRIVER_RESULTS_CONFIDENCE_V158)missing.push('leading-fit confidence');
     if(missing.length)console.error('FORM integrity: required canonical layers missing: '+missing.join(', '));
   }
 
@@ -84,7 +98,8 @@ function init(){
   }).observe(driver,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
   setTimeout(function(){verifyLayers();enforceInterview();verifyResults();},1200);
   setTimeout(function(){verifyLayers();enforceInterview();verifyResults();},3500);
-  window.FORM_DRIVER_BUILD_INTEGRITY_V154={version:'10.54',expected:expected,verifyLayers:verifyLayers,verifyResults:verifyResults};
+  window.FORM_DRIVER_BUILD_INTEGRITY_V154={version:'10.59',expected:expected,verifyLayers:verifyLayers,verifyResults:verifyResults};
+  window.FORM_DRIVER_BUILD_INTEGRITY_V159=window.FORM_DRIVER_BUILD_INTEGRITY_V154;
   return true;
 }
 let n=0,t=setInterval(function(){n++;if(init()||n>240)clearInterval(t);},50);
