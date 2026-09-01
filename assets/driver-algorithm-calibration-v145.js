@@ -10,6 +10,7 @@ function init(){
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const answered=v=>v!==null&&v!==undefined&&v!==''&&v!=='unknown';
   const metric=id=>state?.metrics?.[id]||{mode:'unknown',value:null};
+  const setText=(el,value)=>{if(el&&el.textContent!==value)el.textContent=value;};
   function classify(id){
     const m=metric(id);if(!m||m.mode==='unknown'||!answered(m.value))return null;
     if(id==='spin'){
@@ -45,7 +46,7 @@ function init(){
   const rangeBounds={under75:[65,74],'75-84':[75,84],'85-89':[85,89],'90-94':[90,94],'95-99':[95,99],'100-104':[100,104],'105-109':[105,109],'110-114':[110,114],115plus:[115,125]};
   function flexAt(x){return x<80?'Senior / A':x<92?'Regular':x<105?'Stiff':'X-Stiff';}
   function weightFor(labels){
-    if(labels.includes('X-Stiff'))return labels.length>1?'60–70g':'60–70g';
+    if(labels.includes('X-Stiff'))return'60–70g';
     if(labels.includes('Stiff'))return labels.includes('Regular')?'50–65g':'55–65g';
     if(labels.includes('Regular'))return labels.includes('Senior / A')?'45–60g':'50–60g';
     return'45–55g';
@@ -78,25 +79,26 @@ function init(){
     cards.forEach((card,i)=>{
       const row=rows?.[i],cfg=card.querySelector('.fitConfig81');if(!row||!cfg)return;
       const boxes=[...cfg.children],loft=loftFit(row.p),shaft=shaftFit();
-      if(boxes[0]){const b=boxes[0].querySelector('b'),small=boxes[0].querySelector('small');if(b)b.textContent=`${loft.loft.toFixed(1)}°`;if(small)small.textContent=`Test ${loft.range}. ${loft.reason}`;}
-      if(boxes[1]){const b=boxes[1].querySelector('b'),small=boxes[1].querySelector('small');if(b)b.textContent=`${shaft.flex} · ${shaft.weight}`;if(small)small.textContent=shaft.note;}
+      if(boxes[0]){setText(boxes[0].querySelector('b'),`${loft.loft.toFixed(1)}°`);setText(boxes[0].querySelector('small'),`Test ${loft.range}. ${loft.reason}`);}
+      if(boxes[1]){setText(boxes[1].querySelector('b'),`${shaft.flex} · ${shaft.weight}`);setText(boxes[1].querySelector('small'),shaft.note);}
     });
   }
   function patchUpgrade(){
-    const box=document.querySelector('.report100Upgrade');if(!box||box.dataset.formUpgradeReliability==='inferred-current-profile')return;
+    const box=document.querySelector('.report100Upgrade');if(!box||box.dataset.formUpgradeReliability)return;
     let rows;try{rows=ENG.winners(typeof normalizedGolferV69==='function'?normalizedGolferV69():golfer());}catch(e){return;}
     const best=rows?.[0];if(!best)return;
     const ev=V81.recommendationEvidence?.(best.s);if(!ev||ev.combined>=72)return;
     const title=box.querySelector('b'),text=box.querySelector('p,em');
     const existing=(title?.textContent||'').toLowerCase();
     if(existing.includes('test before replacing')||existing.includes('no clear'))return;
-    if(title)title.textContent='Worth a side-by-side test';
-    if(text)text.textContent=`The best new fit currently has ${Math.round(ev.combined)}% recommendation support. FORM will use it to prioritize testing, but developing evidence is not strong enough for a purchase-level upgrade claim on score separation alone.`;
+    setText(title,'Worth a side-by-side test');
+    setText(text,`The best new fit currently has ${Math.round(ev.combined)}% recommendation support. FORM will use it to prioritize testing, but developing evidence is not strong enough for a purchase-level upgrade claim on score separation alone.`);
     box.dataset.formUpgradeReliability='developing-new-product-evidence';
   }
   function apply(){patchCards();patchUpgrade();}
-  const observer=new MutationObserver(()=>setTimeout(apply,0));observer.observe(document.documentElement,{subtree:true,childList:true});
-  document.addEventListener('click',()=>setTimeout(apply,0),true);setTimeout(apply,0);
+  let pending=false;const schedule=()=>{if(pending)return;pending=true;setTimeout(()=>{pending=false;apply();},0);};
+  const observer=new MutationObserver(schedule);observer.observe(document.documentElement,{subtree:true,childList:true});
+  document.addEventListener('click',schedule,true);schedule();
   window.FORM_DRIVER_ALGORITHM_CALIBRATION_V145={version:'10.45',classify,loftFit,shaftFit,apply};
   return true;
 }
