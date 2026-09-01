@@ -1,4 +1,4 @@
-// FORM 10.77 — stable, one-pass driver results reconciliation.
+// FORM 10.78 — stable, one-pass driver results reconciliation.
 // No broad MutationObserver. Enhances the proven base report only after it exists.
 (function(){
 'use strict';
@@ -41,20 +41,28 @@ function init(){
    if(!other){return `This is the cleanest overall match FORM found for your profile${p[0]?`, with ${p[0].toLowerCase()} carrying the most emphasis`:''}. Real-world testing should confirm that the modeled strengths show up in your dispersion and ball flight.`;}
    const gap=Math.abs(row.s.overall-other.s.overall),best=rel[0],trade=weak[0];
    if(i===0){
-     const lead=best?`${best.meta.label.toLowerCase()} is its clearest relative advantage`: 'the overall profile is the separator';
+     const lead=best&&best.delta>0.5?`${best.meta.label.toLowerCase()} is its clearest relative advantage`:'no single category clearly beats the finalist-group average; the lead comes from the combined weighted fit';
      const tie=gap<1.25?`The margin over #2 is only ${gap.toFixed(1)} Fit points, so FORM considers them the same testing tier.`:`It leads #2 by ${gap.toFixed(1)} Fit points.`;
-     const watch=trade&&trade.delta<0?`Its main pressure-test area is ${trade.meta.label.toLowerCase()}, where another finalist is stronger.`:`There is no single major category penalty driving against it.`;
-     return `${tie} ${lead}, and that advantage lines up with the needs FORM is weighting most heavily for you. ${watch}`;
+     const watch=trade&&trade.delta<-0.5?`Its main pressure-test area is ${trade.meta.label.toLowerCase()}, where another finalist is stronger.`:`There is no single meaningful category penalty driving against it.`;
+     return `${tie} ${lead}. ${watch}`;
    }
-   const above=other,delta=(above.s.overall-row.s.overall).toFixed(1),counter=best&&best.delta>0.5?`${best.meta.label} is where this head gives you the strongest counterargument to the model above.`:`Its case is balance rather than one standout category.`;
-   const loss=trade?`${trade.meta.label} is the clearest reason it sits lower.`:'The difference is spread across several small categories.';
+   const above=other,delta=(above.s.overall-row.s.overall).toFixed(1),counter=best&&best.delta>0.5?`${best.meta.label} is where this head gives you the strongest counterargument to the model above.`:`It does not have a category-level advantage over the finalist-group average; its case is the overall combination.`;
+   const loss=trade&&trade.delta<-0.5?`${trade.meta.label} is the clearest reason it sits lower.`:'The difference is spread across several small categories rather than one meaningful weakness.';
    return `It sits ${delta} Fit points behind the model above. ${loss} ${counter} That makes it a useful side-by-side comparison rather than simply a lower-ranked fallback.`;
  }
  function proCon(rows,i){
    const row=rows[i],hi=strongestRelative(rows,i),lo=weakestRelative(rows,i);if(!row||!hi.length)return{pros:[],cons:[]};
-   const pros=[],cons=[];
-   hi.slice(0,2).forEach(v=>{let t=`${v.meta.label} is a relative strength in this finalist group.`;if(v.k==='strike')t+=` ${strikeContext(row)}`;else if(v.delta>2)t+=` It is meaningfully better here than the average of the other finalists.`;else t+=` The advantage is modest, but it contributes to the overall fit.`;pros.push(t);});
-   lo.slice(0,2).forEach(v=>{let t=`${v.meta.label} is the first area to pressure-test against the other finalists.`;if(v.delta<-2)t+=` FORM sees a meaningful relative disadvantage here.`;else t+=` This is a trade-off, not a red flag.`;cons.push(t);});
+   const pros=[],cons=[],positive=hi.filter(v=>v.delta>0.5),negative=lo.filter(v=>v.delta<-0.5);
+   if(positive.length){
+     positive.slice(0,2).forEach(v=>{let t=`${v.meta.label} is a genuine relative advantage in this finalist group.`;if(v.k==='strike')t+=` ${strikeContext(row)}`;else if(v.delta>2)t+=` It is meaningfully better here than the average of the other finalists.`;else t+=` The edge is modest, so it should be confirmed in side-by-side testing.`;pros.push(t);});
+   }else{
+     const best=hi[0];pros.push(`This head does not beat the finalist-group average in any single scored category. Its best relative area is ${best.meta.label.toLowerCase()}, so its case is the combined fit rather than a standalone category advantage.`);
+   }
+   if(negative.length){
+     negative.slice(0,2).forEach(v=>{let t=`${v.meta.label} is a real relative trade-off versus the other finalists.`;if(v.delta<-2)t+=` FORM sees enough separation here that it deserves deliberate pressure-testing.`;else t+=` The difference is small and should not be treated as a disqualifier.`;cons.push(t);});
+   }else{
+     cons.push('FORM does not see a meaningful category-level disadvantage versus the finalist group. The deciding evidence should come from actual dispersion, launch and strike consistency in testing.');
+   }
    return {pros,cons};
  }
  function scoreGrid(row){return categoryRows(row).map(v=>{
@@ -85,7 +93,7 @@ function init(){
  function arm(){let n=0;const t=setInterval(()=>{n++;if(enhance()||n>80)clearInterval(t);},50);}
  document.addEventListener('click',e=>{if(e.target?.closest?.('#step9 .readyBox button'))arm();},true);
  document.addEventListener('touchend',e=>{if(e.target?.closest?.('#step9 .readyBox button'))arm();},{capture:true,passive:true});
- arm();window.FORM_DRIVER_RESULTS_INTEGRATED_V177={version:'10.77',enhance};return true;
+ arm();window.FORM_DRIVER_RESULTS_INTEGRATED_V177={version:'10.78',enhance};return true;
 }
 let n=0,t=setInterval(()=>{n++;if(init()||n>300)clearInterval(t);},50);
 })();
