@@ -1,10 +1,10 @@
-// FORM 10.45 — configuration consistency + shaft-boundary calibration + evidence-aware upgrade language.
+// FORM 10.52 — configuration consistency + shaft-boundary and transition calibration + evidence-aware upgrade language.
 // This layer does not change absolute FORM Fit Scores. It keeps configuration and purchase guidance
 // consistent with the same uncertainty rules used by the scoring engine.
 (function(){
 'use strict';
 function init(){
-  if(window.FORM_DRIVER_ALGORITHM_CALIBRATION_V145)return true;
+  if(window.FORM_DRIVER_ALGORITHM_CALIBRATION_V152)return true;
   const ENG=window.FORM_DRIVER_ENGINE_V80,V81=window.FORM_DRIVER_CONFIG_V81;
   if(!ENG||!V81||typeof state==='undefined'||typeof golfer!=='function')return false;
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -45,16 +45,23 @@ function init(){
   }
   const rangeBounds={under75:[65,74],'75-84':[75,84],'85-89':[85,89],'90-94':[90,94],'95-99':[95,99],'100-104':[100,104],'105-109':[105,109],'110-114':[110,114],115plus:[115,125]};
   function flexAt(x){return x<80?'Senior / A':x<92?'Regular':x<105?'Stiff':'X-Stiff';}
-  function weightFor(labels){
-    if(labels.includes('X-Stiff'))return'60–70g';
-    if(labels.includes('Stiff'))return labels.includes('Regular')?'50–65g':'55–65g';
-    if(labels.includes('Regular'))return labels.includes('Senior / A')?'45–60g':'50–60g';
-    return'45–55g';
+  function baseWeightFor(labels){
+    if(labels.includes('X-Stiff'))return[60,70];
+    if(labels.includes('Stiff'))return labels.includes('Regular')?[50,65]:[55,65];
+    if(labels.includes('Regular'))return labels.includes('Senior / A')?[45,60]:[50,60];
+    return[45,55];
+  }
+  function transitionProfile(){
+    const t=String(state?.transition||'unknown');
+    if(t==='smooth')return{key:t,label:'smoother-loading / mid profile',shift:-4,note:'Your smoother transition supports testing the lighter end of the window and a profile that loads without needing an aggressively stiff tip section.'};
+    if(t==='aggressive')return{key:t,label:'more stable / firmer-tip profile',shift:4,note:'Your quicker transition supports testing the heavier end of the window and a more stable profile before assuming a different flex family.'};
+    if(t==='neutral')return{key:t,label:'neutral mid-profile',shift:0,note:'Your moderate transition supports a neutral profile as the starting point.'};
+    return{key:'unknown',label:'profile to be tested',shift:0,note:'Transition is unknown or variable, so FORM is keeping shaft profile intentionally broad.'};
   }
   function shaftFit(){
     const m=metric('speed');let labels=[],source='club speed',note='';
     if(m.mode==='exact'&&answered(m.value)){
-      const s=Number(m.value);if(!Number.isFinite(s))return {flex:'Speed needed',weight:'No defensible range yet',note:'FORM will not guess shaft flex or weight without usable club-speed information.'};
+      const s=Number(m.value);if(!Number.isFinite(s))return {flex:'Speed needed',weight:'No defensible range yet',profile:'Profile to be tested',note:'FORM will not guess shaft flex or weight without usable club-speed information.'};
       labels=[flexAt(s)];
       if(Math.abs(s-80)<=2)labels=[flexAt(79),flexAt(81)];
       else if(Math.abs(s-92)<=2)labels=[flexAt(91),flexAt(93)];
@@ -67,11 +74,14 @@ function init(){
     }else{
       const g=typeof normalizedGolferV69==='function'?normalizedGolferV69():golfer();
       const general={belowavg:82,typical:92,aboveavg:101,fast:108,veryfast:116};const s=m.mode==='general'?(general[m.value]||Number(g?.speed)):Number(g?.speed);
-      if(!Number.isFinite(s))return {flex:'Speed needed',weight:'No defensible range yet',note:'FORM will not guess shaft flex or weight without usable club-speed information.'};
-      labels=[flexAt(s)];source=m.mode==='general'?'general speed profile':'golfer speed profile';note=' This is a broad starting family only; transition, delivery and feel can move the final shaft materially.';
+      if(!Number.isFinite(s))return {flex:'Speed needed',weight:'No defensible range yet',profile:'Profile to be tested',note:'FORM will not guess shaft flex or weight without usable club-speed information.'};
+      labels=[flexAt(s)];source=m.mode==='general'?'general speed profile':'golfer speed profile';note=' This is a broad starting family because speed alone does not identify a final shaft.';
     }
-    labels=[...new Set(labels)];const flex=labels.join(' / '),weight=weightFor(labels);
-    return {flex,weight,note:`Starting point from ${source}.${note} Final shaft profile still requires testing.`};
+    labels=[...new Set(labels)];
+    const transition=transitionProfile(),base=baseWeightFor(labels);
+    const lo=Math.max(40,Math.round(base[0]+transition.shift)),hi=Math.max(lo+5,Math.round(base[1]+transition.shift));
+    const flex=labels.join(' / '),weight=`${lo}–${hi}g`;
+    return {flex,weight,profile:transition.label,note:`Starting point from ${source}.${note} ${transition.note} Final shaft model, torque and exact weight still require testing.`};
   }
   function patchCards(){
     let rows;try{rows=ENG.winners(typeof normalizedGolferV69==='function'?normalizedGolferV69():golfer());}catch(e){return;}
@@ -80,7 +90,7 @@ function init(){
       const row=rows?.[i],cfg=card.querySelector('.fitConfig81');if(!row||!cfg)return;
       const boxes=[...cfg.children],loft=loftFit(row.p),shaft=shaftFit();
       if(boxes[0]){setText(boxes[0].querySelector('b'),`${loft.loft.toFixed(1)}°`);setText(boxes[0].querySelector('small'),`Test ${loft.range}. ${loft.reason}`);}
-      if(boxes[1]){setText(boxes[1].querySelector('b'),`${shaft.flex} · ${shaft.weight}`);setText(boxes[1].querySelector('small'),shaft.note);}
+      if(boxes[1]){setText(boxes[1].querySelector('b'),`${shaft.flex} · ${shaft.weight}`);setText(boxes[1].querySelector('small'),`${shaft.profile}. ${shaft.note}`);}
     });
   }
   function patchUpgrade(){
@@ -99,7 +109,8 @@ function init(){
   let pending=false;const schedule=()=>{if(pending)return;pending=true;setTimeout(()=>{pending=false;apply();},0);};
   const observer=new MutationObserver(schedule);observer.observe(document.documentElement,{subtree:true,childList:true});
   document.addEventListener('click',schedule,true);schedule();
-  window.FORM_DRIVER_ALGORITHM_CALIBRATION_V145={version:'10.45',classify,loftFit,shaftFit,apply};
+  window.FORM_DRIVER_ALGORITHM_CALIBRATION_V152={version:'10.52',classify,loftFit,shaftFit,transitionProfile,apply};
+  window.FORM_DRIVER_ALGORITHM_CALIBRATION_V145=window.FORM_DRIVER_ALGORITHM_CALIBRATION_V152;
   return true;
 }
 let n=0,t=setInterval(()=>{n++;if(init()||n>240)clearInterval(t);},50);
