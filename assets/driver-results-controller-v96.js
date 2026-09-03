@@ -1,4 +1,4 @@
-// FORM 10.81 — stable integrated driver report renderer.
+// FORM 10.83 — stable integrated driver report renderer.
 // Direct, non-recursive, observer-free. New-driver Fit Scores stay independent of the current club.
 (function(){
 'use strict';
@@ -104,6 +104,8 @@ function init(){
     if(current.exact===false)return {level:'Test before replacing',text:`FORM models the best new fit ${gap.toFixed(1)} points ahead, but your current-driver benchmark is inferred rather than directly evidenced. Use the gap to prioritize a side-by-side test; do not treat it as a purchase claim without measured validation.`};
     const diff=current.detail?ENG.compare(best.s,current.detail):[],wins=diff.filter(x=>x.delta>=4);
     if(gap<2.5||!wins.length)return {level:'No clear equipment upgrade',text:`The best new fit is ${gap.toFixed(1)} points ahead, but FORM does not see enough meaningful category improvement to justify replacement.`};
+    let ev=null;try{ev=V81.recommendationEvidence?.(best.s);}catch(e){}
+    if(ev&&Number(ev.combined)<72)return {level:'Worth a side-by-side test',text:`The best new fit is ${gap.toFixed(1)} points ahead, but recommendation support is ${Math.round(Number(ev.combined)||0)}%. FORM will use the result to prioritize testing; developing product evidence is not strong enough for a purchase-level upgrade claim on score separation alone.`};
     if(gap<6)return {level:'Worth a side-by-side test',text:`The modeled fit advantage is ${gap.toFixed(1)} points, led by ${wins.slice(0,2).map(x=>x.label.toLowerCase()).join(' and ')||'several smaller gains'}.`};
     return {level:'Strong upgrade candidate',text:`FORM sees a ${gap.toFixed(1)}-point fit advantage, led by ${wins.slice(0,3).map(x=>x.label.toLowerCase()).join(', ')||'multiple weighted categories'}.`};
   }
@@ -138,7 +140,7 @@ function init(){
   let building=false;
   function startResults(){
     if(building)return;building=true;const cta=document.querySelector('#step9 .readyBox button');if(cta){cta.disabled=true;cta.textContent='Preparing your fit…';}
-    requestAnimationFrame(()=>{try{renderReport();}catch(err){console.error('FORM 10.81 report failed',err);if(cta){cta.disabled=false;cta.textContent='Generate My Fit →';}const box=document.querySelector('#step9 .readyBox');if(box&&!document.getElementById('formReport100Error')){const p=document.createElement('p');p.id='formReport100Error';p.style.cssText='margin:12px 0 0;color:#8b1e1e;font-weight:700';p.textContent='FORM received the request but could not build the report. Your fitting answers remain available.';box.appendChild(p);}}finally{building=false;}});
+    requestAnimationFrame(()=>{try{renderReport();}catch(err){console.error('FORM 10.83 report failed',err);if(cta){cta.disabled=false;cta.textContent='Generate My Fit →';}const box=document.querySelector('#step9 .readyBox');if(box&&!document.getElementById('formReport100Error')){const p=document.createElement('p');p.id='formReport100Error';p.style.cssText='margin:12px 0 0;color:#8b1e1e;font-weight:700';p.textContent='FORM received the request but could not build the report. Your fitting answers remain available.';box.appendChild(p);}}finally{building=false;}});
   }
   window.FORM_START_DRIVER_RESULTS=startResults;
   window.FORM_RENDER_DRIVER_REPORT_V100=renderReport;
@@ -146,7 +148,7 @@ function init(){
   window.showResults=startResults;
   document.addEventListener('click',function(e){const b=e.target?.closest?.('#step9 .readyBox button');if(!b)return;e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();startResults();},true);
   document.addEventListener('touchend',function(e){const b=e.target?.closest?.('#step9 .readyBox button');if(!b)return;e.preventDefault();e.stopPropagation();startResults();},{capture:true,passive:false});
-  window.FORM_DRIVER_RESULTS_CONTROLLER_V96=true;window.FORM_DRIVER_RESULTS_CONTROLLER_V100=true;window.FORM_DRIVER_RESULTS_CONTROLLER_V181={version:'10.81'};
+  window.FORM_DRIVER_RESULTS_CONTROLLER_V96=true;window.FORM_DRIVER_RESULTS_CONTROLLER_V100=true;window.FORM_DRIVER_RESULTS_CONTROLLER_V181={version:'10.83'};
   return true;
 }
 let tries=0;const t=setInterval(()=>{tries++;if(init()||tries>300)clearInterval(t);},50);
