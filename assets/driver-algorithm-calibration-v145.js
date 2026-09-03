@@ -1,6 +1,6 @@
-// FORM 10.52 — configuration consistency + shaft-boundary and transition calibration + evidence-aware upgrade language.
-// This layer does not change absolute FORM Fit Scores. It keeps configuration and purchase guidance
-// consistent with the same uncertainty rules used by the scoring engine.
+// FORM 10.84 — pure configuration calibration.
+// Observer-free. This layer calibrates loft and shaft starting points only.
+// Absolute FORM Fit Scores remain independent of the golfer's current club; upgrade advice lives in the stable report renderer.
 (function(){
 'use strict';
 function init(){
@@ -10,7 +10,7 @@ function init(){
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const answered=v=>v!==null&&v!==undefined&&v!==''&&v!=='unknown';
   const metric=id=>state?.metrics?.[id]||{mode:'unknown',value:null};
-  const setText=(el,value)=>{if(el&&el.textContent!==value)el.textContent=value;};
+
   function classify(id){
     const m=metric(id);if(!m||m.mode==='unknown'||!answered(m.value))return null;
     if(id==='spin'){
@@ -30,6 +30,7 @@ function init(){
     return id==='launch'?['10-12','16-18'].includes(m.value):id==='spin'&&m.value==='2000-2249';
   }
   function numericExact(id){const m=metric(id);if(m.mode!=='exact'||!answered(m.value))return null;const n=Number(m.value);return Number.isFinite(n)?n:null;}
+
   function loftFit(p){
     const launch=classify('launch'),spin=classify('spin'),aoa=numericExact('aoa');let loft=10.5,reasons=[],conflict=false;
     if(launch==='low'){loft+=1;reasons.push('lower launch');}else if(launch==='high'){loft-=1;reasons.push('higher launch');}
@@ -37,12 +38,14 @@ function init(){
     conflict=(launch==='low'&&spin==='high')||(launch==='high'&&spin==='low');
     if(aoa!=null&&aoa<=-2){loft+=.5;reasons.push('downward attack angle');}else if(aoa!=null&&aoa>=4){loft-=.5;reasons.push('upward attack angle');}
     if(p?.player==='lowspin')loft+=.5;
-    loft=Math.round(clamp(loft,8,12)*2)/2;const lo=clamp(loft-.5,8,12),hi=clamp(loft+.5,8,12);
+    loft=Math.round(clamp(loft,8,12)*2)/2;
+    const lo=clamp(loft-.5,8,12),hi=clamp(loft+.5,8,12);
     let reason=reasons.length?`Driven by ${reasons.slice(0,3).join(', ')}.`:'Neutral starting loft from the information provided.';
     if(ambiguousRange('launch')||ambiguousRange('spin'))reason+=' A reported range crosses a FORM fitting boundary, so that metric is not being used to force loft up or down.';
     if(conflict)reason+=' Launch and spin point in competing loft directions, so launch-monitor validation matters more than nominal loft.';
     return {loft,range:`${lo.toFixed(1)}°–${hi.toFixed(1)}°`,reason,conflict};
   }
+
   const rangeBounds={under75:[65,74],'75-84':[75,84],'85-89':[85,89],'90-94':[90,94],'95-99':[95,99],'100-104':[100,104],'105-109':[105,109],'110-114':[110,114],115plus:[115,125]};
   function flexAt(x){return x<80?'Senior / A':x<92?'Regular':x<105?'Stiff':'X-Stiff';}
   function baseWeightFor(labels){
@@ -83,33 +86,8 @@ function init(){
     const flex=labels.join(' / '),weight=`${lo}–${hi}g`;
     return {flex,weight,profile:transition.label,note:`Starting point from ${source}.${note} ${transition.note} Final shaft model, torque and exact weight still require testing.`};
   }
-  function patchCards(){
-    let rows;try{rows=ENG.winners(typeof normalizedGolferV69==='function'?normalizedGolferV69():golfer());}catch(e){return;}
-    const cards=[...document.querySelectorAll('#result80Grid .result70Card')];
-    cards.forEach((card,i)=>{
-      const row=rows?.[i],cfg=card.querySelector('.fitConfig81');if(!row||!cfg)return;
-      const boxes=[...cfg.children],loft=loftFit(row.p),shaft=shaftFit();
-      if(boxes[0]){setText(boxes[0].querySelector('b'),`${loft.loft.toFixed(1)}°`);setText(boxes[0].querySelector('small'),`Test ${loft.range}. ${loft.reason}`);}
-      if(boxes[1]){setText(boxes[1].querySelector('b'),`${shaft.flex} · ${shaft.weight}`);setText(boxes[1].querySelector('small'),`${shaft.profile}. ${shaft.note}`);}
-    });
-  }
-  function patchUpgrade(){
-    const box=document.querySelector('.report100Upgrade');if(!box||box.dataset.formUpgradeReliability)return;
-    let rows;try{rows=ENG.winners(typeof normalizedGolferV69==='function'?normalizedGolferV69():golfer());}catch(e){return;}
-    const best=rows?.[0];if(!best)return;
-    const ev=V81.recommendationEvidence?.(best.s);if(!ev||ev.combined>=72)return;
-    const title=box.querySelector('b'),text=box.querySelector('p,em');
-    const existing=(title?.textContent||'').toLowerCase();
-    if(existing.includes('test before replacing')||existing.includes('no clear'))return;
-    setText(title,'Worth a side-by-side test');
-    setText(text,`The best new fit currently has ${Math.round(ev.combined)}% recommendation support. FORM will use it to prioritize testing, but developing evidence is not strong enough for a purchase-level upgrade claim on score separation alone.`);
-    box.dataset.formUpgradeReliability='developing-new-product-evidence';
-  }
-  function apply(){patchCards();patchUpgrade();}
-  let pending=false;const schedule=()=>{if(pending)return;pending=true;setTimeout(()=>{pending=false;apply();},0);};
-  const observer=new MutationObserver(schedule);observer.observe(document.documentElement,{subtree:true,childList:true});
-  document.addEventListener('click',schedule,true);schedule();
-  window.FORM_DRIVER_ALGORITHM_CALIBRATION_V152={version:'10.52',classify,loftFit,shaftFit,transitionProfile,apply};
+
+  window.FORM_DRIVER_ALGORITHM_CALIBRATION_V152={version:'10.84',classify,loftFit,shaftFit,transitionProfile};
   window.FORM_DRIVER_ALGORITHM_CALIBRATION_V145=window.FORM_DRIVER_ALGORITHM_CALIBRATION_V152;
   return true;
 }
