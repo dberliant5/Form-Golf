@@ -6,6 +6,7 @@ function apply(){
   results.querySelector('.report100Lead')?.remove();
   const hero=results.querySelector('.report100Hero');if(hero){hero.style.display='block';hero.style.gridTemplateColumns='1fr';}
   results.querySelector('.report100Signal')?.remove();
+  const setup=results.querySelector('.report100Setup'),grid=results.querySelector('.report100Grid');if(setup&&grid&&grid.parentNode)grid.insertAdjacentElement('afterend',setup);
   return true;
 }
 window.FORM_APPLY_RESULTS_CLEANUP_V187=apply;
