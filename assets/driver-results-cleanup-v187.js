@@ -6,7 +6,7 @@ function apply(){
   results.querySelector('.report100Lead')?.remove();
   const hero=results.querySelector('.report100Hero');if(hero){hero.style.display='block';hero.style.gridTemplateColumns='1fr';}
   const signal=results.querySelector('.report100Signal');
-  if(signal){const cells=[...signal.children];cells.forEach(cell=>{const label=(cell.querySelector('.report100Label')?.textContent||'').trim().toLowerCase();if(label==='ranking separation')cell.remove();});if(!signal.children.length)signal.remove();else{signal.style.gridTemplateColumns=`repeat(${signal.children.length},minmax(0,1fr))`;}}
+  if(signal){const cells=[...signal.children];cells.forEach(cell=>{const label=(cell.querySelector('.report100Label')?.textContent||'').trim().toLowerCase();if(label==='ranking separation'||label==='eligible finalists')cell.remove();});if(!signal.children.length)signal.remove();else{signal.style.gridTemplateColumns='1fr';}}
   return true;
 }
 window.FORM_APPLY_RESULTS_CLEANUP_V187=apply;
