@@ -1,4 +1,4 @@
-// FORM 10.89 — interview quality calibration.
+// FORM 10.89.2 — interview quality calibration.
 // Captures strike-source quality, uses transition/tempo for shaft guidance,
 // and keeps performance priorities separate from preference logic.
 (function(){
@@ -31,7 +31,7 @@ function init(){
   step7.querySelectorAll('[data-transition-v150] .opt').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();state.transition=b.dataset.v;state.style=b.dataset.v;syncTransition();document.getElementById('formInputWarning')?.remove();},true));syncTransition();
   const priorReview=typeof window.renderReview==='function'?window.renderReview:null;
   if(priorReview){window.renderReview=function(){const out=priorReview.apply(this,arguments);setTimeout(()=>{const prefs=document.getElementById('reviewPrefs');if(prefs){[...prefs.querySelectorAll('.reviewRow')].forEach(row=>{const label=row.querySelector('span')?.textContent?.trim(),b=row.querySelector('b');if(label==='Style'){row.querySelector('span').textContent='Shaft transition';if(b){const q=b.querySelector('.quality');b.textContent=({smooth:'Smooth / gradual',neutral:'Moderate / neutral',aggressive:'Quick / aggressive',unknown:'Varies / not sure'})[state.transition]||'—';if(q)b.appendChild(q);}}if(label==='Priorities'&&b){const q=b.querySelector('.quality');const labels={accuracy:'Accuracy / forgiveness',distance:'Distance',flight:'Ball flight'};b.textContent=perfOrder().map((k,i)=>`#${i+1} ${labels[k]}`).join(', ');if(q)b.appendChild(q);}});}const strike=document.getElementById('reviewStrike');if(strike&&['heel','toe'].includes(state.strike)&&!strike.querySelector('[data-form-strike-source]')){const label=({confirmed:'Confirmed impact evidence',repeated:'Felt pattern',guess:'Mostly a guess','':'Unverified'})[state.strikeSource]||'Unverified';strike.insertAdjacentHTML('beforeend',`<div class="reviewRow" data-form-strike-source><span>Strike evidence</span><b>${label}<span class="quality">Source</span></b></div>`);}},0);return out;};}
-  window.FORM_DRIVER_INTERVIEW_QUALITY_V153={version:'10.89',performancePriorities:PERF.map(x=>x[0])};window.FORM_DRIVER_INTERVIEW_QUALITY_V150=window.FORM_DRIVER_INTERVIEW_QUALITY_V153;return true;
+  window.FORM_DRIVER_INTERVIEW_QUALITY_V153={version:'10.89.2',performancePriorities:PERF.map(x=>x[0])};window.FORM_DRIVER_INTERVIEW_QUALITY_V150=window.FORM_DRIVER_INTERVIEW_QUALITY_V153;return true;
 }
 let n=0,t=setInterval(()=>{n++;if(init()||n>240)clearInterval(t)},50);
 })();
