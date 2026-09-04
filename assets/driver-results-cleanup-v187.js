@@ -5,8 +5,7 @@ function apply(){
   const results=document.getElementById('results');if(!results||!results.classList.contains('formReport100'))return false;
   results.querySelector('.report100Lead')?.remove();
   const hero=results.querySelector('.report100Hero');if(hero){hero.style.display='block';hero.style.gridTemplateColumns='1fr';}
-  const signal=results.querySelector('.report100Signal');
-  if(signal){const cells=[...signal.children];cells.forEach(cell=>{const label=(cell.querySelector('.report100Label')?.textContent||'').trim().toLowerCase();if(label==='ranking separation'||label==='eligible finalists')cell.remove();});if(!signal.children.length)signal.remove();else{signal.style.gridTemplateColumns='1fr';}}
+  results.querySelector('.report100Signal')?.remove();
   return true;
 }
 window.FORM_APPLY_RESULTS_CLEANUP_V187=apply;
