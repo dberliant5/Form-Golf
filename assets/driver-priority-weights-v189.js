@@ -1,6 +1,6 @@
-// FORM 10.92 — two-axis user priorities: Distance vs Accuracy.
-// Replaces the old ranked priority UI. Ball flight remains a fitting need derived from delivery data,
-// not a user preference. Total priority influence stays fixed so changing the balance does not inflate fit scores.
+// FORM 14.5 — two-axis user preference: Distance vs Accuracy & Forgiveness.
+// One continuum captures the only subjective performance tradeoff FORM asks the golfer to make.
+// Launch, spin, trajectory, strike and directional fit remain technical fitting inputs.
 (function(){'use strict';
 if(window.FORM_DRIVER_PRIORITY_WEIGHTS_V189)return;
 
@@ -8,21 +8,17 @@ function init(){
   if(window.FORM_DRIVER_PRIORITY_WEIGHTS_V189)return true;
   if(typeof state==='undefined'||typeof golfer!=='function'||typeof initPriorityRank!=='function'||typeof rankedWeight!=='function')return false;
 
-  if(!state.priorityWeights)state.priorityWeights={distance:50,accuracy:50};
+  if(!state.priorityWeights)state.priorityWeights={distance:50,accuracy:50,touched:false};
   const clamp=v=>Math.max(0,Math.min(100,Math.round((Number(v)||0)/5)*5));
   function normalize(){
-    let d=clamp(state.priorityWeights?.distance),a=clamp(state.priorityWeights?.accuracy);
-    if(!Number.isFinite(d)||!Number.isFinite(a)){d=50;a=50;}
-    const total=d+a;
-    if(total!==100){
-      if(total<=0){d=50;a=50;}else{d=Math.round((d/total)*20)*5;a=100-d;}
-    }
-    state.priorityWeights={distance:d,accuracy:a};
+    let a=clamp(state.priorityWeights?.accuracy),d=100-a;
+    state.priorityWeights={distance:d,accuracy:a,touched:!!state.priorityWeights?.touched};
+    state.driverPrioritySplit={distance:d,accuracy:a,touched:!!state.priorityWeights.touched};
     if(state.ranks){
-      state.ranks.distance=d>a?1:d<a?2:1;
-      state.ranks.accuracy=a>d?1:a<d?2:1;
-      state.ranks.flight=3;
-      state.ranks.feel=4;state.ranks.looks=5;state.ranks.value=6;
+      if(a>d){state.ranks.accuracy=1;state.ranks.distance=2;}
+      else if(d>a){state.ranks.distance=1;state.ranks.accuracy=2;}
+      else {state.ranks.accuracy=1;state.ranks.distance=2;}
+      state.ranks.flight=3;state.ranks.feel=4;state.ranks.looks=5;state.ranks.value=6;
     }
     return state.priorityWeights;
   }
@@ -30,51 +26,67 @@ function init(){
 
   const priorGolfer=golfer;
   golfer=function(){
-    const g=priorGolfer();const w=normalize();
+    const g=priorGolfer(),w=normalize();
     return {...g,priorityWeights:{distance:w.distance,accuracy:w.accuracy}};
   };
 
-  // Preserve roughly the same total influence as the previous #1 + #2 priority weights (7 + 5 = 12),
-  // but distribute that fixed influence continuously according to the golfer's chosen 100-point balance.
+  // Calibrated curve. UI allocation can reach 0/100, but neither preference channel is
+  // allowed to overwhelm the underlying physics. The pair always sums to 10 points of influence:
+  // balanced = 5/5, an extreme = 7/3.
   rankedWeight=function(g,id){
     const w=g?.priorityWeights||state.priorityWeights||{distance:50,accuracy:50};
-    if(id==='distance')return (Number(w.distance)||0)/100*12;
-    if(id==='accuracy')return (Number(w.accuracy)||0)/100*12;
+    if(id==='distance'||id==='accuracy'){
+      const share=Math.max(0,Math.min(100,Number(w[id])||0));
+      return Math.round((3+4*(share/100))*100)/100;
+    }
+    if(id==='flight')return 0;
     return 0;
   };
 
-  function syncFrom(id,value){
-    const v=clamp(value);if(id==='distance'){state.priorityWeights.distance=v;state.priorityWeights.accuracy=100-v;}else{state.priorityWeights.accuracy=v;state.priorityWeights.distance=100-v;}
-    normalize();initPriorityRank();
+  function label(w){
+    if(w.accuracy===50)return 'Balanced';
+    if(w.accuracy>=80)return 'Strongly accuracy & forgiveness focused';
+    if(w.accuracy>=60)return 'Accuracy & forgiveness focused';
+    if(w.distance>=80)return 'Strongly distance focused';
+    if(w.distance>=60)return 'Distance focused';
+    return w.accuracy>50?'Slight accuracy & forgiveness lean':'Slight distance lean';
+  }
+  function syncAccuracy(value){
+    const a=clamp(value);state.priorityWeights={accuracy:a,distance:100-a,touched:true};normalize();initPriorityRank();
   }
 
   initPriorityRank=function(){
     const box=document.getElementById('priorityRank');if(!box)return;
-    const w=normalize(),step=document.getElementById('step6');
-    const h=step?.querySelector('h1'),lead=step?.querySelector('.lead'),note=step?.querySelector('.note');
-    if(h)h.textContent='How do you want to balance distance and accuracy?';
-    if(lead)lead.textContent='Set the importance of each. The two weights always total 100%. Launch, spin and ball flight are fitted from your delivery data rather than treated as a separate preference.';
-    if(note)note.textContent='50 / 50 means equal importance. Moving either slider automatically adjusts the other so the total remains 100%.';
-    box.innerHTML=`<div class="priorityWeightSummary"><div><span>Distance</span><b>${w.distance}%</b></div><div class="priorityWeightVs">vs</div><div><span>Accuracy</span><b>${w.accuracy}%</b></div></div><div class="priorityWeightRows"><label class="priorityWeightRow"><div><b>Distance</b><small>Useful carry and ball-speed output</small></div><div class="priorityWeightControl"><input type="range" min="0" max="100" step="5" value="${w.distance}" data-pweight="distance" aria-label="Distance priority weight"><span>${w.distance}%</span></div></label><label class="priorityWeightRow"><div><b>Accuracy</b><small>Dispersion, forgiveness and protection of your normal miss</small></div><div class="priorityWeightControl"><input type="range" min="0" max="100" step="5" value="${w.accuracy}" data-pweight="accuracy" aria-label="Accuracy priority weight"><span>${w.accuracy}%</span></div></label></div><div class="priorityWeightPresets"><button type="button" data-preset="30">Distance 30 · Accuracy 70</button><button type="button" data-preset="50">50 / 50</button><button type="button" data-preset="70">Distance 70 · Accuracy 30</button></div>`;
-    box.querySelectorAll('[data-pweight]').forEach(inp=>inp.oninput=()=>syncFrom(inp.dataset.pweight,inp.value));
-    box.querySelectorAll('[data-preset]').forEach(btn=>btn.onclick=()=>syncFrom('distance',btn.dataset.preset));
+    const w=normalize(),stepEl=document.getElementById('step6');
+    const h=stepEl?.querySelector('h1'),lead=stepEl?.querySelector('.lead'),note=stepEl?.querySelector('.note');
+    if(h)h.textContent='What matters most from your next driver?';
+    if(lead)lead.textContent='Tell FORM where you want us to lean when distance and accuracy / forgiveness compete.';
+    if(note)note.textContent='FORM still evaluates launch, spin, trajectory, strike pattern and directional fit automatically.';
+    box.innerHTML=`<div class="priorityContinuum189">
+      <div class="priorityContinuumEnds"><div><b>Distance</b><span>Maximize useful distance when the tradeoff is real.</span></div><div><b>Accuracy & forgiveness</b><span>Keep misses tighter and protect performance away from center.</span></div></div>
+      <input class="priorityContinuumRange" type="range" min="0" max="100" step="5" value="${w.accuracy}" data-priority-continuum aria-label="Balance distance versus accuracy and forgiveness">
+      <div class="priorityContinuumReadout"><b>${label(w)} · ${w.distance} / ${w.accuracy}</b><span>Distance / Accuracy & forgiveness</span></div>
+      <div class="priorityContinuumBar" aria-hidden="true"><i style="width:${w.distance}%"></i><em style="width:${w.accuracy}%"></em></div>
+      <div class="priorityContinuumFoot">This is a preference, not a physics override. FORM keeps both dimensions in the fit even at either end of the scale.</div>
+    </div>`;
+    const range=box.querySelector('[data-priority-continuum]');if(range)range.oninput=()=>syncAccuracy(range.value);
   };
 
   const priorReview=typeof renderReview==='function'?renderReview:null;
   if(priorReview)renderReview=function(){
     priorReview();const w=normalize(),prefs=document.getElementById('reviewPrefs');if(!prefs)return;
-    const row=[...prefs.querySelectorAll('.reviewRow')].find(x=>/^Priorities$/i.test(x.querySelector('span')?.textContent?.trim()||''));
-    if(row){const b=row.querySelector('b');if(b)b.innerHTML=`Distance ${w.distance}% · Accuracy ${w.accuracy}%<span class="quality">Weighted</span>`;}
+    let row=[...prefs.querySelectorAll('.reviewRow')].find(x=>/^(Priorities|Performance preference)$/i.test(x.querySelector('span')?.textContent?.trim()||''));
+    if(row){const lab=row.querySelector('span'),b=row.querySelector('b');if(lab)lab.textContent='Performance preference';if(b)b.innerHTML=`${w.distance}% Distance · ${w.accuracy}% Accuracy & forgiveness<span class="quality">Weighted</span>`;}
   };
 
   if(!document.getElementById('formPriorityWeights189Styles')){
     const s=document.createElement('style');s.id='formPriorityWeights189Styles';s.textContent=`
-    .priorityWeightSummary{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;border:1px solid var(--line);background:#fafbf8;padding:18px;margin:20px 0 14px}.priorityWeightSummary>div:not(.priorityWeightVs){display:flex;justify-content:space-between;align-items:baseline;gap:12px}.priorityWeightSummary span{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:800}.priorityWeightSummary b{font-size:24px}.priorityWeightVs{font-size:9px;text-transform:uppercase;color:var(--muted);letter-spacing:.12em}.priorityWeightRows{border:1px solid var(--line);background:#fff}.priorityWeightRow{display:grid;grid-template-columns:minmax(180px,.8fr) minmax(220px,1.2fr);gap:24px;align-items:center;padding:18px;border-bottom:1px solid var(--line)}.priorityWeightRow:last-child{border-bottom:0}.priorityWeightRow b{display:block;font-size:14px}.priorityWeightRow small{display:block;margin-top:4px;color:var(--muted);font-size:9px;line-height:1.45}.priorityWeightControl{display:grid;grid-template-columns:1fr 46px;gap:12px;align-items:center}.priorityWeightControl input{width:100%;accent-color:var(--deep)}.priorityWeightControl span{text-align:right;font-weight:800;font-size:13px}.priorityWeightPresets{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.priorityWeightPresets button{border:1px solid var(--line);background:#fff;padding:9px 11px;font:inherit;font-size:9px;color:var(--deep);cursor:pointer}.priorityWeightPresets button:hover{background:#fafbf8}@media(max-width:700px){.priorityWeightRow{grid-template-columns:1fr;gap:12px}.priorityWeightSummary{gap:10px;padding:14px}.priorityWeightSummary b{font-size:20px}.priorityWeightPresets{display:grid;grid-template-columns:1fr}}
+    .priorityContinuum189{margin-top:24px;border:1px solid var(--line);background:#fff;padding:22px}.priorityContinuumEnds{display:flex;justify-content:space-between;gap:20px}.priorityContinuumEnds>div{max-width:46%}.priorityContinuumEnds>div:last-child{text-align:right}.priorityContinuumEnds b{display:block;font-family:Georgia,serif;font-size:19px;line-height:1.1;color:var(--deep)}.priorityContinuumEnds span{display:block;margin-top:6px;font-size:10px;line-height:1.45;color:var(--muted)}.priorityContinuumRange{width:100%;margin:28px 0 12px;accent-color:var(--deep)}.priorityContinuumReadout{text-align:center}.priorityContinuumReadout b{display:block;font-size:17px;color:var(--deep)}.priorityContinuumReadout span{display:block;margin-top:4px;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.priorityContinuumBar{display:flex;height:7px;overflow:hidden;border-radius:999px;background:var(--line);margin-top:18px}.priorityContinuumBar i,.priorityContinuumBar em{display:block;height:100%;transition:width .12s ease}.priorityContinuumBar i{background:#9aa69f}.priorityContinuumBar em{background:var(--deep)}.priorityContinuumFoot{margin-top:18px;padding-top:15px;border-top:1px solid var(--line);font-size:10px;line-height:1.55;color:var(--muted)}@media(max-width:700px){.priorityContinuum189{padding:18px}.priorityContinuumEnds{gap:14px}.priorityContinuumEnds b{font-size:17px}.priorityContinuumEnds span{font-size:9px}.priorityContinuumReadout b{font-size:15px}}
     `;document.head.appendChild(s);
   }
 
   if(typeof step!=='undefined'&&step===6)initPriorityRank();
-  window.FORM_DRIVER_PRIORITY_WEIGHTS_V189={version:'10.92',normalize};
+  window.FORM_DRIVER_PRIORITY_WEIGHTS_V189={version:'14.5',normalize};
   return true;
 }
 let n=0,t=setInterval(()=>{n++;if(init()||n>240)clearInterval(t);},50);
