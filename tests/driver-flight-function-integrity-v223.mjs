@@ -1,3 +1,4 @@
+// Direct integrity test for the actual test-only continuous flight helpers.
 import fs from 'node:fs';
 import vm from 'node:vm';
 
