@@ -8,6 +8,8 @@ on:
       - 'tests/run-driver-v225-production-candidate.mjs'
       - 'tests/driver-v225-carry-boundaries.html'
       - 'tests/run-driver-v225-carry-boundaries.mjs'
+      - 'tests/driver-v225-live-stack.html'
+      - 'tests/run-driver-v225-live-stack.mjs'
       - '.github/workflows/driver-v225-production-candidate.yml'
   workflow_dispatch:
 jobs:
@@ -38,6 +40,8 @@ jobs:
         run: node tests/run-driver-v225-production-candidate.mjs
       - name: Run focused carry boundary regression
         run: node tests/run-driver-v225-carry-boundaries.mjs
+      - name: Run exact live-stack regression
+        run: node tests/run-driver-v225-live-stack.mjs
       - name: Upload candidate reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -46,3 +50,4 @@ jobs:
           path: |
             tests/baselines/driver-v225-production-candidate*.json
             tests/baselines/driver-v225-carry-boundaries.json
+            tests/baselines/driver-v225-live-stack.json
