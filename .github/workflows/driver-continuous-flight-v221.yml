@@ -5,7 +5,7 @@ on:
     paths:
       - 'tests/driver-continuous-flight-v221.js'
       - 'tests/driver-continuous-flight-runner-v221.html'
-      - 'tests/run-driver-continuous-flight.mjs'
+      - 'tests/run-driver-continuous-flight-targeted.mjs'
       - '.github/workflows/driver-continuous-flight-v221.yml'
   workflow_dispatch:
 jobs:
@@ -27,7 +27,7 @@ jobs:
           python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
           sleep 2
       - name: Run stable vs continuous comparison
-        run: node tests/run-driver-continuous-flight.mjs
+        run: node tests/run-driver-continuous-flight-targeted.mjs
       - name: Upload comparison
         uses: actions/upload-artifact@v4
         with:
