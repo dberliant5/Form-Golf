@@ -1,0 +1,21 @@
+name: Driver v225 Live Deploy Check
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/driver-v225-live-deploy-check.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify GitHub Pages serves v225
+        run: |
+          set -euo pipefail
+          url="https://dberliant5.github.io/Form-Golf/"
+          html="$(curl -fsSL --retry 6 --retry-delay 5 --max-time 20 "$url")"
+          printf '%s' "$html" | grep -q 'assets/driver-engine-v225.js?v=8.225'
+          if printf '%s' "$html" | grep -q 'assets/driver-engine-v80.js?v=8.0'; then
+            echo "Live page still references v80 engine" >&2
+            exit 1
+          fi
+          echo "Live page is serving driver-engine-v225.js?v=8.225"
