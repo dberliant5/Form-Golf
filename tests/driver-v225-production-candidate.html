@@ -1,8 +1,50 @@
 <!doctype html><html><head><meta charset="utf-8"><title>FORM v225 Production Candidate</title></head><body><button id="run">Run</button><pre id="out"></pre><iframe id="form" src="../index.html" style="width:1px;height:1px;opacity:0"></iframe><script>
 const frame=document.getElementById('form'),out=document.getElementById('out');
-function loadScript(w,src){return new Promise((res,rej)=>{const s=w.document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('Failed to load '+src));w.document.body.appendChild(s);});}
+function loadScript(w,src){return new Promise((res,rej)=>{const s=w.document.createElement('script');s.src=src+(src.includes('?')?'&':'?')+'gate='+Date.now()+Math.random();s.onload=res;s.onerror=()=>rej(new Error('Failed to load '+src));w.document.body.appendChild(s);});}
+function waitFor(fn,ms=12000){return new Promise((res,rej)=>{const start=Date.now(),t=setInterval(()=>{try{if(fn()){clearInterval(t);res();return}}catch(e){}if(Date.now()-start>ms){clearInterval(t);rej(new Error('Timed out waiting for production calibration stack'));}},25);});}
 function rankMap(r){return Object.fromEntries((r?.top10||[]).map(x=>[x.product,x.rank]));}
+function componentKeys(report,id='M07'){return Object.keys(report?.results?.find(x=>x.id===id)?.top10?.[0]?.components||{});}
 function compareCase(a,b){const A=rankMap(a),B=rankMap(b),names=[...new Set([...Object.keys(A),...Object.keys(B)])],moves=names.map(n=>({product:n,from:A[n]??null,to:B[n]??null,delta:A[n]!=null&&B[n]!=null?B[n]-A[n]:null})).filter(x=>x.from!==x.to);return {id:a.id,stableTop:a.top,candidateTop:b.top,topChanged:a.top!==b.top,stableScore:a.topScore,candidateScore:b.topScore,topScoreDelta:Math.round(((b.topScore??0)-(a.topScore??0))*10)/10,moves:moves.length,rankMoves:moves};}
-async function run(){const w=frame.contentWindow;if(!w.FORM_DRIVER_ENGINE_V80)throw new Error('Stable v80 missing');await loadScript(w,'tests/driver-regression-matrix-v219.js');await loadScript(w,'tests/driver-regression-aoa-v220.js');const stableEngine=w.FORM_DRIVER_ENGINE_V80;const stable=w.FORM_DRIVER_REGRESSION_V219.run();const stableAoa=w.FORM_DRIVER_AOA_REGRESSION_V220.run();await loadScript(w,'assets/driver-engine-v225.js');const candidate=w.FORM_DRIVER_ENGINE_V80;if(candidate===stableEngine)throw new Error('Generated v225 did not replace engine object');const candidateReport=w.FORM_DRIVER_REGRESSION_V219.run();const candidateAoa=w.FORM_DRIVER_AOA_REGRESSION_V220.run();w.FORM_DRIVER_ENGINE_V80=stableEngine;const byCandidate=Object.fromEntries(candidateReport.results.map(x=>[x.id,x]));const comparisons=stable.results.map(x=>compareCase(x,byCandidate[x.id]));const thresholdIds=['R01','R02','R04','R06'];const summary={topChangedCases:comparisons.filter(x=>x.topChanged).length,casesWithAbsTopScoreDeltaOver2:comparisons.filter(x=>Math.abs(x.topScoreDelta)>2).length,avgAbsTopScoreDelta:Math.round(comparisons.reduce((a,x)=>a+Math.abs(x.topScoreDelta),0)/comparisons.length*100)/100,totalTop10PositionChanges:comparisons.reduce((a,x)=>a+x.moves,0)};const checks={caseCountPreserved:stable.caseCount===candidateReport.caseCount,aoaStable:JSON.stringify(stableAoa.checks)===JSON.stringify(candidateAoa.checks),launchBoundarySmooth:Math.abs(candidateReport.pairChecks.find(x=>x.a==='R04')?.topScoreDelta??99)<=0.3,spinBoundarySmooth:Math.abs(candidateReport.pairChecks.find(x=>x.a==='R06')?.topScoreDelta??99)<=0.3,limitedWinnerChurn:summary.topChangedCases<=3,noLargeScoreChurn:summary.casesWithAbsTopScoreDeltaOver2<=3};const report={generatedAt:new Date().toISOString(),productionScoringChanged:false,candidate:'assets/driver-engine-v225.js',summary,checks,passed:Object.values(checks).every(Boolean),thresholds:{stable:stable.pairChecks.filter(x=>thresholdIds.includes(x.a)),candidate:candidateReport.pairChecks.filter(x=>thresholdIds.includes(x.a))},topChanged:comparisons.filter(x=>x.topChanged),comparisons};window.FORM_V225_CANDIDATE_REPORT=report;out.textContent=JSON.stringify(report,null,2);}
+async function ensureStableCalibrations(w){
+ await waitFor(()=>w.FORM_DRIVER_ENGINE_V80&&w.FORM_DRIVER_SCORE_CALIBRATION_V146?.version==='10.47'&&w.FORM_DRIVER_RANKING_CALIBRATION_V103===true);
+}
+async function reapplyCalibrations(w){
+ delete w.FORM_DRIVER_SCORE_CALIBRATION_V146;
+ delete w.FORM_DRIVER_RANKING_CALIBRATION_V101;
+ delete w.FORM_DRIVER_RANKING_CALIBRATION_V103;
+ await loadScript(w,'assets/driver-score-calibration-v146.js');
+ await waitFor(()=>w.FORM_DRIVER_SCORE_CALIBRATION_V146?.version==='10.47');
+ await loadScript(w,'assets/driver-ranking-calibration-v101.js');
+ await waitFor(()=>w.FORM_DRIVER_RANKING_CALIBRATION_V103===true);
+}
+async function run(){
+ const w=frame.contentWindow;
+ await ensureStableCalibrations(w);
+ if(!w.FORM_DRIVER_ENGINE_V80)throw new Error('Stable v80 missing');
+ await loadScript(w,'tests/driver-regression-matrix-v219.js');
+ await loadScript(w,'tests/driver-regression-aoa-v220.js');
+ const stableEngine=w.FORM_DRIVER_ENGINE_V80;
+ const stableScoreSource=String(stableEngine.scoreOne);
+ const stableWinnersSource=String(stableEngine.winners);
+ const stable=w.FORM_DRIVER_REGRESSION_V219.run();
+ const stableAoa=w.FORM_DRIVER_AOA_REGRESSION_V220.run();
+ await loadScript(w,'assets/driver-engine-v225.js');
+ const bareCandidate=w.FORM_DRIVER_ENGINE_V80;
+ if(bareCandidate===stableEngine)throw new Error('Generated v225 did not replace engine object');
+ await reapplyCalibrations(w);
+ const candidate=w.FORM_DRIVER_ENGINE_V80;
+ const candidateScoreSource=String(candidate.scoreOne);
+ const candidateWinnersSource=String(candidate.winners);
+ const candidateReport=w.FORM_DRIVER_REGRESSION_V219.run();
+ const candidateAoa=w.FORM_DRIVER_AOA_REGRESSION_V220.run();
+ w.FORM_DRIVER_ENGINE_V80=stableEngine;
+ const byCandidate=Object.fromEntries(candidateReport.results.map(x=>[x.id,x]));
+ const comparisons=stable.results.map(x=>compareCase(x,byCandidate[x.id]));
+ const thresholdIds=['R01','R02','R04','R06'];
+ const summary={topChangedCases:comparisons.filter(x=>x.topChanged).length,casesWithAbsTopScoreDeltaOver2:comparisons.filter(x=>Math.abs(x.topScoreDelta)>2).length,avgAbsTopScoreDelta:Math.round(comparisons.reduce((a,x)=>a+Math.abs(x.topScoreDelta),0)/comparisons.length*100)/100,totalTop10PositionChanges:comparisons.reduce((a,x)=>a+x.moves,0)};
+ const checks={caseCountPreserved:stable.caseCount===candidateReport.caseCount,aoaStable:JSON.stringify(stableAoa.checks)===JSON.stringify(candidateAoa.checks),launchBoundarySmooth:Math.abs(candidateReport.pairChecks.find(x=>x.a==='R04')?.topScoreDelta??99)<=0.3,spinBoundarySmooth:Math.abs(candidateReport.pairChecks.find(x=>x.a==='R06')?.topScoreDelta??99)<=0.3,limitedWinnerChurn:summary.topChangedCases<=3,noLargeScoreChurn:summary.casesWithAbsTopScoreDeltaOver2<=3,sameCalibrationLayer:/cohort-aware evidence-depth execution/.test(stableScoreSource)&&/cohort-aware evidence-depth execution/.test(candidateScoreSource),executionPresentBoth:componentKeys(stable).includes('execution')===componentKeys(candidateReport).includes('execution')};
+ const report={generatedAt:new Date().toISOString(),productionScoringChanged:false,candidate:'assets/driver-engine-v225.js',stack:{stableScoreSource,stableWinnersSource,candidateScoreSource,candidateWinnersSource,stableM07ComponentKeys:componentKeys(stable),candidateM07ComponentKeys:componentKeys(candidateReport)},summary,checks,passed:Object.values(checks).every(Boolean),thresholds:{stable:stable.pairChecks.filter(x=>thresholdIds.includes(x.a)),candidate:candidateReport.pairChecks.filter(x=>thresholdIds.includes(x.a))},topChanged:comparisons.filter(x=>x.topChanged),comparisons};
+ window.FORM_V225_CANDIDATE_REPORT=report;out.textContent=JSON.stringify(report,null,2);
+}
 document.getElementById('run').onclick=()=>run().catch(e=>{out.textContent=String(e.stack||e)});
 </script></body></html>
