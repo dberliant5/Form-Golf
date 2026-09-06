@@ -18,7 +18,7 @@ assert anchor in src
 src=src.replace(anchor,helpers+anchor,1)
 
 old="  const spin=classifyMetric('spin')||g.spin||null,launch=classifyMetric('launch')||g.traj||null;"
-new="  const spin=classifyMetric('spin')||g.spin||null,launch=classifyMetric('launch')||g.traj||null,flight=flightNeeds(speed);"
+new="  const spin=classifyMetric('spin')||g.spin||null,launch=classifyMetric('launch')||g.traj||null,flight=flightNeeds(exactOrMid('speed')||speed);"
 assert old in src
 src=src.replace(old,new,1)
 oldret="  return {speed,bs,carry,smash,spin,launch,spinVar:spin==='varies',launchVar:launch==='varies',strike:g.strike,offCenter:['toe','heel','varied'].includes(g.strike),twoWay,directionConflict,fade:!twoWay&&!directionConflict&&(curveFade||costlyFade),draw:!twoWay&&!directionConflict&&(curveDraw||costlyDraw),accuracyW:typeof rankedWeight==='function'?rankedWeight(g,'accuracy'):0,distanceW:typeof rankedWeight==='function'?rankedWeight(g,'distance'):0,flightW:typeof rankedWeight==='function'?rankedWeight(g,'flight'):0,speedQ:q(metric('speed').mode),spinQ:q(metric('spin').mode),launchQ:q(metric('launch').mode),ballQ:q(metric('ballSpeed').mode),carryQ:q(metric('carry').mode)};"
