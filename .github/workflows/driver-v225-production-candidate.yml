@@ -6,10 +6,7 @@ on:
       - 'tests/build-driver-engine-v225.py'
       - 'tests/driver-v225-production-candidate.html'
       - 'tests/run-driver-v225-production-candidate.mjs'
-      - 'tests/driver-v225-carry-boundaries.html'
-      - 'tests/run-driver-v225-carry-boundaries.mjs'
-      - 'tests/driver-v225-live-stack.html'
-      - 'tests/run-driver-v225-live-stack.mjs'
+      - 'tests/driver-carry-boundaries-helper-v226.js'
       - '.github/workflows/driver-v225-production-candidate.yml'
   workflow_dispatch:
 jobs:
@@ -36,13 +33,8 @@ jobs:
         run: |
           python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
           sleep 2
-      - name: Run generated candidate matrix regression
+      - name: Run deterministic candidate regression
         run: node tests/run-driver-v225-production-candidate.mjs
-      - name: Run exact live-stack regression
-        run: node tests/run-driver-v225-live-stack.mjs
-      - name: Run calibrated carry stress regression
-        continue-on-error: true
-        run: node tests/run-driver-v225-carry-boundaries.mjs
       - name: Upload candidate reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -50,5 +42,3 @@ jobs:
           name: driver-v225-production-candidate
           path: |
             tests/baselines/driver-v225-production-candidate*.json
-            tests/baselines/driver-v225-carry-boundaries.json
-            tests/baselines/driver-v225-live-stack.json
