@@ -1,0 +1,2 @@
+/* FORM 14.11.6 — presentation-only cleanup: hide category weight percentages while preserving scoring logic. */
+#results.formReport100 .report100Metric em{display:none!important}
