@@ -1,3 +1,4 @@
+// CI trigger: validate generated v225 before production promotion.
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 const browser=await chromium.launch({headless:true});const page=await browser.newPage();
