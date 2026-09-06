@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FORM Driver Regression Runner v220</title><style>body{font-family:system-ui,-apple-system,sans-serif;margin:24px;background:#f6f6f2;color:#171717}h1{margin-bottom:4px}p{max-width:900px}button{padding:10px 14px;border:0;border-radius:8px;background:#171717;color:white;font-weight:700;cursor:pointer}pre{white-space:pre-wrap;background:white;border:1px solid #ddd;border-radius:10px;padding:16px;max-height:70vh;overflow:auto}.ok{color:#176b32}.warn{color:#9a4f00}iframe{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}</style></head>
+<body>
+<h1>FORM Driver Regression Runner v220</h1>
+<p>This page loads the current FORM app in a same-origin hidden frame, runs the stable-scorer regression matrix plus the isolated AoA audit, and prints a JSON baseline. It does not modify production state or scoring.</p>
+<button id="run">Run stable baseline</button>
+<p id="status">Ready.</p>
+<pre id="out">No baseline run yet.</pre>
+<iframe id="form" src="../index.html"></iframe>
+<script>
+const statusEl=document.getElementById('status'),out=document.getElementById('out'),frame=document.getElementById('form');
+function loadScript(win,src){return new Promise((resolve,reject)=>{const s=win.document.createElement('script');s.src=src;s.onload=resolve;s.onerror=reject;win.document.body.appendChild(s);});}
+async function ensureHarnesses(){const w=frame.contentWindow;if(!w.FORM_DRIVER_ENGINE_V80)throw new Error('Stable driver engine did not load.');if(!w.FORM_DRIVER_REGRESSION_V219)await loadScript(w,'tests/driver-regression-matrix-v219.js');if(!w.FORM_DRIVER_AOA_REGRESSION_V220)await loadScript(w,'tests/driver-regression-aoa-v220.js');return w;}
+async function run(){try{statusEl.textContent='Running…';statusEl.className='';const w=await ensureHarnesses();const matrix=w.FORM_DRIVER_REGRESSION_V219.run();const aoa=w.FORM_DRIVER_AOA_REGRESSION_V220.run();const report={generatedAt:new Date().toISOString(),stableEngine:'FORM_DRIVER_ENGINE_V80',productionScoringChanged:false,matrix,aoa};out.textContent=JSON.stringify(report,null,2);const aoaIgnored=aoa.checks.minus4VsPlus4Identical;const cliffPairs=(matrix.pairChecks||[]).filter(x=>['R01','R02','R04','R06'].includes(x.a)&&x.topChanged);statusEl.textContent=`Complete. Matrix cases: ${matrix.caseCount}. AoA invariant: ${aoaIgnored?'YES':'NO'}. Threshold pairs changing #1: ${cliffPairs.length}.`;statusEl.className=(aoaIgnored||cliffPairs.length)?'warn':'ok';window.FORM_STABLE_BASELINE_V220=report;}catch(e){statusEl.textContent='Runner error: '+(e&&e.message?e.message:e);statusEl.className='warn';console.error(e);}}
+document.getElementById('run').addEventListener('click',run);
+</script>
+</body></html>
