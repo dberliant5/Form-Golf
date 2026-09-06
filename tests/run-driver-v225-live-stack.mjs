@@ -1,3 +1,4 @@
+// Production-equivalent gate: exact current index stack, no legacy calibration wrappers.
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 const browser=await chromium.launch({headless:true});const page=await browser.newPage();
