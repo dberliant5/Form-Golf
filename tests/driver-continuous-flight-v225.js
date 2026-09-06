@@ -1,0 +1,21 @@
+// FORM driver flight experiment v225 — TEST ONLY.
+// Extends corrected v224 by removing the same binary launch/spin thresholds
+// from the supporting carry-efficiency component when carry data is supplied.
+(function(){'use strict';
+const BASE=window.FORM_DRIVER_CONTINUOUS_FLIGHT_V224,E=window.FORM_DRIVER_EVIDENCE_V80;
+if(!BASE||!E)throw new Error('Continuous flight v224 and evidence model must load first.');
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const r1=v=>Math.round(v*10)/10;
+const val=(ev,k,d=80)=>ev?.dimensions?.[k]?.value??d;
+const metric=id=>state?.metrics?.[id]||{mode:'unknown',value:null};
+const carryMid={under180:170,'180-199':190,'200-219':210,'220-239':230,'240-259':250,'260-279':270,'280plus':290};
+const speedMid={under75:72,'75-84':80,'85-89':87,'90-94':92,'95-99':97,'100-104':102,'105-109':107,'110-114':112,'115plus':118};
+function numeric(id,map){const m=metric(id);if(!m||m.mode==='unknown'||m.value==null)return null;if(m.mode==='exact'){const n=Number(m.value);return Number.isFinite(n)?n:null;}if(m.mode==='range')return map?.[m.value]??null;return null;}
+function blend(a,b,t){return a+(b-a)*t;}
+function signal(ev,need,lowKey,highKey){const low=need?.low||0,high=need?.high||0;if(low>=high&&low>0)return blend(80,val(ev,lowKey),low);if(high>0)return blend(80,val(ev,highKey),high);return 80;}
+function replaceCarry(g,ev,old){if(!old)return old;const speed=numeric('speed',speedMid)||Number(g?.speed)||null,carry=numeric('carry',carryMid);if(!speed||!carry)return old;const n=BASE.flightNeeds(g);const launchSignal=signal(ev,n.launch,'launchSupport','launchControl'),spinSignal=signal(ev,n.spin,'spinSupport','spinReduction');let s=launchSignal*.45+spinSignal*.4+val(ev,'speedPotential')*.15;const ypm=carry/speed;if(ypm>=2.4&&ypm<=2.75)s=(s+90)/2;return {...old,score:r1(clamp(s,0,100)),explanation:`Carry (${carry} yd) remains a supporting output check; its launch/spin inputs now use the same continuous speed-aware needs as the primary flight components.`,continuousCarry:{ypm:r1(ypm),launchSignal:r1(launchSignal),spinSignal:r1(spinSignal)}};}
+function scoreOne(p,g){const base=BASE.scoreOne(p,g);if(base?.hardConstraints?.length||!base?.components?.length)return base;const ev=E.evidenceFor(p);let components=base.components.map(x=>x.key==='carry'?replaceCarry(g,ev,x):({...x}));const totalW=components.reduce((a,x)=>a+x.weight,0),raw=components.reduce((a,x)=>a+x.score*x.weight,0)/totalW,evidenceQ=components.reduce((a,x)=>a+x.evidenceConfidence*x.weight,0)/totalW;const adjusted=raw>82?raw-(1-evidenceQ)*3.5:raw,overall=r1(clamp(100-(100-adjusted)*1.22,45,99.2));components=components.map(x=>({...x,normalizedWeight:r1(x.weight/totalW*100),impact:r1((x.score-80)*x.weight/totalW)}));const strengths=components.slice().sort((a,b)=>b.impact-a.impact),weaknesses=components.slice().sort((a,b)=>a.impact-b.impact);return {...base,overall,raw:r1(raw),evidenceQuality:r1(evidenceQ),components,strengths,weaknesses,experiment:'continuous-speed-aware-flight-v225'};}
+function winners(g){const rows=[];products.forEach(p=>{if(p.generation==='previous_limited')return;if(typeof productAllowedByBrandScope==='function'&&!productAllowedByBrandScope(p))return;const s=scoreOne(p,g);if(!s.hardConstraints?.length)rows.push({p,s});});rows.sort((a,b)=>b.s.overall-a.s.overall);const by=new Map();rows.forEach(r=>{if(!by.has(r.p.brand))by.set(r.p.brand,r)});return [...by.values()].sort((a,b)=>b.s.overall-a.s.overall);}
+function currentScore(g){const stableCur=BASE.stable.currentScore(g);if(!stableCur?.detail)return stableCur;const brand=g?.currentClub?.brand,modelLabel=g?.currentClub?.model||'',clean=modelLabel.replace(/\s*\(20\d{2}\)\s*/,'').trim();const p=products.find(x=>x.brand===brand&&(x.model===clean||x.model===modelLabel));if(!p)return stableCur;const detail=scoreOne(p,g);return {...stableCur,score:detail.overall,detail};}
+window.FORM_DRIVER_CONTINUOUS_FLIGHT_V225={scoreOne,winners,currentScore,flightNeeds:BASE.flightNeeds,targets:BASE.targets,stable:BASE.stable};
+})();
