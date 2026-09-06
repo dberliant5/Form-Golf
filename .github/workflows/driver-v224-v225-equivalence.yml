@@ -1,0 +1,36 @@
+name: Driver v224 v225 Equivalence
+on:
+  push:
+    paths:
+      - 'tests/build-driver-engine-v225.py'
+      - 'tests/driver-continuous-flight-v224.js'
+      - 'tests/driver-v224-v225-equivalence.html'
+      - 'tests/run-driver-v224-v225-equivalence.mjs'
+      - '.github/workflows/driver-v224-v225-equivalence.yml'
+  workflow_dispatch:
+jobs:
+  equivalence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build generated v225 engine
+        run: python3 tests/build-driver-engine-v225.py
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - name: Compare v224 and generated v225
+        run: node tests/run-driver-v224-v225-equivalence.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: driver-v224-v225-equivalence
+          path: tests/baselines/driver-v224-v225-equivalence.json
