@@ -12,6 +12,8 @@ on:
 jobs:
   regression:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -35,6 +37,17 @@ jobs:
           sleep 2
       - name: Run deterministic candidate regression
         run: node tests/run-driver-v225-production-candidate.mjs
+      - name: Persist validated v225 engine
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/driver-engine-v225.js
+          if git diff --cached --quiet; then
+            echo "Validated v225 engine already matches repository."
+          else
+            git commit -m "Persist validated driver engine v225"
+            git push origin HEAD:main
+          fi
       - name: Upload candidate reports
         if: always()
         uses: actions/upload-artifact@v4
