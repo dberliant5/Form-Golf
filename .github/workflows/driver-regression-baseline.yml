@@ -11,6 +11,9 @@ on:
       - '.github/workflows/driver-regression-baseline.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   baseline:
     runs-on: ubuntu-latest
@@ -31,6 +34,13 @@ jobs:
           sleep 2
       - name: Run stable regression baseline
         run: node tests/run-driver-regression.mjs
+      - name: Commit frozen baseline
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/baselines/driver-stable-v220.json tests/baselines/driver-stable-v220-summary.json
+          git diff --cached --quiet || git commit -m "Freeze stable driver regression baseline v220"
+          git push
       - name: Upload baseline
         uses: actions/upload-artifact@v4
         with:
