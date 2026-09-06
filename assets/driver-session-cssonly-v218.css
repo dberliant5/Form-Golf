@@ -1,0 +1,18 @@
+/* FORM session UX v218 — CSS only, no event/state ownership */
+#driverExperience .step:not(.hidden){animation:formSessionIn .22s ease both}
+@keyframes formSessionIn{from{opacity:.45;transform:translateY(4px)}to{opacity:1;transform:none}}
+#driverExperience #step1:before,#driverExperience #step2:before,#driverExperience #step3:before,#driverExperience #step4:before,#driverExperience #step5:before,#driverExperience #step6:before,#driverExperience #step7:before,#driverExperience #step8:before,#driverExperience #step9:before{display:block;font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#7b847e;margin:0 0 8px;line-height:1.2}
+#driverExperience #step1:before{content:'SETUP'}
+#driverExperience #step2:before{content:'BALL FLIGHT'}
+#driverExperience #step3:before{content:'BALL FLIGHT'}
+#driverExperience #step4:before{content:'MISS + CONTACT'}
+#driverExperience #step5:before{content:'DELIVERY'}
+#driverExperience #step6:before{content:'PRIORITIES'}
+#driverExperience #step7:before{content:'PREFERENCES'}
+#driverExperience #step8:before{content:'CURRENT DRIVER'}
+#driverExperience #step9:before{content:'FIT REVIEW'}
+#driverExperience .opt,#driverExperience .brandMode,#driverExperience .multiOptions button,#driverExperience #brandPicker button{transition:transform .12s ease,box-shadow .12s ease,background-color .12s ease,border-color .12s ease!important}
+#driverExperience .opt:active,#driverExperience .brandMode:active,#driverExperience .multiOptions button:active,#driverExperience #brandPicker button:active{transform:scale(.985)!important}
+#driverExperience .step h1,#driverExperience .step h2{letter-spacing:-.02em}
+#driverExperience .stepCount{font-variant-numeric:tabular-nums}
+@media(max-width:620px){#driverExperience #step1:before,#driverExperience #step2:before,#driverExperience #step3:before,#driverExperience #step4:before,#driverExperience #step5:before,#driverExperience #step6:before,#driverExperience #step7:before,#driverExperience #step8:before,#driverExperience #step9:before{margin-bottom:7px;font-size:9px}}
