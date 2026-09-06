@@ -1,14 +1,11 @@
 <!doctype html><html><head><meta charset="utf-8"><title>FORM v225 Production Candidate</title></head><body><button id="run">Run</button><pre id="out"></pre><iframe id="form" src="../index.html" style="width:1px;height:1px;opacity:0"></iframe><script>
 const frame=document.getElementById('form'),out=document.getElementById('out');
 function loadScript(w,src){return new Promise((res,rej)=>{const s=w.document.createElement('script');s.src=src+(src.includes('?')?'&':'?')+'gate='+Date.now()+Math.random();s.onload=res;s.onerror=()=>rej(new Error('Failed to load '+src));w.document.body.appendChild(s);});}
-function waitFor(fn,ms=12000){return new Promise((res,rej)=>{const start=Date.now(),t=setInterval(()=>{try{if(fn()){clearInterval(t);res();return}}catch(e){}if(Date.now()-start>ms){clearInterval(t);rej(new Error('Timed out waiting for production calibration stack'));}},25);});}
+function waitFor(fn,ms=12000){return new Promise((res,rej)=>{const start=Date.now(),t=setInterval(()=>{try{if(fn()){clearInterval(t);res();return}}catch(e){}if(Date.now()-start>ms){clearInterval(t);rej(new Error('Timed out waiting for required test runtime'));}},25);});}
 function rankMap(r){return Object.fromEntries((r?.top10||[]).map(x=>[x.product,x.rank]));}
 function componentKeys(report,id='M07'){return Object.keys(report?.results?.find(x=>x.id===id)?.top10?.[0]?.components||{});}
 function compareCase(a,b){const A=rankMap(a),B=rankMap(b),names=[...new Set([...Object.keys(A),...Object.keys(B)])],moves=names.map(n=>({product:n,from:A[n]??null,to:B[n]??null,delta:A[n]!=null&&B[n]!=null?B[n]-A[n]:null})).filter(x=>x.from!==x.to);return {id:a.id,stableTop:a.top,candidateTop:b.top,topChanged:a.top!==b.top,stableScore:a.topScore,candidateScore:b.topScore,topScoreDelta:Math.round(((b.topScore??0)-(a.topScore??0))*10)/10,moves:moves.length,rankMoves:moves};}
-async function ensureStableCalibrations(w){
- await waitFor(()=>w.FORM_DRIVER_ENGINE_V80&&w.FORM_DRIVER_SCORE_CALIBRATION_V146?.version==='10.47'&&w.FORM_DRIVER_RANKING_CALIBRATION_V103===true);
-}
-async function reapplyCalibrations(w){
+async function applyCalibrations(w){
  delete w.FORM_DRIVER_SCORE_CALIBRATION_V146;
  delete w.FORM_DRIVER_RANKING_CALIBRATION_V101;
  delete w.FORM_DRIVER_RANKING_CALIBRATION_V103;
@@ -19,8 +16,9 @@ async function reapplyCalibrations(w){
 }
 async function run(){
  const w=frame.contentWindow;
- await ensureStableCalibrations(w);
+ await waitFor(()=>w.FORM_DRIVER_ENGINE_V80);
  if(!w.FORM_DRIVER_ENGINE_V80)throw new Error('Stable v80 missing');
+ await applyCalibrations(w);
  await loadScript(w,'tests/driver-regression-matrix-v219.js');
  await loadScript(w,'tests/driver-regression-aoa-v220.js');
  const stableEngine=w.FORM_DRIVER_ENGINE_V80;
@@ -31,7 +29,7 @@ async function run(){
  await loadScript(w,'assets/driver-engine-v225.js');
  const bareCandidate=w.FORM_DRIVER_ENGINE_V80;
  if(bareCandidate===stableEngine)throw new Error('Generated v225 did not replace engine object');
- await reapplyCalibrations(w);
+ await applyCalibrations(w);
  const candidate=w.FORM_DRIVER_ENGINE_V80;
  const candidateScoreSource=String(candidate.scoreOne);
  const candidateWinnersSource=String(candidate.winners);
