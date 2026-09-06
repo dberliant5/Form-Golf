@@ -21,11 +21,13 @@ async function run(){
  await applyCalibrations(w);
  await loadScript(w,'tests/driver-regression-matrix-v219.js');
  await loadScript(w,'tests/driver-regression-aoa-v220.js');
+ await loadScript(w,'tests/driver-carry-boundaries-helper-v226.js');
  const stableEngine=w.FORM_DRIVER_ENGINE_V80;
  const stableScoreSource=String(stableEngine.scoreOne);
  const stableWinnersSource=String(stableEngine.winners);
  const stable=w.FORM_DRIVER_REGRESSION_V219.run();
  const stableAoa=w.FORM_DRIVER_AOA_REGRESSION_V220.run();
+ const stableCarry=w.FORM_DRIVER_CARRY_BOUNDARIES_V226.run();
  await loadScript(w,'assets/driver-engine-v225.js');
  const bareCandidate=w.FORM_DRIVER_ENGINE_V80;
  if(bareCandidate===stableEngine)throw new Error('Generated v225 did not replace engine object');
@@ -35,14 +37,16 @@ async function run(){
  const candidateWinnersSource=String(candidate.winners);
  const candidateReport=w.FORM_DRIVER_REGRESSION_V219.run();
  const candidateAoa=w.FORM_DRIVER_AOA_REGRESSION_V220.run();
+ const candidateCarry=w.FORM_DRIVER_CARRY_BOUNDARIES_V226.run();
  w.FORM_DRIVER_ENGINE_V80=stableEngine;
  const byCandidate=Object.fromEntries(candidateReport.results.map(x=>[x.id,x]));
  const comparisons=stable.results.map(x=>compareCase(x,byCandidate[x.id]));
  const thresholdIds=['R01','R02','R04','R06'];
  const summary={topChangedCases:comparisons.filter(x=>x.topChanged).length,casesWithAbsTopScoreDeltaOver2:comparisons.filter(x=>Math.abs(x.topScoreDelta)>2).length,avgAbsTopScoreDelta:Math.round(comparisons.reduce((a,x)=>a+Math.abs(x.topScoreDelta),0)/comparisons.length*100)/100,totalTop10PositionChanges:comparisons.reduce((a,x)=>a+x.moves,0)};
- const checks={caseCountPreserved:stable.caseCount===candidateReport.caseCount,aoaStable:JSON.stringify(stableAoa.checks)===JSON.stringify(candidateAoa.checks),launchBoundarySmooth:Math.abs(candidateReport.pairChecks.find(x=>x.a==='R04')?.topScoreDelta??99)<=0.3,spinBoundarySmooth:Math.abs(candidateReport.pairChecks.find(x=>x.a==='R06')?.topScoreDelta??99)<=0.3,limitedWinnerChurn:summary.topChangedCases<=3,noLargeScoreChurn:summary.casesWithAbsTopScoreDeltaOver2<=3,sameCalibrationLayer:/cohort-aware evidence-depth execution/.test(stableScoreSource)&&/cohort-aware evidence-depth execution/.test(candidateScoreSource),executionPresentBoth:componentKeys(stable).includes('execution')===componentKeys(candidateReport).includes('execution')};
- const report={generatedAt:new Date().toISOString(),productionScoringChanged:false,candidate:'assets/driver-engine-v225.js',stack:{stableScoreSource,stableWinnersSource,candidateScoreSource,candidateWinnersSource,stableM07ComponentKeys:componentKeys(stable),candidateM07ComponentKeys:componentKeys(candidateReport)},summary,checks,passed:Object.values(checks).every(Boolean),thresholds:{stable:stable.pairChecks.filter(x=>thresholdIds.includes(x.a)),candidate:candidateReport.pairChecks.filter(x=>thresholdIds.includes(x.a))},topChanged:comparisons.filter(x=>x.topChanged),comparisons};
+ const cp=candidateCarry.pairs||[];
+ const checks={caseCountPreserved:stable.caseCount===candidateReport.caseCount,aoaStable:JSON.stringify(stableAoa.checks)===JSON.stringify(candidateAoa.checks),launchBoundarySmooth:Math.abs(candidateReport.pairChecks.find(x=>x.a==='R04')?.topScoreDelta??99)<=0.3,spinBoundarySmooth:Math.abs(candidateReport.pairChecks.find(x=>x.a==='R06')?.topScoreDelta??99)<=0.3,limitedWinnerChurn:summary.topChangedCases<=3,noLargeScoreChurn:summary.casesWithAbsTopScoreDeltaOver2<=3,sameCalibrationLayer:/cohort-aware evidence-depth execution/.test(stableScoreSource)&&/cohort-aware evidence-depth execution/.test(candidateScoreSource),executionPresentBoth:componentKeys(stable).includes('execution')===componentKeys(candidateReport).includes('execution'),carryLaunchSmooth:Math.abs(cp[0]?.topScoreDelta??99)<=0.3&&!cp[0]?.topChanged,carryLowSpinSmooth:Math.abs(cp[1]?.topScoreDelta??99)<=0.3&&!cp[1]?.topChanged,carryHighSpinSmooth:Math.abs(cp[2]?.topScoreDelta??99)<=0.3&&!cp[2]?.topChanged,carryExecutionPresentBoth:stableCarry.rows?.[0]?.componentKeys?.includes('execution')===candidateCarry.rows?.[0]?.componentKeys?.includes('execution')};
+ const report={generatedAt:new Date().toISOString(),productionScoringChanged:false,candidate:'assets/driver-engine-v225.js',stack:{stableScoreSource,stableWinnersSource,candidateScoreSource,candidateWinnersSource,stableM07ComponentKeys:componentKeys(stable),candidateM07ComponentKeys:componentKeys(candidateReport)},summary,checks,passed:Object.values(checks).every(Boolean),thresholds:{stable:stable.pairChecks.filter(x=>thresholdIds.includes(x.a)),candidate:candidateReport.pairChecks.filter(x=>thresholdIds.includes(x.a))},carry:{stable:stableCarry,candidate:candidateCarry},topChanged:comparisons.filter(x=>x.topChanged),comparisons};
  window.FORM_V225_CANDIDATE_REPORT=report;out.textContent=JSON.stringify(report,null,2);
 }
-document.getElementById('run').onclick=()=>run().catch(e=>{out.textContent=String(e.stack||e)});
+document.getElementById('run').onclick=()=>run().catch(e=>{out.textContent='Error: '+String(e.stack||e)});
 </script></body></html>
