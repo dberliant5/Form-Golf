@@ -34,3 +34,4 @@ jobs:
         with:
           name: driver-v224-v225-equivalence
           path: tests/baselines/driver-v224-v225-equivalence.json
+# rerun marker 2026-09-06
