@@ -1,0 +1,14 @@
+/* FORM session UX v217 — additive prototype over 14.11.3. No imagery. */
+#driverExperience{--sessionInk:#173d2e;--sessionMuted:#758078}
+#driverExperience .formSessionPhase{font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--sessionMuted);margin:0 0 9px;display:flex;align-items:center;gap:8px}
+#driverExperience .formSessionPhase:after{content:"";height:1px;background:rgba(23,61,46,.15);flex:1;max-width:90px}
+#driverExperience .formProfile{position:fixed;z-index:45;top:16px;right:18px;display:flex;gap:5px;align-items:center;pointer-events:none}
+#driverExperience .formProfileChip{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--sessionInk);border:1px solid rgba(23,61,46,.2);background:rgba(255,255,255,.82);padding:5px 7px;border-radius:999px;animation:formChipIn .25s ease both}
+#driverExperience .formRead{position:fixed;z-index:60;left:50%;bottom:84px;transform:translate(-50%,8px);width:min(520px,calc(100vw - 28px));box-sizing:border-box;padding:13px 15px;border-left:3px solid var(--sessionInk);background:#f4f0e8;box-shadow:0 10px 30px rgba(20,35,27,.12);opacity:0;transition:opacity .18s ease,transform .18s ease;pointer-events:none;color:#34453c;font-size:12px;line-height:1.42}
+#driverExperience .formRead.on{opacity:1;transform:translate(-50%,0)}
+#driverExperience .formRead b{display:block;color:var(--sessionInk);font-size:9px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px}
+#driverExperience .opt.formCommitted,#driverExperience button.formCommitted{transform:scale(.985)!important;transition:transform .12s ease,opacity .12s ease!important}
+#driverExperience .step.formEntering{animation:formStepIn .22s ease both}
+@keyframes formStepIn{from{opacity:.35;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes formChipIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+@media(max-width:620px){#driverExperience .formProfile{top:12px;right:12px;max-width:54vw;overflow:hidden}.formProfileChip:nth-child(n+3){display:none!important}#driverExperience .formRead{bottom:76px}.formSessionPhase{margin-top:2px!important}}
