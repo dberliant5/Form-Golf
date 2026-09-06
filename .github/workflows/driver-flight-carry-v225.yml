@@ -1,0 +1,31 @@
+name: Driver Flight Carry v225
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/driver-continuous-flight-v225.js'
+      - 'tests/driver-flight-carry-regression-v225.html'
+      - 'tests/run-driver-flight-carry-v225.mjs'
+      - '.github/workflows/driver-flight-carry-v225.yml'
+  workflow_dispatch:
+jobs:
+  carry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '20'}
+      - run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - run: node tests/run-driver-flight-carry-v225.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: driver-flight-carry-v225
+          path: tests/baselines/driver-flight-carry-v225.json
+          if-no-files-found: error
