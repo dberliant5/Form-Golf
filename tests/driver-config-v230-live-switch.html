@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Driver Config v230 Live Switch</title></head><body><button id="run">Run</button><pre id="out"></pre><iframe id="form" src="../index.html" style="width:1px;height:1px;opacity:0"></iframe><script>
+const frame=document.getElementById('form'),out=document.getElementById('out');
+function loadScript(w,src){return new Promise((res,rej)=>{const s=w.document.createElement('script');s.src=src+'?gate='+Date.now();s.onload=res;s.onerror=()=>rej(new Error('Failed '+src));w.document.body.appendChild(s);});}
+function waitFor(fn,ms=20000){return new Promise((res,rej)=>{const st=Date.now(),t=setInterval(()=>{try{if(fn()){clearInterval(t);res();return}}catch(e){}if(Date.now()-st>ms){clearInterval(t);rej(new Error('Timed out'));}},25);});}
+async function run(){const w=frame.contentWindow;await waitFor(()=>w.FORM_DRIVER_ENGINE_V80?.scoreOne&&w.FORM_DRIVER_CONFIG_V230?.loftFit);await loadScript(w,'tests/driver-config-regression-v229.js');const rows=w.FORM_DRIVER_CONFIG_REGRESSION_V229.run(),byId=Object.fromEntries(rows.map(x=>[x.id,x]));const srcs=[...w.document.scripts].map(s=>s.getAttribute('src')||'');let decorateCallable=true;try{w.FORM_DRIVER_CONFIG_V230.decorate([],[]);}catch(e){decorateCallable=false;}
+const checks={
+ activeV230:!!w.FORM_DRIVER_CONFIG_V230,
+ compatibilityAlias:w.FORM_DRIVER_CONFIG_V230===w.FORM_DRIVER_CONFIG_V81,
+ indexLoadsV230:srcs.some(s=>s.includes('assets/driver-config-v230.js')),
+ noIndexV81:!srcs.some(s=>s.includes('assets/driver-config-v81.js')),
+ v225StillActive:srcs.some(s=>s.includes('assets/driver-engine-v225.js')),
+ generalFallbackPreserved:byId.GEN_LOW.loft===12&&byId.GEN_HIGH.loft===9,
+ rangeContinuous:byId.RG_L_LOW.loft===11&&byId.RG_L_MID.loft===10.5&&byId.RG_S_LOW.loft===10.5,
+ extremeHighModerated:byId.COMBO_UP_HIGH.loft===10,
+ extremeLowBounded:byId.COMBO_DOWN_LOW.loft===12,
+ decorateCallable
+};
+const report={generatedAt:new Date().toISOString(),passed:Object.values(checks).every(Boolean),checks,scripts:srcs.filter(Boolean).filter(s=>s.includes('driver-')),sample:{GEN_LOW:byId.GEN_LOW,GEN_HIGH:byId.GEN_HIGH,RG_L_LOW:byId.RG_L_LOW,RG_S_LOW:byId.RG_S_LOW,COMBO_UP_HIGH:byId.COMBO_UP_HIGH,COMBO_DOWN_LOW:byId.COMBO_DOWN_LOW}};window.FORM_CONFIG_V230_LIVE_REPORT=report;out.textContent=JSON.stringify(report,null,2);}
+document.getElementById('run').onclick=()=>run().catch(e=>out.textContent='Error: '+String(e.stack||e));
+</script></body></html>
