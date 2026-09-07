@@ -31,5 +31,5 @@ jobs:
       - name: Verify Driver v6.3 safeguards
         run: |
           grep -q 'ensureResultsScaffold' assets/driver-v63.js
-          grep -q 'metricModePicker' assets/driver-v63.js
+          grep -q 'metricModeSelector' assets/driver-v63.js
           grep -q 'dataStrengthNote' assets/driver-v63.js
