@@ -1,0 +1,35 @@
+name: Driver Config v229 Expanded
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tests/driver-config-regression-v229.js'
+      - 'tests/driver-config-v229-expanded.html'
+      - 'tests/run-driver-config-v229.mjs'
+      - 'tests/driver-config-continuous-v228.js'
+      - '.github/workflows/driver-config-v229.yml'
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - name: Run expanded config regression
+        run: node tests/run-driver-config-v229.mjs
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver-config-v229-expanded
+          path: tests/baselines/driver-config-v229-expanded.json
