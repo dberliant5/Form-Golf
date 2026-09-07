@@ -1,0 +1,13 @@
+import { chromium } from 'playwright';
+import fs from 'node:fs';
+const browser=await chromium.launch({headless:true});
+const page=await browser.newPage();
+await page.goto('http://127.0.0.1:8080/tests/driver-config-v230-live-switch.html',{waitUntil:'domcontentloaded'});
+await page.click('#run');
+await page.waitForFunction(()=>window.FORM_CONFIG_V230_LIVE_REPORT,{timeout:90000});
+const report=await page.evaluate(()=>window.FORM_CONFIG_V230_LIVE_REPORT);
+fs.mkdirSync('tests/baselines',{recursive:true});
+fs.writeFileSync('tests/baselines/driver-config-v230-live-switch.json',JSON.stringify(report,null,2));
+console.log(JSON.stringify(report,null,2));
+await browser.close();
+if(!report.passed)process.exit(1);
