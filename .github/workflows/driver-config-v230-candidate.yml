@@ -1,0 +1,58 @@
+name: Driver Config v230 Candidate
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tests/build-driver-config-v230.py'
+      - 'tests/driver-config-v230-candidate.html'
+      - 'tests/run-driver-config-v230.mjs'
+      - 'tests/driver-config-regression-v229.js'
+      - 'assets/driver-config-v81.js'
+      - '.github/workflows/driver-config-v230-candidate.yml'
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build standalone v230 config
+        run: python3 tests/build-driver-config-v230.py
+      - name: Verify generated scope
+        run: |
+          test -f assets/driver-config-v230.js
+          grep -q 'FORM_DRIVER_CONFIG_V230' assets/driver-config-v230.js
+          grep -q 'speed-based window' assets/driver-config-v230.js
+          node --check assets/driver-config-v230.js
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - name: Run v230 production-candidate regression
+        run: node tests/run-driver-config-v230.mjs
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver-config-v230-candidate
+          path: tests/baselines/driver-config-v230-candidate.json
+      - name: Persist validated v230 config
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/driver-config-v230.js
+          if git diff --cached --quiet; then
+            echo 'Generated v230 already persisted.'
+          else
+            git commit -m 'Persist validated driver config v230'
+            git push
+          fi
