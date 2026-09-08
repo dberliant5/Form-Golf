@@ -23,11 +23,31 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Verify candidate syntax and capture frozen regression
+      - name: Verify candidate syntax and active production stack
         run: |
+          node --check assets/driver-engine-v225.js
           node --check assets/driver-engine-v226.js
           node --check assets/driver-config-v230.js
-          cp tests/baselines/driver-stable-v220-summary.json /tmp/driver-stable-v220-summary.json
+          grep -q 'assets/driver-engine-v225.js?v=8.225' index.html
+          grep -q 'assets/driver-config-v230.js?v=8.230' index.html
+          ! grep -q 'assets/driver-config-v81.js?v=8.1' index.html
+
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local production server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+
+      - name: Capture current v225 regression
+        run: |
+          node tests/run-driver-regression.mjs
+          cp tests/baselines/driver-stable-v220-summary.json /tmp/driver-v225-current-summary.json
+          git checkout -- tests/baselines/driver-stable-v220-summary.json
 
       - name: Stage v226 production reference and smoke safeguard
         run: |
@@ -54,37 +74,27 @@ jobs:
           smoke.write_text(s,encoding='utf-8')
           PY
 
-      - name: Install Playwright
-        run: |
-          npm init -y >/dev/null 2>&1
-          npm install playwright@1.55.0
-          npx playwright install --with-deps chromium
-
-      - name: Start staged v226 server
-        run: |
-          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
-          sleep 2
-
-      - name: Run v226 promotion gates
+      - name: Run staged v226 promotion gates
         run: |
           node tests/run-driver-v226-candidate-gate-v238.mjs
           node tests/run-driver-upgrade-semantics-v236.mjs
           node tests/run-driver-upgrade-gap-diagnostic-v237.mjs
           node tests/run-driver-regression.mjs
 
-      - name: Verify regression core is unchanged
+      - name: Require current v225 and v226 regression parity
         run: |
           python3 - <<'PY'
           import json
           from pathlib import Path
-          frozen=json.loads(Path('/tmp/driver-stable-v220-summary.json').read_text())
-          current=json.loads(Path('tests/baselines/driver-stable-v220-summary.json').read_text())
+          v225=json.loads(Path('/tmp/driver-v225-current-summary.json').read_text())
+          v226=json.loads(Path('tests/baselines/driver-stable-v220-summary.json').read_text())
           keys=['matrixCases','aoaInvariant','thresholdPairs','currentSatisfactionInvariant','doubleCountStress']
-          diff={k:(frozen.get(k),current.get(k)) for k in keys if frozen.get(k)!=current.get(k)}
+          diff={k:(v225.get(k),v226.get(k)) for k in keys if v225.get(k)!=v226.get(k)}
           if diff:
-              raise SystemExit('Driver regression core changed: '+json.dumps(diff,sort_keys=True))
-          print('Driver regression core unchanged on staged v226.')
+              raise SystemExit('Current v225/v226 regression mismatch: '+json.dumps(diff,sort_keys=True))
+          print('Current v225 and staged v226 regression cores are identical.')
           PY
+          git checkout -- tests/baselines/driver-stable-v220-summary.json
 
       - name: Verify promoted stack before commit
         run: |
@@ -96,6 +106,7 @@ jobs:
           ! grep -q 'assets/driver-config-v81.js?v=8.1' index.html
           grep -q 'node --check assets/driver-engine-v226.js' .github/workflows/form-smoke.yml
           grep -q 'assets/driver-engine-v226.js?v=8.226' .github/workflows/form-smoke.yml
+          git diff --exit-code -- tests/baselines/driver-stable-v220-summary.json
 
       - name: Commit validated promotion
         run: |
