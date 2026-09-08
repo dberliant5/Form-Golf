@@ -1,0 +1,50 @@
+name: Update Driver Upgrade Gates for v226
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/update-driver-upgrade-gates-v226.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  update-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Update v236 and v237 semantics for v226 candidate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p=Path('tests/run-driver-upgrade-semantics-v236.mjs')
+          s=p.read_text().replace("assets/driver-engine-v225.js","assets/driver-engine-v226.js")
+          old="if (gap >= 6 && level !== 'Strong upgrade candidate') fail('large-gap-label', `largest exact gap ${gap}, label ${level}`);\n    else if (gap >= 2.5 && gap < 6 && !['Worth a side-by-side test','No clear equipment upgrade'].includes(level)) fail('moderate-gap-label', `gap ${gap}, label ${level}`);"
+          new="if (report.largestExact.result.current.score === 50 && level !== 'Worth a side-by-side test') fail('hard-constrained-label', `fallback current score ${report.largestExact.result.current.score}, label ${level}`);\n    else if (report.largestExact.result.current.score !== 50 && gap >= 6 && level !== 'Strong upgrade candidate') fail('large-gap-label', `largest exact gap ${gap}, label ${level}`);\n    else if (report.largestExact.result.current.score !== 50 && gap >= 2.5 && gap < 6 && !['Worth a side-by-side test','No clear equipment upgrade'].includes(level)) fail('moderate-gap-label', `gap ${gap}, label ${level}`);"
+          if old not in s: raise SystemExit('v236 assertion block not found')
+          p.write_text(s.replace(old,new,1))
+
+          p=Path('tests/run-driver-upgrade-gap-diagnostic-v237.mjs')
+          s=p.read_text().replace("assets/driver-engine-v225.js","assets/driver-engine-v226.js")
+          old="const pathological = report.constrained.filter(x => x.gap >= 6 && x.decision?.level === 'No clear equipment upgrade');\n  if (!pathological.length) failures.push({name:'hard-constraint-pathology-present',detail:'No constrained >=6-point exact-current cases were observed; original v236 pathology did not reproduce.'});\n  else checks.push({name:'hard-constraint-pathology-reproduced',detail:`${pathological.length} constrained exact-current cases with >=6-point gaps returned No clear equipment upgrade`});"
+          new="const corrected = report.constrained.filter(x => x.gap >= 6 && x.decision?.level === 'Worth a side-by-side test' && !/points ahead|point fit advantage|modeled advantage/i.test(x.decision?.text||''));\n  if (corrected.length !== report.constrained.length) failures.push({name:'hard-constraint-semantics',detail:`${corrected.length}/${report.constrained.length} constrained exact-current cases used conservative no-gap side-by-side language`});\n  else checks.push({name:'hard-constraint-semantics',detail:`all ${corrected.length} constrained exact-current cases used conservative no-gap side-by-side language`});"
+          if old not in s: raise SystemExit('v237 pathology block not found')
+          s=s.replace(old,new,1)
+          s=s.replace("if (failures.some(x=>x.name==='unconstrained-large-gap-incoherence')) process.exitCode=1;","if (failures.length) process.exitCode=1;")
+          p.write_text(s)
+          PY
+      - name: Verify tests
+        run: |
+          node --check tests/run-driver-upgrade-semantics-v236.mjs
+          node --check tests/run-driver-upgrade-gap-diagnostic-v237.mjs
+          grep -q 'driver-engine-v226.js' tests/run-driver-upgrade-semantics-v236.mjs
+          grep -q 'driver-engine-v226.js' tests/run-driver-upgrade-gap-diagnostic-v237.mjs
+      - name: Commit updated gates
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tests/run-driver-upgrade-semantics-v236.mjs tests/run-driver-upgrade-gap-diagnostic-v237.mjs
+          git commit -m 'Update Driver upgrade gates for v226' || exit 0
+          git push origin HEAD:main
