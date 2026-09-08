@@ -13,7 +13,7 @@ try {
     const baseGolfer = clone(typeof normalizedGolferV69 === 'function' ? normalizedGolferV69() : golfer());
     baseGolfer.currentClub = baseGolfer.currentClub || {};
 
-    const source = await fetch('assets/driver-engine-v225.js').then(r => r.text());
+    const source = await fetch('assets/driver-engine-v226.js').then(r => r.text());
     const needle = 'window.FORM_DRIVER_ENGINE_V80={scoreOne,winners,currentScore,compare};';
     if (!source.includes(needle)) throw new Error('v225 export hook not found');
     (0, eval)(source.replace(needle, 'window.FORM_DRIVER_ENGINE_V80={scoreOne,winners,currentScore,compare,recommendation};'));
@@ -67,9 +67,9 @@ try {
 
   const failures = [];
   const checks = [];
-  const pathological = report.constrained.filter(x => x.gap >= 6 && x.decision?.level === 'No clear equipment upgrade');
-  if (!pathological.length) failures.push({name:'hard-constraint-pathology-present',detail:'No constrained >=6-point exact-current cases were observed; original v236 pathology did not reproduce.'});
-  else checks.push({name:'hard-constraint-pathology-reproduced',detail:`${pathological.length} constrained exact-current cases with >=6-point gaps returned No clear equipment upgrade`});
+  const corrected = report.constrained.filter(x => x.gap >= 6 && x.decision?.level === 'Worth a side-by-side test' && !/points ahead|point fit advantage|modeled advantage/i.test(x.decision?.text||''));
+  if (corrected.length !== report.constrained.length) failures.push({name:'hard-constraint-semantics',detail:`${corrected.length}/${report.constrained.length} constrained exact-current cases used conservative no-gap side-by-side language`});
+  else checks.push({name:'hard-constraint-semantics',detail:`all ${corrected.length} constrained exact-current cases used conservative no-gap side-by-side language`});
 
   const unconstrainedLarge = [...report.bands.sixTo12,...report.bands.over12].filter(x=>!x.hardConstraints.length);
   const incoherentUnconstrained = unconstrainedLarge.filter(x=>x.gap>=6 && x.decision?.level==='No clear equipment upgrade');
@@ -77,7 +77,7 @@ try {
   else checks.push({name:'unconstrained-large-gap-semantics',detail:`${unconstrainedLarge.length} unconstrained >=6-point observations had no reproduced empty-component hard-constraint pathology`});
 
   console.log(JSON.stringify({generatedAt:new Date().toISOString(),productionScoringChanged:false,failures,checks,report},null,2));
-  if (failures.some(x=>x.name==='unconstrained-large-gap-incoherence')) process.exitCode=1;
+  if (failures.length) process.exitCode=1;
 } catch (err) {
   console.error(err);
   process.exitCode=1;

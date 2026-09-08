@@ -20,7 +20,7 @@ try {
     // Re-evaluate the exact production v225 source in this disposable test page, changing
     // only its export line so the private recommendation() helper becomes inspectable.
     // Production source, scorer behavior and deployed exports remain untouched.
-    const source = await fetch('assets/driver-engine-v225.js').then(r => r.text());
+    const source = await fetch('assets/driver-engine-v226.js').then(r => r.text());
     const needle = 'window.FORM_DRIVER_ENGINE_V80={scoreOne,winners,currentScore,compare};';
     if (!source.includes(needle)) throw new Error('v225 recommendation export hook not found');
     (0, eval)(source.replace(needle, 'window.FORM_DRIVER_ENGINE_V80={scoreOne,winners,currentScore,compare,recommendation};'));
@@ -92,8 +92,9 @@ try {
   if (report.largestExact) {
     const gap = report.largestExact.gap;
     const level = report.largestExact.result.decision.level;
-    if (gap >= 6 && level !== 'Strong upgrade candidate') fail('large-gap-label', `largest exact gap ${gap}, label ${level}`);
-    else if (gap >= 2.5 && gap < 6 && !['Worth a side-by-side test','No clear equipment upgrade'].includes(level)) fail('moderate-gap-label', `gap ${gap}, label ${level}`);
+    if (report.largestExact.result.current.score === 50 && level !== 'Worth a side-by-side test') fail('hard-constrained-label', `fallback current score ${report.largestExact.result.current.score}, label ${level}`);
+    else if (report.largestExact.result.current.score !== 50 && gap >= 6 && level !== 'Strong upgrade candidate') fail('large-gap-label', `largest exact gap ${gap}, label ${level}`);
+    else if (report.largestExact.result.current.score !== 50 && gap >= 2.5 && gap < 6 && !['Worth a side-by-side test','No clear equipment upgrade'].includes(level)) fail('moderate-gap-label', `gap ${gap}, label ${level}`);
     else pass('largest-exact-observation', `${report.largestExact.brand} ${report.largestExact.model}: gap ${gap}, label ${level}`);
 
     if (report.largestExactGood && report.largestExactGood.decision.level !== level) fail('large-gap-satisfaction-independent', `${level} vs ${report.largestExactGood.decision.level}`);
