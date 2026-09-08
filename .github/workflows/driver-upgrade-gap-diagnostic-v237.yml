@@ -5,7 +5,7 @@ on:
     paths:
       - 'tests/run-driver-upgrade-gap-diagnostic-v237.mjs'
       - '.github/workflows/driver-upgrade-gap-diagnostic-v237.yml'
-      - 'assets/driver-engine-v225.js'
+      - 'assets/driver-engine-v226.js'
       - 'assets/driver-config-v230.js'
       - 'index.html'
   workflow_dispatch:
