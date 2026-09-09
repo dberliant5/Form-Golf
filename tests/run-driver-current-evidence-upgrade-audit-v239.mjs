@@ -17,9 +17,9 @@ try {
     const baseGolfer = clone(typeof normalizedGolferV69 === 'function' ? normalizedGolferV69() : golfer());
     baseGolfer.currentClub = {};
 
-    const source = await fetch('assets/driver-engine-v226.js').then(r => r.text());
+    const source = await fetch('assets/driver-engine-v227.js').then(r => r.text());
     const needle = 'window.FORM_DRIVER_ENGINE_V80={scoreOne,winners,currentScore,compare};';
-    if (!source.includes(needle)) throw new Error('v226 recommendation export hook not found');
+    if (!source.includes(needle)) throw new Error('v227 recommendation export hook not found');
     (0, eval)(source.replace(needle, 'window.FORM_DRIVER_ENGINE_V80={scoreOne,winners,currentScore,compare,recommendation};'));
 
     const engine = window.FORM_DRIVER_ENGINE_V80;
@@ -123,7 +123,7 @@ try {
   console.log(JSON.stringify({
     generatedAt:new Date().toISOString(),
     productionScoringChanged:false,
-    purpose:'Audit upgrade certainty as current-club evidence weakens; ranking must remain independent.',
+    purpose:'Audit active v227 upgrade certainty as current-club evidence weakens; ranking must remain independent.',
     failures,
     checks,
     report
