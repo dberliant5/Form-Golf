@@ -1,0 +1,72 @@
+name: Driver v227 Full Regression Parity v241
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/driver-engine-v227.js'
+      - 'tests/run-driver-v227-candidate-audit-v240.mjs'
+      - '.github/workflows/driver-v227-full-regression-parity-v241.yml'
+      - 'tests/driver-regression-matrix-v219.js'
+      - 'tests/driver-regression-aoa-v220.js'
+      - 'tests/driver-regression-runner-v220.html'
+      - 'tests/run-driver-regression.mjs'
+  workflow_dispatch:
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate production and candidate syntax
+        run: |
+          node --check assets/driver-engine-v226.js
+          node --check assets/driver-engine-v227.js
+          node --check assets/driver-config-v230.js
+          grep -q 'assets/driver-engine-v226.js?v=8.226' index.html
+          grep -q 'assets/driver-config-v230.js?v=8.230' index.html
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - name: Capture live v226 full regression
+        run: |
+          node tests/run-driver-regression.mjs
+          cp tests/baselines/driver-stable-v220.json /tmp/v226-regression.json
+          cp tests/baselines/driver-stable-v220-summary.json /tmp/v226-summary.json
+      - name: Stage only v227 engine reference
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old='assets/driver-engine-v226.js?v=8.226'
+          new='assets/driver-engine-v227.js?v=8.227'
+          if s.count(old)!=1: raise SystemExit(f'Expected exactly one live v226 reference, found {s.count(old)}')
+          p.write_text(s.replace(old,new))
+          PY
+      - name: Capture staged v227 full regression
+        run: |
+          node tests/run-driver-regression.mjs
+          cp tests/baselines/driver-stable-v220.json /tmp/v227-regression.json
+          cp tests/baselines/driver-stable-v220-summary.json /tmp/v227-summary.json
+      - name: Require exact full-regression parity
+        run: |
+          cmp /tmp/v226-regression.json /tmp/v227-regression.json
+          cmp /tmp/v226-summary.json /tmp/v227-summary.json
+          echo 'Full v226 and v227 regression outputs are identical.'
+      - name: Run targeted v227 semantic fix audit
+        run: node tests/run-driver-v227-candidate-audit-v240.mjs
+      - name: Verify production remained untouched
+        run: |
+          git checkout -- index.html tests/baselines/driver-stable-v220.json tests/baselines/driver-stable-v220-summary.json
+          grep -q 'assets/driver-engine-v226.js?v=8.226' index.html
+          ! grep -q 'assets/driver-engine-v227.js?v=8.227' index.html
+          git diff --exit-code -- index.html tests/baselines/driver-stable-v220.json tests/baselines/driver-stable-v220-summary.json
