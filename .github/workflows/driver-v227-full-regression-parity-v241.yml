@@ -57,14 +57,29 @@ jobs:
           node tests/run-driver-regression.mjs
           cp tests/baselines/driver-stable-v220.json /tmp/v227-regression.json
           cp tests/baselines/driver-stable-v220-summary.json /tmp/v227-summary.json
-      - name: Require exact full-regression parity
+      - name: Require exact fitting-output parity
         run: |
-          cmp /tmp/v226-regression.json /tmp/v227-regression.json
-          cmp /tmp/v226-summary.json /tmp/v227-summary.json
-          echo 'Full v226 and v227 regression outputs are identical.'
+          python3 - <<'PY'
+          import json
+          def normalized(path):
+              data=json.load(open(path))
+              def scrub(v):
+                  if isinstance(v,dict):
+                      return {k:scrub(x) for k,x in v.items() if k not in {'generatedAt','generated_at','runAt','timestamp'}}
+                  if isinstance(v,list): return [scrub(x) for x in v]
+                  return v
+              return scrub(data)
+          pairs=[('/tmp/v226-regression.json','/tmp/v227-regression.json'),('/tmp/v226-summary.json','/tmp/v227-summary.json')]
+          for a,b in pairs:
+              A,B=normalized(a),normalized(b)
+              if A!=B:
+                  raise SystemExit(f'Fitting output differs after metadata normalization: {a} vs {b}')
+          print('Full v226 and v227 fitting outputs are identical after removing run metadata.')
+          PY
       - name: Run targeted v227 semantic fix audit
         run: node tests/run-driver-v227-candidate-audit-v240.mjs
       - name: Verify production remained untouched
+        if: always()
         run: |
           git checkout -- index.html tests/baselines/driver-stable-v220.json tests/baselines/driver-stable-v220-summary.json
           grep -q 'assets/driver-engine-v226.js?v=8.226' index.html
