@@ -1,0 +1,64 @@
+name: Promote Validated Driver Engine v227
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/promote-driver-v227.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify candidate and current production stack
+        run: |
+          node --check assets/driver-engine-v226.js
+          node --check assets/driver-engine-v227.js
+          node --check assets/driver-config-v230.js
+          grep -q 'assets/driver-engine-v226.js?v=8.226' index.html
+          ! grep -q 'assets/driver-engine-v227.js?v=8.227' index.html
+          grep -q 'assets/driver-config-v230.js?v=8.230' index.html
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - name: Re-run targeted v227 semantic and parity gate
+        run: node tests/run-driver-v227-candidate-audit-v240.mjs
+      - name: Stage only validated v227 production reference
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old='assets/driver-engine-v226.js?v=8.226'
+          new='assets/driver-engine-v227.js?v=8.227'
+          if s.count(old)!=1:
+              raise SystemExit(f'Expected exactly one live v226 reference, found {s.count(old)}')
+          if new in s:
+              raise SystemExit('v227 production reference already present unexpectedly')
+          p.write_text(s.replace(old,new),encoding='utf-8')
+          PY
+      - name: Verify staged production stack
+        run: |
+          grep -q 'assets/driver-engine-v227.js?v=8.227' index.html
+          ! grep -q 'assets/driver-engine-v226.js?v=8.226' index.html
+          grep -q 'assets/driver-config-v230.js?v=8.230' index.html
+          git diff --exit-code -- . ':!index.html'
+      - name: Commit validated engine reference
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Promote validated Driver engine v227'
+          git push origin HEAD:main
