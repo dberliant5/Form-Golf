@@ -90,9 +90,18 @@ try {
   if (!report.exact) {
     fail('exact-current-available', `no exact current model resolved (${report.exactCandidateCount} candidates)`);
   } else {
-    const e = report.exact.result.current.evidenceQuality;
-    if (!Number.isFinite(e)) fail('exact-current-evidence-quality', JSON.stringify(report.exact.result.current));
-    else pass('exact-current-evidence-quality', `${report.exact.club.brand} ${report.exact.club.model}: ${e}`);
+    const current = report.exact.result.current;
+    if (current.hardConstraints.length) {
+      if (report.exact.result.decision.level !== 'Worth a side-by-side test') {
+        fail('exact-hard-constraint-conservative', JSON.stringify(report.exact.result));
+      } else {
+        pass('exact-hard-constraint-conservative', `${report.exact.club.brand} ${report.exact.club.model}: hard constraint correctly avoids a precise upgrade gap`);
+      }
+    } else if (!Number.isFinite(current.evidenceQuality)) {
+      fail('exact-current-evidence-quality', JSON.stringify(current));
+    } else {
+      pass('exact-current-evidence-quality', `${report.exact.club.brand} ${report.exact.club.model}: ${current.evidenceQuality}`);
+    }
   }
 
   if (!report.historical) {
