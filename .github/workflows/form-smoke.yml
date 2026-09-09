@@ -17,7 +17,6 @@ jobs:
           node --check assets/app-2.js
           node --check assets/app-3.js
           node --check assets/driver-v63.js
-          node --check assets/driver-engine-v225.js
           node --check assets/driver-engine-v226.js
           node --check assets/driver-config-v230.js
       - name: Verify split application references
@@ -33,19 +32,10 @@ jobs:
           PY
       - name: Verify active Driver stack
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          html=Path('index.html').read_text(encoding='utf-8')
-          v225='assets/driver-engine-v225.js?v=8.225' in html
-          v226='assets/driver-engine-v226.js?v=8.226' in html
-          if v225 == v226:
-              raise SystemExit('Expected exactly one validated Driver engine reference (v225 or v226).')
-          if 'assets/driver-config-v230.js?v=8.230' not in html:
-              raise SystemExit('Validated v230 config reference missing.')
-          if 'assets/driver-config-v81.js?v=8.1' in html:
-              raise SystemExit('Obsolete v81 config is active.')
-          print('Validated Driver stack:', 'v226 + v230' if v226 else 'v225 + v230')
-          PY
+          grep -q 'assets/driver-engine-v226.js?v=8.226' index.html
+          ! grep -q 'assets/driver-engine-v225.js?v=8.225' index.html
+          grep -q 'assets/driver-config-v230.js?v=8.230' index.html
+          ! grep -q 'assets/driver-config-v81.js?v=8.1' index.html
       - name: Verify Driver v6.3 safeguards
         run: |
           grep -q 'ensureResultsScaffold' assets/driver-v63.js
