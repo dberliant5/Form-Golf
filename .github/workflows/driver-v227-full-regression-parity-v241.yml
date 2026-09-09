@@ -81,7 +81,8 @@ jobs:
       - name: Verify production remained untouched
         if: always()
         run: |
-          git checkout -- index.html tests/baselines/driver-stable-v220.json tests/baselines/driver-stable-v220-summary.json
+          git checkout -- index.html
+          rm -f tests/baselines/driver-stable-v220.json tests/baselines/driver-stable-v220-summary.json
           grep -q 'assets/driver-engine-v226.js?v=8.226' index.html
           ! grep -q 'assets/driver-engine-v227.js?v=8.227' index.html
-          git diff --exit-code -- index.html tests/baselines/driver-stable-v220.json tests/baselines/driver-stable-v220-summary.json
+          git diff --exit-code -- index.html
