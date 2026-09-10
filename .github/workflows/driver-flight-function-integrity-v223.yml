@@ -1,0 +1,26 @@
+name: Driver Flight Function Integrity v223
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/driver-continuous-flight-v221.js'
+      - 'tests/driver-flight-function-integrity-v223.mjs'
+      - '.github/workflows/driver-flight-function-integrity-v223.yml'
+  workflow_dispatch:
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run continuous flight function integrity
+        run: node tests/driver-flight-function-integrity-v223.mjs
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver-flight-function-integrity-v223
+          path: tests/baselines/driver-flight-function-integrity-v223.json
+          if-no-files-found: error

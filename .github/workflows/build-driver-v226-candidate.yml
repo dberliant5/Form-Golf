@@ -1,0 +1,54 @@
+name: Build Driver v226 Candidate
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-driver-v226-candidate.yml'
+      - 'assets/driver-engine-v225.js'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build-candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Create v226 candidate from validated v225
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          src = Path('assets/driver-engine-v225.js').read_text()
+          old = "function recommendation(best,current){if(!best)return {level:'No recommendation',text:'No eligible current-generation driver remained after your constraints.'};if(current.score==null)return {level:'Test before replacing',text:'FORM can rank new drivers for your profile, but it cannot make a defensible upgrade claim without enough product information about your current driver.'};const gap=r1(best.s.overall-current.score),diff=compare(best.s,current.detail),wins=diff.filter(x=>x.delta>=4);if(gap<2.5||wins.length===0)return {level:'No clear equipment upgrade',text:`The best new fit is ${gap.toFixed(1)} points ahead, but FORM does not see enough meaningful category improvement to call the change an upgrade.`};if(gap<6)return {level:'Worth a side-by-side test',text:`The ${gap.toFixed(1)}-point modeled advantage is driven mainly by ${wins.slice(0,2).map(x=>x.label.toLowerCase()).join(' and ')}.`};return {level:'Strong upgrade candidate',text:`FORM sees a ${gap.toFixed(1)}-point fit advantage, led by ${wins.slice(0,3).map(x=>x.label.toLowerCase()).join(', ')}.`};}"
+          new = "function recommendation(best,current){if(!best)return {level:'No recommendation',text:'No eligible current-generation driver remained after your constraints.'};if(current.score==null)return {level:'Test before replacing',text:'FORM can rank new drivers for your profile, but it cannot make a defensible upgrade claim without enough product information about your current driver.'};if(current.detail?.hardConstraints?.length){const reason=current.detail.hardConstraints[0];return {level:'Worth a side-by-side test',text:`Your current driver conflicts with a core FORM fit requirement (${reason}). Because that rule prevents a normal component-by-component score, FORM recommends testing the top fit against your current driver rather than treating the fallback score as a precise upgrade gap.`};}const gap=r1(best.s.overall-current.score),diff=compare(best.s,current.detail),wins=diff.filter(x=>x.delta>=4);if(gap<2.5||wins.length===0)return {level:'No clear equipment upgrade',text:`The best new fit is ${gap.toFixed(1)} points ahead, but FORM does not see enough meaningful category improvement to call the change an upgrade.`};if(gap<6)return {level:'Worth a side-by-side test',text:`The ${gap.toFixed(1)}-point modeled advantage is driven mainly by ${wins.slice(0,2).map(x=>x.label.toLowerCase()).join(' and ')}.`};return {level:'Strong upgrade candidate',text:`FORM sees a ${gap.toFixed(1)}-point fit advantage, led by ${wins.slice(0,3).map(x=>x.label.toLowerCase()).join(', ')}.`};}"
+          if old not in src:
+              raise SystemExit('Validated v225 recommendation block not found; refusing candidate build')
+          out = src.replace('// FORM 8.225 — evidence-driven driver scorer with continuous speed-aware flight needs','// FORM 8.226 — evidence-driven driver scorer with conservative hard-constraint upgrade semantics',1).replace(old,new,1)
+          if out.count("current.detail?.hardConstraints?.length") != 1:
+              raise SystemExit('v226 hard-constraint branch was not created exactly once')
+          Path('assets/driver-engine-v226.js').write_text(out)
+          PY
+      - name: Verify candidate is narrowly scoped
+        run: |
+          node --check assets/driver-engine-v226.js
+          python3 - <<'PY'
+          from pathlib import Path
+          a=Path('assets/driver-engine-v225.js').read_text().splitlines()
+          b=Path('assets/driver-engine-v226.js').read_text().splitlines()
+          changed=[(i+1,x,y) for i,(x,y) in enumerate(zip(a,b)) if x!=y]
+          if len(a)!=len(b) or len(changed)!=2:
+              raise SystemExit(f'Unexpected v226 scope: lines {len(a)}->{len(b)}, changed={len(changed)}')
+          print('Narrow v226 diff verified:', [(i, x[:90], y[:90]) for i,x,y in changed])
+          PY
+      - name: Commit candidate only
+        run: |
+          if git diff --quiet -- assets/driver-engine-v226.js && git ls-files --error-unmatch assets/driver-engine-v226.js >/dev/null 2>&1; then
+            echo 'v226 candidate already current'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/driver-engine-v226.js
+          git commit -m 'Build Driver engine v226 candidate'
+          git push origin HEAD:main

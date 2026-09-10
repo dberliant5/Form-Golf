@@ -1,0 +1,108 @@
+name: Driver v228 Evidence Claim Candidate
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/driver-v228-evidence-claim-candidate.yml'
+      - 'assets/driver-engine-v227.js'
+      - 'tests/run-driver-current-claim-confidence-candidate-v242.mjs'
+      - 'tests/driver-regression-matrix-v219.js'
+      - 'tests/driver-regression-aoa-v220.js'
+      - 'tests/driver-regression-runner-v220.html'
+      - 'tests/run-driver-regression.mjs'
+  workflow_dispatch:
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Build isolated v228 candidate from production v227
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          src=Path('assets/driver-engine-v227.js').read_text()
+          old="if(current.label==='Historical modeled profile')return {level:'Worth a side-by-side test',text:`FORM sees a ${gap.toFixed(1)}-point modeled fit advantage, led by ${wins.slice(0,3).map(x=>x.label.toLowerCase()).join(', ')}, but your current driver is represented by a historical modeled profile. Treat this as a strong test signal rather than a definitive replacement claim.`};return {level:'Strong upgrade candidate',text:`FORM sees a ${gap.toFixed(1)}-point fit advantage, led by ${wins.slice(0,3).map(x=>x.label.toLowerCase()).join(', ')}.`};"
+          new="if(current.label==='Historical modeled profile')return {level:'Worth a side-by-side test',text:`FORM sees a ${gap.toFixed(1)}-point modeled fit advantage, led by ${wins.slice(0,3).map(x=>x.label.toLowerCase()).join(', ')}, but your current driver is represented by a historical modeled profile. Treat this as a strong test signal rather than a definitive replacement claim.`};const eq=current?.detail?.evidenceQuality;if(Number.isFinite(eq)&&eq<.45)return {level:'Worth a side-by-side test',text:`FORM sees a ${gap.toFixed(1)}-point modeled fit advantage, but evidence for your current driver is limited. Treat this as a strong reason to test the top fit side-by-side rather than a definitive replacement call.`};return {level:'Strong upgrade candidate',text:`FORM sees a ${gap.toFixed(1)}-point fit advantage, led by ${wins.slice(0,3).map(x=>x.label.toLowerCase()).join(', ')}.`};"
+          if src.count(old)!=1: raise SystemExit(f'Expected one recommendation insertion point, found {src.count(old)}')
+          out=src.replace('// FORM 8.227 — evidence-driven driver scorer with conservative current-club evidence semantics','// FORM 8.228 — evidence-calibrated current-driver upgrade claims',1).replace(old,new,1)
+          Path('/tmp/driver-engine-v228.js').write_text(out)
+          Path('assets/driver-engine-v228.js').write_text(out)
+          PY
+          node --check assets/driver-engine-v227.js
+          node --check assets/driver-engine-v228.js
+          grep -q "evidenceQuality;if(Number.isFinite(eq)&&eq<.45)" assets/driver-engine-v228.js
+      - name: Prove candidate diff is recommendation-only
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import difflib
+          a=Path('assets/driver-engine-v227.js').read_text().splitlines()
+          b=Path('assets/driver-engine-v228.js').read_text().splitlines()
+          diff=list(difflib.unified_diff(a,b,lineterm=''))
+          added='\n'.join(x for x in diff if x.startswith('+') and not x.startswith('+++'))
+          removed='\n'.join(x for x in diff if x.startswith('-') and not x.startswith('---'))
+          allowed=('FORM 8.228','evidenceQuality','evidence for your current driver is limited','Strong upgrade candidate','Historical modeled profile')
+          touched='\n'.join([added,removed])
+          if 'evidence for your current driver is limited' not in touched: raise SystemExit('Expected claim ceiling text absent')
+          if any(term in touched for term in ['function scoreOne','function winners','function currentScore','function compare','normalizedWeight','hardConstraints:[]']):
+              raise SystemExit('Candidate diff touched scoring/ranking mechanics')
+          print('Candidate diff is confined to version metadata and recommendation semantics.')
+          PY
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - name: Validate intended low-evidence semantics against v227
+        run: node tests/run-driver-current-claim-confidence-candidate-v242.mjs
+      - name: Capture production v227 regression
+        run: |
+          node tests/run-driver-regression.mjs
+          cp tests/baselines/driver-stable-v220.json /tmp/v227-regression.json
+          cp tests/baselines/driver-stable-v220-summary.json /tmp/v227-summary.json
+      - name: Stage only v228 engine reference
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html'); s=p.read_text()
+          old='assets/driver-engine-v227.js?v=8.227'; new='assets/driver-engine-v228.js?v=8.228'
+          if s.count(old)!=1: raise SystemExit(f'Expected one live v227 reference, found {s.count(old)}')
+          if new in s: raise SystemExit('v228 unexpectedly already live')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Capture staged v228 full regression
+        run: |
+          node tests/run-driver-regression.mjs
+          cp tests/baselines/driver-stable-v220.json /tmp/v228-regression.json
+          cp tests/baselines/driver-stable-v220-summary.json /tmp/v228-summary.json
+      - name: Require exact fitting-output parity
+        run: |
+          python3 - <<'PY'
+          import json
+          def normalized(path):
+              data=json.load(open(path))
+              def scrub(v):
+                  if isinstance(v,dict): return {k:scrub(x) for k,x in v.items() if k not in {'generatedAt','generated_at','runAt','timestamp'}}
+                  if isinstance(v,list): return [scrub(x) for x in v]
+                  return v
+              return scrub(data)
+          for a,b in [('/tmp/v227-regression.json','/tmp/v228-regression.json'),('/tmp/v227-summary.json','/tmp/v228-summary.json')]:
+              if normalized(a)!=normalized(b): raise SystemExit(f'Fitting output differs: {a} vs {b}')
+          print('v227 and staged v228 scoring/ranking regression outputs are identical.')
+          PY
+      - name: Verify production reference remained untouched in repository
+        if: always()
+        run: |
+          git checkout -- index.html
+          rm -f assets/driver-engine-v228.js tests/baselines/driver-stable-v220.json tests/baselines/driver-stable-v220-summary.json
+          grep -q 'assets/driver-engine-v227.js?v=8.227' index.html
+          ! grep -q 'assets/driver-engine-v228.js?v=8.228' index.html
+          git diff --exit-code -- index.html

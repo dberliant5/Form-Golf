@@ -1,0 +1,63 @@
+name: Promote Driver Config v230
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tests/driver-config-v230-live-switch.html'
+      - 'tests/run-driver-config-v230-live-switch.mjs'
+      - '.github/workflows/driver-config-v230-promote.yml'
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify validated config exists
+        run: |
+          test -f assets/driver-config-v230.js
+          grep -q 'FORM_DRIVER_CONFIG_V230' assets/driver-config-v230.js
+          grep -q 'driver-engine-v225.js?v=8.225' index.html
+          grep -q 'driver-config-v81.js?v=8.1' index.html
+      - name: Apply local config switch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old='assets/driver-config-v81.js?v=8.1'
+          new='assets/driver-config-v230.js?v=8.230'
+          assert old in s, 'expected live v81 config reference not found'
+          assert new not in s, 'v230 already referenced before local switch'
+          p.write_text(s.replace(old,new,1))
+          PY
+          grep -q 'driver-config-v230.js?v=8.230' index.html
+          ! grep -q 'driver-config-v81.js?v=8.1' index.html
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - name: Validate locally switched live index
+        run: node tests/run-driver-config-v230-live-switch.mjs
+      - name: Upload live-switch report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver-config-v230-live-switch
+          path: tests/baselines/driver-config-v230-live-switch.json
+      - name: Commit production config switch
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Promote validated driver config v230'
+          git push

@@ -1,0 +1,58 @@
+name: Driver v228 Post-Live Audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/driver-v228-post-live-audit.yml'
+      - 'assets/driver-engine-v228.js'
+      - 'index.html'
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify live v228 wiring and syntax
+        run: |
+          test -f assets/driver-engine-v228.js
+          node --check assets/driver-engine-v228.js
+          grep -q 'assets/driver-engine-v228.js?v=8.228' index.html
+          ! grep -q 'assets/driver-engine-v227.js?v=8.227' index.html
+          grep -q "evidenceQuality;if(Number.isFinite(eq)&&eq<.45)" assets/driver-engine-v228.js
+      - name: Prepare v228-specific audit copies
+        run: |
+          cp tests/run-driver-current-evidence-upgrade-audit-v239.mjs tests/.tmp-v228-current-evidence.mjs
+          sed -i 's/driver-engine-v227\.js/driver-engine-v228.js/g; s/active v227/active v228/g' tests/.tmp-v228-current-evidence.mjs
+          cp tests/run-driver-current-claim-confidence-audit-v241.mjs tests/.tmp-v228-claim-confidence.mjs
+          sed -i 's/driver-engine-v227\.js/driver-engine-v228.js/g; s/v227 recommendation/v228 recommendation/g' tests/.tmp-v228-claim-confidence.mjs
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - name: Run broad current-gamer matrix on live v228
+        run: node tests/.tmp-v228-current-evidence.mjs
+      - name: Require low-evidence claim ceiling on actual v228
+        run: |
+          node tests/.tmp-v228-claim-confidence.mjs > /tmp/v228-claim-confidence.json
+          cat /tmp/v228-claim-confidence.json
+          jq -e '.failures | length == 0' /tmp/v228-claim-confidence.json >/dev/null
+          jq -e '.report.limitedStrong | length == 0' /tmp/v228-claim-confidence.json >/dev/null
+          jq -e '.report.developingStrong | length > 0' /tmp/v228-claim-confidence.json >/dev/null
+          echo 'Actual v228 has zero limited-evidence Strong claims while preserving developing-evidence Strong claims.'
+      - name: Run full driver regression on live v228
+        run: node tests/run-driver-regression.mjs
+      - name: Clean generated audit files
+        if: always()
+        run: |
+          rm -f tests/.tmp-v228-current-evidence.mjs tests/.tmp-v228-claim-confidence.mjs
+          rm -f tests/baselines/driver-stable-v220.json tests/baselines/driver-stable-v220-summary.json
+          git diff --exit-code -- index.html assets/driver-engine-v228.js

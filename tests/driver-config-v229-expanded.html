@@ -1,0 +1,29 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Driver Config v229 Expanded</title></head><body><button id="run">Run</button><pre id="out"></pre><iframe id="form" src="../index.html" style="width:1px;height:1px;opacity:0"></iframe><script>
+const frame=document.getElementById('form'),out=document.getElementById('out');
+function loadScript(w,src){return new Promise((res,rej)=>{const s=w.document.createElement('script');s.src=src+(src.includes('?')?'&':'?')+'gate='+Date.now()+Math.random();s.onload=res;s.onerror=()=>rej(new Error('Failed '+src));w.document.body.appendChild(s);});}
+function waitFor(fn,ms=12000){return new Promise((res,rej)=>{const st=Date.now(),t=setInterval(()=>{try{if(fn()){clearInterval(t);res();return}}catch(e){}if(Date.now()-st>ms){clearInterval(t);rej(new Error('Timed out'));}},25);});}
+const byId=r=>Object.fromEntries(r.rows.map(x=>[x.id,x]));
+function monotonic(vals,dir){for(let i=1;i<vals.length;i++){if(dir==='noninc'&&vals[i]>vals[i-1])return false;if(dir==='nondec'&&vals[i]<vals[i-1])return false;}return true;}
+async function run(){const w=frame.contentWindow;await waitFor(()=>w.FORM_DRIVER_CONFIG_V81?.loftFit);await loadScript(w,'tests/driver-config-regression-v229.js');const stable=w.FORM_DRIVER_CONFIG_REGRESSION_V229.run();await loadScript(w,'tests/driver-config-continuous-v228.js');const cand=w.FORM_DRIVER_CONFIG_REGRESSION_V229.run();const S=byId(stable),C=byId(cand);
+ const general=['GEN_LOW','GEN_HIGH','GEN_CONFLICT','GEN_VARIES'];
+ const speed=[68,70,72,75,80,85,90,92,94,95,96,98,100,102,105,108].map(x=>C['SPD_'+x].loft);
+ const launch=[7,8,9,10,11,12,13,14,15,16,17,18,19].map(x=>C['LA_'+x].loft);
+ const spin=[1400,1600,1800,2000,2100,2200,2300,2450,2600,2800,3000,3200,3500].map(x=>C['SP_'+x].loft);
+ const maxStep=a=>Math.max(...a.slice(1).map((v,i)=>Math.abs(v-a[i])));
+ const checks={
+  generalFallbackExact:general.every(id=>S[id].loft===C[id].loft&&S[id].conflict===C[id].conflict&&S[id].reason===C[id].reason),
+  rangeFinite:['RG_L_LOW','RG_L_MID','RG_S_LOW','RG_S_MID','RG_S_HIGH'].every(id=>Number.isFinite(C[id].loft)&&C[id].loft>=8&&C[id].loft<=12),
+  rangeDirectional:C.RG_L_LOW.loft>=C.RG_L_MID.loft&&C.RG_S_LOW.loft>=C.RG_S_MID.loft&&C.RG_S_HIGH.loft<=C.RG_S_MID.loft,
+  speedMonotonic:monotonic(speed,'noninc'),
+  speedMaxHalfStep:maxStep(speed)<=.5,
+  launchMonotonic:monotonic(launch,'noninc'),
+  launchMaxHalfStep:maxStep(launch)<=.5,
+  spinMonotonic:monotonic(spin,'noninc'),
+  spinMaxHalfStep:maxStep(spin)<=.5,
+  combosBounded:['COMBO_DOWN_LOW','COMBO_UP_HIGH','COMBO_DOWN_NEUTRAL','COMBO_UP_NEUTRAL'].every(id=>C[id].loft>=8&&C[id].loft<=12),
+  comboDownAtLeastNeutral:C.COMBO_DOWN_LOW.loft>=C.COMBO_DOWN_NEUTRAL.loft,
+  comboUpHighNotAboveNeutral:C.COMBO_UP_HIGH.loft<=C.COMBO_UP_NEUTRAL.loft
+ };
+ const report={generatedAt:new Date().toISOString(),passed:Object.values(checks).every(Boolean),checks,sequences:{speed,launch,spin},range:{stable:Object.fromEntries(['RG_L_LOW','RG_L_MID','RG_S_LOW','RG_S_MID','RG_S_HIGH'].map(id=>[id,S[id]])),candidate:Object.fromEntries(['RG_L_LOW','RG_L_MID','RG_S_LOW','RG_S_MID','RG_S_HIGH'].map(id=>[id,C[id]]))},general:Object.fromEntries(general.map(id=>[id,{stable:S[id],candidate:C[id]}])),combos:Object.fromEntries(['COMBO_DOWN_LOW','COMBO_UP_HIGH','COMBO_DOWN_NEUTRAL','COMBO_UP_NEUTRAL'].map(id=>[id,{stable:S[id],candidate:C[id]}]))};window.FORM_DRIVER_CONFIG_V229_REPORT=report;out.textContent=JSON.stringify(report,null,2);}
+document.getElementById('run').onclick=()=>run().catch(e=>out.textContent='Error: '+String(e.stack||e));
+</script></body></html>

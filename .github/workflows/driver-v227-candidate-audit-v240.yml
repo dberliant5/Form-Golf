@@ -1,0 +1,36 @@
+name: Driver v227 Candidate Audit v240
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/driver-engine-v227.js'
+      - 'tests/run-driver-v227-candidate-audit-v240.mjs'
+      - '.github/workflows/driver-v227-candidate-audit-v240.yml'
+      - 'assets/driver-engine-v226.js'
+      - 'assets/driver-config-v230.js'
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate candidate syntax
+        run: |
+          node --check assets/driver-engine-v226.js
+          node --check assets/driver-engine-v227.js
+          node --check assets/driver-config-v230.js
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - name: Run v227 parity and semantics audit
+        run: node tests/run-driver-v227-candidate-audit-v240.mjs

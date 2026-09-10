@@ -1,0 +1,62 @@
+name: Promote Driver v228
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/promote-driver-v228.yml'
+  workflow_dispatch:
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Require validated production baseline
+        run: |
+          test -f assets/driver-engine-v227.js
+          grep -q 'assets/driver-engine-v227.js?v=8.227' index.html
+          ! grep -q 'assets/driver-engine-v228.js?v=8.228' index.html
+      - name: Build v228 from validated v227 baseline
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          src=Path('assets/driver-engine-v227.js').read_text()
+          old="if(current.label==='Historical modeled profile')return {level:'Worth a side-by-side test',text:`FORM sees a ${gap.toFixed(1)}-point modeled fit advantage, led by ${wins.slice(0,3).map(x=>x.label.toLowerCase()).join(', ')}, but your current driver is represented by a historical modeled profile. Treat this as a strong test signal rather than a definitive replacement claim.`};return {level:'Strong upgrade candidate',text:`FORM sees a ${gap.toFixed(1)}-point fit advantage, led by ${wins.slice(0,3).map(x=>x.label.toLowerCase()).join(', ')}.`};"
+          new="if(current.label==='Historical modeled profile')return {level:'Worth a side-by-side test',text:`FORM sees a ${gap.toFixed(1)}-point modeled fit advantage, led by ${wins.slice(0,3).map(x=>x.label.toLowerCase()).join(', ')}, but your current driver is represented by a historical modeled profile. Treat this as a strong test signal rather than a definitive replacement claim.`};const eq=current?.detail?.evidenceQuality;if(Number.isFinite(eq)&&eq<.45)return {level:'Worth a side-by-side test',text:`FORM sees a ${gap.toFixed(1)}-point modeled fit advantage, but evidence for your current driver is limited. Treat this as a strong reason to test the top fit side-by-side rather than a definitive replacement call.`};return {level:'Strong upgrade candidate',text:`FORM sees a ${gap.toFixed(1)}-point fit advantage, led by ${wins.slice(0,3).map(x=>x.label.toLowerCase()).join(', ')}.`};"
+          if src.count(old)!=1: raise SystemExit(f'Expected one recommendation insertion point, found {src.count(old)}')
+          out=src.replace('// FORM 8.227 — evidence-driven driver scorer with conservative current-club evidence semantics','// FORM 8.228 — evidence-calibrated current-driver upgrade claims',1).replace(old,new,1)
+          Path('assets/driver-engine-v228.js').write_text(out)
+          p=Path('index.html'); s=p.read_text(); live='assets/driver-engine-v227.js?v=8.227'; candidate='assets/driver-engine-v228.js?v=8.228'
+          if s.count(live)!=1: raise SystemExit(f'Expected one live v227 reference, found {s.count(live)}')
+          p.write_text(s.replace(live,candidate,1))
+          PY
+          node --check assets/driver-engine-v228.js
+          grep -q 'assets/driver-engine-v228.js?v=8.228' index.html
+          grep -q "evidenceQuality;if(Number.isFinite(eq)&&eq<.45)" assets/driver-engine-v228.js
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - name: Run full regression on locally promoted stack
+        run: node tests/run-driver-regression.mjs
+      - name: Run semantic candidate audit
+        run: node tests/run-driver-current-claim-confidence-candidate-v242.mjs
+      - name: Commit validated production switch
+        if: success()
+        run: |
+          rm -f tests/baselines/driver-stable-v220.json tests/baselines/driver-stable-v220-summary.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/driver-engine-v228.js index.html
+          git commit -m 'Promote driver engine v228 low-evidence claim ceiling'
+          git push

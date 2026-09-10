@@ -1,0 +1,29 @@
+name: Driver calibration activation audit v245
+on:
+  push:
+    branches:
+      - candidate/form-14-11-7-v228
+    paths:
+      - 'assets/driver-algorithm-calibration-v145.js'
+      - 'assets/driver-config-v230.js'
+      - 'assets/driver-engine-v228.js'
+      - 'static-test-v995.html'
+      - 'tests/run-driver-calibration-activation-v245.mjs'
+      - '.github/workflows/driver-calibration-activation-v245.yml'
+  workflow_dispatch:
+jobs:
+  calibration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '24'}
+      - run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - run: node tests/run-driver-calibration-activation-v245.mjs

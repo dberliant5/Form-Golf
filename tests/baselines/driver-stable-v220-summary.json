@@ -1,0 +1,36 @@
+{
+  "matrixCases": 40,
+  "aoaInvariant": true,
+  "thresholdPairs": [
+    {"pair":"R01->R02","topChanged":false,"topScoreDelta":-0.2,"moves":2},
+    {"pair":"R02->R03","topChanged":false,"topScoreDelta":-0.1,"moves":4},
+    {"pair":"R04->R05","topChanged":false,"topScoreDelta":-1.5,"moves":6},
+    {"pair":"R06->R07","topChanged":false,"topScoreDelta":0.9,"moves":3}
+  ],
+  "currentSatisfactionInvariant": {
+    "a":"C01","b":"C02","topChanged":false,"topScoreDelta":0,"moves":[]
+  },
+  "doubleCountStress": [
+    {"a":"X01","b":"X02","topChanged":false,"topScoreDelta":0.8,"moves":7},
+    {"a":"X01","b":"X03","topChanged":false,"topScoreDelta":0.2,"moves":0}
+  ],
+  "selectedObservations": {
+    "M01":"Tour Edge Hot Launch Max D 82.0; gap to #2 3.1",
+    "M10":"Tour Edge Exotics Max 83.1; gap to #2 0.4",
+    "Q01":"Callaway Quantum Max D 85.4; exact evidence",
+    "Q02":"Callaway Quantum Max D 86.6; approximate/range evidence",
+    "D01":"Callaway Quantum Max D 85.4; right miss",
+    "D02":"TaylorMade Qi4D 86.2; left miss",
+    "D03":"Tour Edge Exotics Max 86.2; two-way miss",
+    "X01":"Callaway Quantum Max D 84.4; toe + measured low smash",
+    "X02":"Callaway Quantum Max D 85.2; center + measured low smash",
+    "X03":"Callaway Quantum Max D 84.6; toe without ball-speed data"
+  },
+  "integrityNotes": [
+    "No tested threshold pair changed the #1 driver, but launch/spin cutoffs create non-trivial score and Top-10 movement from tiny numeric changes.",
+    "Head ranking is invariant to AoA at -4, 0, and +4 degrees when all other fitting inputs are held constant. AoA still affects the separate loft/configuration layer.",
+    "Current-driver satisfaction labels mixed vs good do not alter absolute head ranking or Fit Score.",
+    "Strike and ball-speed-retention share retention evidence structurally, but the current X01/X02/X03 stress tests did not produce a #1 flip; observed top-score effect was modest.",
+    "Lower input precision can produce a higher Fit Score even when ranking is unchanged; Fit Score and evidence confidence remain semantically separate."
+  ]
+}
