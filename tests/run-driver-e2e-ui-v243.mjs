@@ -11,10 +11,15 @@ page.on('pageerror', e => consoleErrors.push(e.message));
 try {
   await page.goto(pageUrl, { waitUntil: 'networkidle', timeout: 45000 });
   await page.waitForFunction(() => !!window.FORM_DRIVER_ENGINE_V80, null, { timeout: 30000 });
+  await page.waitForFunction(() => !!window.FORM_DRIVER_INTERVIEW_QUALITY_V153 || !!document.querySelector('[data-form-priority-range]'), null, { timeout: 15000 }).catch(async e => {
+    const d = await page.evaluate(() => ({href:location.href, engine:window.FORM_DRIVER_ENGINE_V80?.version||null, interview:window.FORM_DRIVER_INTERVIEW_QUALITY_V153?.version||null, hasState:typeof state!=='undefined', step6:!!document.getElementById('step6'), priorityRank:!!document.getElementById('priorityRank'), rangeCount:document.querySelectorAll('[data-form-priority-range]').length, body:document.body.innerText.slice(0,800)}));
+    throw new Error(`Interview layer did not initialize: ${JSON.stringify(d)}`);
+  });
   await page.getByRole('button', { name: /Start Driver Fitting/i }).first().click();
 
   await page.evaluate(() => window.goTo?.(6));
-  await page.waitForSelector('[data-form-priority-range]', { timeout: 15000 });
+  await page.waitForSelector('#step6:not(.hidden)', { timeout: 10000 });
+  await page.waitForSelector('[data-form-priority-range]', { state: 'attached', timeout: 10000 });
   const rangeCount = await page.locator('[data-form-priority-range]').count();
   if (rangeCount !== 1) throw new Error(`Expected one priority slider; found ${rangeCount}`);
   const ptxt = await page.locator('#step6').innerText();
