@@ -12,7 +12,8 @@ try {
   await page.goto(`${base}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   await page.waitForFunction(() => window.FORM_DRIVER_ENGINE_V80, null, { timeout: 15000 });
 
-  const report = await page.evaluate(async () => {
+  const states = ['great', 'good', 'mixed', 'poor'];
+  const report = await page.evaluate(async ({ states }) => {
     const clone = v => JSON.parse(JSON.stringify(v));
     const baseGolfer = clone(typeof normalizedGolferV69 === 'function' ? normalizedGolferV69() : golfer());
     baseGolfer.currentClub = {};
@@ -42,35 +43,50 @@ try {
     };
 
     const missing = runWith({});
+    const activeProducts = (typeof products !== 'undefined' && Array.isArray(products) ? products : [])
+      .filter(p => p && p.brand && p.model && p.generation !== 'previous_limited');
 
-    const exactCandidates = (typeof products !== 'undefined' && Array.isArray(products) ? products : [])
-      .filter(p => p && p.brand && p.model && p.generation !== 'previous_limited')
-      .map(p => ({ club:{brand:p.brand,model:p.model,results:'mixed'}, result:runWith({brand:p.brand,model:p.model,results:'mixed'}) }))
-      .filter(x => x.result.current.label === 'Exact model profile' && Number.isFinite(x.result.current.score))
-      .sort((a,b) => {
-        const ag = (a.result.best?.score ?? 0) - a.result.current.score;
-        const bg = (b.result.best?.score ?? 0) - b.result.current.score;
-        return bg-ag;
-      });
-    const exact = exactCandidates[0] || null;
+    const exactMatrix = activeProducts.flatMap(p => states.map(results => ({
+      club: { brand:p.brand, model:p.model, results },
+      result: runWith({ brand:p.brand, model:p.model, results })
+    }))).filter(x => x.result.current.label === 'Exact model profile' && Number.isFinite(x.result.current.score));
 
-    const historicalTrials = [
-      {brand:'Titleist',model:'TS2 (2018)',results:'mixed'},
-      {brand:'PING',model:'G400 Max (2018)',results:'mixed'},
-      {brand:'TaylorMade',model:'M4 (2018)',results:'mixed'},
-      {brand:'Callaway',model:'Rogue (2018)',results:'mixed'}
+    const historicalClubs = [
+      {brand:'Titleist',model:'TS2 (2018)'},
+      {brand:'PING',model:'G400 Max (2018)'},
+      {brand:'TaylorMade',model:'M4 (2018)'},
+      {brand:'Callaway',model:'Rogue (2018)'}
     ];
-    let historical = null;
-    for (const club of historicalTrials) {
-      const result = runWith(club);
-      if (result.current.label === 'Historical modeled profile' && Number.isFinite(result.current.score)) {
-        historical = { club, result };
-        break;
-      }
-    }
+    const historicalMatrix = historicalClubs.flatMap(club => states.map(results => ({
+      club: { ...club, results },
+      result: runWith({ ...club, results })
+    }))).filter(x => x.result.current.label === 'Historical modeled profile' && Number.isFinite(x.result.current.score));
 
-    return { missing, exact, historical, exactCandidateCount:exactCandidates.length };
-  });
+    const summarizeStateSensitivity = rows => {
+      const groups = new Map();
+      for (const row of rows) {
+        const key = `${row.club.brand}|${row.club.model}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(row);
+      }
+      const summaries = [];
+      for (const [key, group] of groups) {
+        const signatures = [...new Set(group.map(x => `${x.result.current.score}|${x.result.decision.level}`))];
+        summaries.push({ key, states:group.length, signatures, sensitive:signatures.length > 1 });
+      }
+      return summaries;
+    };
+
+    return {
+      missing,
+      exactMatrix,
+      historicalMatrix,
+      exactStateSensitivity: summarizeStateSensitivity(exactMatrix),
+      historicalStateSensitivity: summarizeStateSensitivity(historicalMatrix),
+      activeProductCount: activeProducts.length,
+      historicalRequestedCount: historicalClubs.length
+    };
+  }, { states });
 
   const baseline = report.missing.best;
   if (!baseline) fail('best-fit-available', 'no eligible best fit');
@@ -80,52 +96,72 @@ try {
     fail('missing-current-conservative', JSON.stringify(report.missing));
   } else pass('missing-current-conservative', report.missing.decision.text);
 
-  for (const [name, sample] of [['exact', report.exact?.result], ['historical', report.historical?.result]]) {
-    if (!sample || !baseline) continue;
-    const same = sample.best?.name === baseline.name && sample.best?.score === baseline.score;
-    if (!same) fail(`ranking-independent-${name}`, JSON.stringify({ baseline, observed:sample.best }));
-    else pass(`ranking-independent-${name}`, `${sample.best.name} remained ${sample.best.score}`);
+  const allSamples = [...report.exactMatrix, ...report.historicalMatrix];
+  const rankingChanges = allSamples.filter(sample => !baseline || sample.result.best?.name !== baseline.name || sample.result.best?.score !== baseline.score);
+  if (rankingChanges.length) {
+    fail('ranking-independent-current-gamer-matrix', JSON.stringify(rankingChanges.slice(0, 5)));
+  } else {
+    pass('ranking-independent-current-gamer-matrix', `${allSamples.length} current-gamer variants left the best new-driver ranking unchanged`);
   }
 
-  if (!report.exact) {
-    fail('exact-current-available', `no exact current model resolved (${report.exactCandidateCount} candidates)`);
+  const expectedExactRows = report.activeProductCount * states.length;
+  if (report.exactMatrix.length !== expectedExactRows) {
+    fail('exact-current-matrix-complete', `${report.exactMatrix.length}/${expectedExactRows} exact model/state combinations resolved`);
   } else {
-    const current = report.exact.result.current;
-    if (current.hardConstraints.length) {
-      if (report.exact.result.decision.level !== 'Worth a side-by-side test') {
-        fail('exact-hard-constraint-conservative', JSON.stringify(report.exact.result));
-      } else {
-        pass('exact-hard-constraint-conservative', `${report.exact.club.brand} ${report.exact.club.model}: hard constraint correctly avoids a precise upgrade gap`);
-      }
-    } else if (!Number.isFinite(current.evidenceQuality)) {
-      fail('exact-current-evidence-quality', JSON.stringify(current));
-    } else {
-      pass('exact-current-evidence-quality', `${report.exact.club.brand} ${report.exact.club.model}: ${current.evidenceQuality}`);
-    }
+    pass('exact-current-matrix-complete', `${report.exactMatrix.length} exact model/state combinations resolved`);
   }
 
-  if (!report.historical) {
-    fail('historical-current-available', 'no historical modeled current club resolved');
-  } else {
-    const h = report.historical.result;
-    if (!Number.isFinite(h.current.evidenceQuality)) fail('historical-current-evidence-quality', JSON.stringify(h.current));
-    else pass('historical-current-evidence-quality', `${report.historical.club.brand} ${report.historical.club.model}: ${h.current.evidenceQuality}`);
+  const exactBadEvidence = report.exactMatrix.filter(x => !x.result.current.hardConstraints.length && !Number.isFinite(x.result.current.evidenceQuality));
+  if (exactBadEvidence.length) fail('exact-current-evidence-quality', JSON.stringify(exactBadEvidence.slice(0, 5)));
+  else pass('exact-current-evidence-quality', 'all unconstrained exact current-model rows expose finite evidence quality');
 
-    // A modeled historical current club can support a comparison, but it should not create
-    // FORM's strongest spend/upgrade claim without exact current-product evidence.
-    if (h.decision.level === 'Strong upgrade candidate') {
-      fail('modeled-current-upgrade-ceiling', `${report.historical.club.brand} ${report.historical.club.model}: ${h.current.score} -> ${h.best?.score}; ${h.decision.level}`);
-    } else {
-      pass('modeled-current-upgrade-ceiling', `${report.historical.club.brand} ${report.historical.club.model}: ${h.decision.level}`);
-    }
+  const exactBadConstraints = report.exactMatrix.filter(x => x.result.current.hardConstraints.length && x.result.decision.level !== 'Worth a side-by-side test');
+  if (exactBadConstraints.length) fail('exact-hard-constraint-conservative', JSON.stringify(exactBadConstraints.slice(0, 5)));
+  else pass('exact-hard-constraint-conservative', 'all exact hard-constraint rows avoid precise upgrade claims');
+
+  const expectedHistoricalRows = report.historicalRequestedCount * states.length;
+  if (report.historicalMatrix.length !== expectedHistoricalRows) {
+    fail('historical-current-matrix-complete', `${report.historicalMatrix.length}/${expectedHistoricalRows} historical model/state combinations resolved`);
+  } else {
+    pass('historical-current-matrix-complete', `${report.historicalMatrix.length} historical model/state combinations resolved across four manufacturers`);
+  }
+
+  const historicalBadEvidence = report.historicalMatrix.filter(x => !Number.isFinite(x.result.current.evidenceQuality));
+  if (historicalBadEvidence.length) fail('historical-current-evidence-quality', JSON.stringify(historicalBadEvidence.slice(0, 5)));
+  else pass('historical-current-evidence-quality', 'all historical modeled rows expose finite evidence quality');
+
+  const historicalStrong = report.historicalMatrix.filter(x => x.result.decision.level === 'Strong upgrade candidate');
+  if (historicalStrong.length) {
+    fail('modeled-current-upgrade-ceiling', JSON.stringify(historicalStrong.slice(0, 5)));
+  } else {
+    pass('modeled-current-upgrade-ceiling', 'no historical modeled current club produced FORM’s strongest replacement claim');
+  }
+
+  const exactSensitive = report.exactStateSensitivity.filter(x => x.sensitive);
+  const historicalSensitive = report.historicalStateSensitivity.filter(x => x.sensitive);
+  const completeStateGroups = [...report.exactStateSensitivity, ...report.historicalStateSensitivity].filter(x => x.states === states.length);
+  if (!completeStateGroups.length) {
+    fail('current-self-report-matrix-available', 'no make/model resolved all four self-report states');
+  } else if (!exactSensitive.length && !historicalSensitive.length) {
+    fail('current-self-report-used-in-upgrade-comparison', `great/good/mixed/poor produced identical current scores and upgrade decisions across ${completeStateGroups.length} current-gamer make/model groups`);
+  } else {
+    pass('current-self-report-used-in-upgrade-comparison', `${exactSensitive.length + historicalSensitive.length}/${completeStateGroups.length} current-gamer groups changed score or upgrade decision across self-report states`);
   }
 
   console.log(JSON.stringify({
     generatedAt:new Date().toISOString(),
     productionScoringChanged:false,
-    purpose:'Audit active v227 upgrade certainty as current-club evidence weakens; ranking must remain independent.',
+    purpose:'Audit active v227 current-gamer comparison quality across manufacturers, historical models, and every UI self-report state while requiring ranking independence.',
     failures,
     checks,
+    summary:{
+      exactRows:report.exactMatrix.length,
+      historicalRows:report.historicalMatrix.length,
+      exactSensitiveGroups:exactSensitive.length,
+      historicalSensitiveGroups:historicalSensitive.length,
+      exactGroups:report.exactStateSensitivity.length,
+      historicalGroups:report.historicalStateSensitivity.length
+    },
     report
   }, null, 2));
   if (failures.length) process.exitCode = 1;
