@@ -23,21 +23,27 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          html=Path('index.html').read_text(encoding='utf-8')
+          html=Path('form-shell-14-11-7-v228.html').read_text(encoding='utf-8')
           required=['assets/form-base.css','assets/form-responsive.css','assets/driver-v63.css','assets/catalog-data.js','assets/app-1.js','assets/app-2.js','assets/app-3.js','assets/driver-v63.js']
           missing=[x for x in required if x not in html or not Path(x).exists()]
           if missing:
               raise SystemExit('Missing application assets: '+', '.join(missing))
-          print('FORM split application references verified.')
+          print('FORM base-shell application references verified.')
           PY
       - name: Verify active Driver stack
         run: |
-          grep -q 'assets/driver-engine-v228.js?v=8.228' index.html
-          ! grep -q 'assets/driver-engine-v227.js?v=8.227' index.html
-          ! grep -q 'assets/driver-engine-v226.js?v=8.226' index.html
-          ! grep -q 'assets/driver-engine-v225.js?v=8.225' index.html
-          grep -q 'assets/driver-config-v230.js?v=8.230' index.html
-          ! grep -q 'assets/driver-config-v81.js?v=8.1' index.html
+          grep -q 'assets/driver-engine-v228.js?v=8.228' form-shell-14-11-7-v228.html
+          ! grep -q 'assets/driver-engine-v227.js?v=8.227' form-shell-14-11-7-v228.html
+          ! grep -q 'assets/driver-engine-v226.js?v=8.226' form-shell-14-11-7-v228.html
+          ! grep -q 'assets/driver-engine-v225.js?v=8.225' form-shell-14-11-7-v228.html
+          grep -q 'assets/driver-config-v230.js?v=8.230' form-shell-14-11-7-v228.html
+          ! grep -q 'assets/driver-config-v81.js?v=8.1' form-shell-14-11-7-v228.html
+      - name: Verify live root serves audited wrapper
+        run: |
+          grep -q 'FORM Live Build 14.11.7' index.html
+          grep -q "form-shell-14-11-7-v228.html" index.html
+          grep -q 'driver-results-compare-explorer-v197.js' index.html
+          grep -q 'driver-priority-weights-v189.js' index.html
       - name: Verify Driver v6.3 safeguards
         run: |
           grep -q 'ensureResultsScaffold' assets/driver-v63.js

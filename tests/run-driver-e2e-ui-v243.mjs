@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 
 const base = process.env.FORM_URL || 'http://127.0.0.1:8080';
-const pageUrl = `${base.replace(/\/$/,'')}/static-test-v995.html?e2e=${Date.now()}`;
+const pageUrl = `${base.replace(/\/$/,'')}/?e2e=${Date.now()}`;
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 const consoleErrors = [];
