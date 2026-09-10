@@ -1,0 +1,66 @@
+name: Driver 14.11.7 + v228 full candidate audit
+on:
+  push:
+    branches:
+      - candidate/form-14-11-7-v228
+    paths:
+      - 'assets/driver-engine-v228.js'
+      - 'assets/driver-algorithm-calibration-v145.js'
+      - 'assets/driver-config-v230.js'
+      - 'static-test-v995.html'
+      - 'index.html'
+      - 'tests/run-driver-e2e-ui-v243.mjs'
+      - 'tests/check-driver-wrapper-syntax-v244.mjs'
+      - '.github/workflows/driver-14-11-7-v228-full-audit.yml'
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify approved wrapper and active engine/config
+        run: |
+          grep -q 'FORM Live Build 14.11.7' static-test-v995.html
+          grep -q 'assets/driver-engine-v228.js?v=8.228' index.html
+          grep -q 'assets/driver-config-v230.js?v=8.230' index.html
+          grep -q 'driver-results-compare-explorer-v197.js' static-test-v995.html
+          grep -q 'driver-priority-weights-v189.js' static-test-v995.html
+          grep -q 'driver-interview-quality-v150.js' static-test-v995.html
+      - name: Check syntax of every loaded script
+        run: node tests/check-driver-wrapper-syntax-v244.mjs
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - name: Run end-to-end approved UI/results contract
+        run: node tests/run-driver-e2e-ui-v243.mjs
+      - name: Prepare v228 current-gamer audits on approved wrapper
+        run: |
+          cp tests/run-driver-current-evidence-upgrade-audit-v239.mjs tests/.tmp-v228-current-evidence.mjs
+          sed -i 's/driver-engine-v227\.js/driver-engine-v228.js/g; s#/index\.html#/static-test-v995.html#g; s/active v227/approved 14.11.7 + v228/g' tests/.tmp-v228-current-evidence.mjs
+          cp tests/run-driver-current-claim-confidence-audit-v241.mjs tests/.tmp-v228-claim-confidence.mjs
+          sed -i 's/driver-engine-v227\.js/driver-engine-v228.js/g; s#/index\.html#/static-test-v995.html#g; s/v227 recommendation/v228 recommendation/g' tests/.tmp-v228-claim-confidence.mjs
+      - name: Audit current gamers across eras manufacturers and self-report states
+        run: node tests/.tmp-v228-current-evidence.mjs
+      - name: Audit current-club claim confidence
+        run: |
+          node tests/.tmp-v228-claim-confidence.mjs > /tmp/v228-claim-confidence.json
+          cat /tmp/v228-claim-confidence.json
+          jq -e '.failures | length == 0' /tmp/v228-claim-confidence.json >/dev/null
+          jq -e '.report.limitedStrong | length == 0' /tmp/v228-claim-confidence.json >/dev/null
+      - name: Run full Driver regression matrix
+        run: node tests/run-driver-regression.mjs
+      - name: Clean generated audit files
+        if: always()
+        run: |
+          rm -f tests/.tmp-v228-current-evidence.mjs tests/.tmp-v228-claim-confidence.mjs
+          rm -f tests/baselines/driver-stable-v220.json tests/baselines/driver-stable-v220-summary.json
