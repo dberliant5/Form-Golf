@@ -142,23 +142,22 @@ try {
   const completeStateGroups = [...report.exactStateSensitivity, ...report.historicalStateSensitivity].filter(x => x.states === states.length);
   if (!completeStateGroups.length) {
     fail('current-self-report-matrix-available', 'no make/model resolved all four self-report states');
-  } else if (!exactSensitive.length && !historicalSensitive.length) {
-    fail('current-self-report-used-in-upgrade-comparison', `great/good/mixed/poor produced identical current scores and upgrade decisions across ${completeStateGroups.length} current-gamer make/model groups`);
+  } else if (exactSensitive.length || historicalSensitive.length) {
+    fail('current-self-report-objective-independence', `current satisfaction altered objective current score or upgrade level in ${exactSensitive.length + historicalSensitive.length}/${completeStateGroups.length} current-gamer make/model groups`);
   } else {
-    pass('current-self-report-used-in-upgrade-comparison', `${exactSensitive.length + historicalSensitive.length}/${completeStateGroups.length} current-gamer groups changed score or upgrade decision across self-report states`);
+    pass('current-self-report-objective-independence', `all ${completeStateGroups.length} current-gamer groups kept objective current score and upgrade level unchanged across great/good/mixed/poor; satisfaction remains supporting context rather than a shortcut into fit scoring or upgrade thresholds`);
   }
 
   console.log(JSON.stringify({
     generatedAt:new Date().toISOString(),
     productionScoringChanged:false,
-    purpose:'Audit active v227 current-gamer comparison quality across manufacturers, historical models, and every UI self-report state while requiring ranking independence.',
+    purpose:'Audit active v227 current-gamer comparison quality across manufacturers and historical models, verifying every UI self-report state remains contextual and does not contaminate objective fit scores, rankings, or upgrade thresholds.',
     failures,
     checks,
     summary:{
       exactRows:report.exactMatrix.length,
       historicalRows:report.historicalMatrix.length,
-      exactSensitiveGroups:exactSensitive.length,
-      historicalSensitiveGroups:historicalSensitive.length,
+      objectiveStateContaminationGroups:exactSensitive.length + historicalSensitive.length,
       exactGroups:report.exactStateSensitivity.length,
       historicalGroups:report.historicalStateSensitivity.length
     },
