@@ -25,8 +25,8 @@ try {
 
     const engine = window.FORM_DRIVER_ENGINE_V80;
     const productName = p => `${p.brand} ${p.model}`;
-    const runWith = currentClub => {
-      const g = { ...clone(baseGolfer), currentClub: clone(currentClub || {}) };
+    const runWith = (currentClub, currentState = 'good') => {
+      const g = { ...clone(baseGolfer), current: currentState, currentClub: clone(currentClub || {}) };
       const best = engine.winners(g)[0] || null;
       const current = engine.currentScore(g);
       const decision = engine.recommendation(best, current);
@@ -42,13 +42,13 @@ try {
       };
     };
 
-    const missing = runWith({});
+    const missing = runWith({}, 'good');
     const activeProducts = (typeof products !== 'undefined' && Array.isArray(products) ? products : [])
       .filter(p => p && p.brand && p.model && p.generation !== 'previous_limited');
 
-    const exactMatrix = activeProducts.flatMap(p => states.map(results => ({
-      club: { brand:p.brand, model:p.model, results },
-      result: runWith({ brand:p.brand, model:p.model, results })
+    const exactMatrix = activeProducts.flatMap(p => states.map(currentState => ({
+      club: { brand:p.brand, model:p.model, currentState },
+      result: runWith({ brand:p.brand, model:p.model }, currentState)
     }))).filter(x => x.result.current.label === 'Exact model profile' && Number.isFinite(x.result.current.score));
 
     const historicalClubs = [
@@ -57,9 +57,9 @@ try {
       {brand:'TaylorMade',model:'M4 (2018)'},
       {brand:'Callaway',model:'Rogue (2018)'}
     ];
-    const historicalMatrix = historicalClubs.flatMap(club => states.map(results => ({
-      club: { ...club, results },
-      result: runWith({ ...club, results })
+    const historicalMatrix = historicalClubs.flatMap(club => states.map(currentState => ({
+      club: { ...club, currentState },
+      result: runWith(club, currentState)
     }))).filter(x => x.result.current.label === 'Historical modeled profile' && Number.isFinite(x.result.current.score));
 
     const summarizeStateSensitivity = rows => {
