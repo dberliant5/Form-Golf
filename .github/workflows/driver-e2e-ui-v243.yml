@@ -1,0 +1,34 @@
+name: Driver end-to-end UI contract v243
+
+on:
+  push:
+    branches:
+      - candidate/form-14-11-7-v228
+    paths:
+      - 'index.html'
+      - 'static-test-v995.html'
+      - 'assets/**'
+      - 'tests/run-driver-e2e-ui-v243.mjs'
+      - '.github/workflows/driver-e2e-ui-v243.yml'
+  workflow_dispatch:
+
+jobs:
+  e2e-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static FORM server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          for i in {1..30}; do curl -fsS http://127.0.0.1:8080/ >/dev/null && break; sleep 1; done
+      - name: Run end-to-end questionnaire and results contract
+        run: node tests/run-driver-e2e-ui-v243.mjs
