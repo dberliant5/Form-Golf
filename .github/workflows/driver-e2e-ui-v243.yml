@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - candidate/form-14-11-7-v228
+      - candidate/live-root-14-11-7-v228
     paths:
       - 'index.html'
       - 'static-test-v995.html'
