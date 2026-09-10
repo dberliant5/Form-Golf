@@ -50,14 +50,18 @@ try {
     if (typeof state!=='undefined') {
       state.start = state.start || 'straight'; state.curve = state.curve || 'straight';
       state.costly = state.costly || 'two_way'; state.strike = 'heel'; state.strikeSource = 'confirmed';
-      state.lm = state.lm || 'none'; state.transition = state.transition || 'neutral';
+      state.lm = state.lm || 'none'; state.transition = state.transition || 'neutral'; state.style = state.style || state.transition;
       state.current = state.current || 'good';
       state.driverPrioritySplit = state.driverPrioritySplit || { accuracy: 50, distance: 50, touched: true };
+      state.priorityWeights = state.priorityWeights || { accuracy: state.driverPrioritySplit.accuracy, distance: state.driverPrioritySplit.distance, touched: true };
     }
-    window.showResults?.();
+    window.goTo?.(9);
+    window.renderReview?.();
   });
-  await page.waitForSelector('#results:not(.hidden)', { timeout: 20000 });
-  await page.waitForTimeout(1200);
+  await page.waitForSelector('#step9:not(.hidden)', { timeout: 10000 });
+  await page.getByRole('button', { name: /Generate My Fit/i }).click();
+  await page.waitForSelector('#results.formReport100:not(.hidden)', { timeout: 20000 });
+  await page.waitForSelector('.formCompare197', { timeout: 10000 });
   if ((await page.locator('#results').innerText()).trim().length < 200) throw new Error('Results narrative did not render');
   const explorerCount = await page.locator('.formCompare197').count();
   if (!explorerCount) throw new Error('Dynamic results explorer did not render');
