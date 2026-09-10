@@ -17,7 +17,7 @@ jobs:
           node --check assets/app-2.js
           node --check assets/app-3.js
           node --check assets/driver-v63.js
-          node --check assets/driver-engine-v227.js
+          node --check assets/driver-engine-v228.js
           node --check assets/driver-config-v230.js
       - name: Verify split application references
         run: |
@@ -32,7 +32,8 @@ jobs:
           PY
       - name: Verify active Driver stack
         run: |
-          grep -q 'assets/driver-engine-v227.js?v=8.227' index.html
+          grep -q 'assets/driver-engine-v228.js?v=8.228' index.html
+          ! grep -q 'assets/driver-engine-v227.js?v=8.227' index.html
           ! grep -q 'assets/driver-engine-v226.js?v=8.226' index.html
           ! grep -q 'assets/driver-engine-v225.js?v=8.225' index.html
           grep -q 'assets/driver-config-v230.js?v=8.230' index.html
