@@ -1,0 +1,15 @@
+name: Driver 14.11.7 wrapper syntax audit
+on:
+  push:
+    branches:
+      - candidate/form-14-11-7-v228
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Parse all scripts loaded by approved wrapper
+        run: node tests/check-driver-wrapper-syntax-v244.mjs
