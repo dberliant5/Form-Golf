@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - candidate/form-14-11-7-v228
+      - candidate/live-root-14-11-7-v228
     paths:
       - 'assets/driver-engine-v228.js'
       - 'assets/driver-algorithm-calibration-v145.js'
@@ -24,9 +25,10 @@ jobs:
           node-version: '24'
       - name: Verify approved wrapper and active engine/config
         run: |
-          grep -q 'FORM Live Build 14.11.7' static-test-v995.html
-          grep -q 'assets/driver-engine-v228.js?v=8.228' index.html
-          grep -q 'assets/driver-config-v230.js?v=8.230' index.html
+          grep -q 'FORM Live Build 14.11.7' index.html
+          grep -q 'form-shell-14-11-7-v228.html' index.html
+          grep -q 'assets/driver-engine-v228.js?v=8.228' form-shell-14-11-7-v228.html
+          grep -q 'assets/driver-config-v230.js?v=8.230' form-shell-14-11-7-v228.html
           grep -q 'driver-results-compare-explorer-v197.js' static-test-v995.html
           grep -q 'driver-priority-weights-v189.js' static-test-v995.html
           grep -q 'driver-interview-quality-v150.js' static-test-v995.html
