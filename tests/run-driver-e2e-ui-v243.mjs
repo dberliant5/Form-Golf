@@ -35,9 +35,9 @@ try {
   await page.locator('#strikeSourceV150 [data-v="confirmed"]').click();
 
   const wiring = await page.evaluate(() => ({
-    strike: window.state?.strike,
-    strikeSource: window.state?.strikeSource,
-    split: window.state?.driverPrioritySplit,
+    strike: typeof state!=='undefined' ? state.strike : null,
+    strikeSource: typeof state!=='undefined' ? state.strikeSource : null,
+    split: typeof state!=='undefined' ? state.driverPrioritySplit : null,
     interviewVersion: window.FORM_DRIVER_INTERVIEW_QUALITY_V153?.version || null,
     explorerLoaded: !!window.FORM_RESULTS_COMPARE_EXPLORER_V197,
     engineVersion: window.FORM_DRIVER_ENGINE_V80?.version || null
@@ -47,7 +47,7 @@ try {
   if (!wiring.explorerLoaded) throw new Error('Dynamic comparison explorer module is not loaded');
 
   await page.evaluate(() => {
-    if (window.state) {
+    if (typeof state!=='undefined') {
       state.start = state.start || 'straight'; state.curve = state.curve || 'straight';
       state.costly = state.costly || 'two_way'; state.strike = 'heel'; state.strikeSource = 'confirmed';
       state.lm = state.lm || 'none'; state.transition = state.transition || 'neutral';
