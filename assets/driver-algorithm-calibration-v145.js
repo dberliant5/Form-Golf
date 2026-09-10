@@ -46,7 +46,7 @@ function init(){
     return {loft,range:`${lo.toFixed(1)}°–${hi.toFixed(1)}°`,reason,conflict};
   }
 
-  const rangeBounds={under75:[65,74],'75-84':[75,84],'85-89':[85,89],'90-94':[90,94],'95-99':[95,99],'100-104':[100,104],'105-109':[105,109],'110-114':[110,114],115plus:[115,125]};
+  const rangeBounds={under75:[65,74],'75-84':[75,84],'85-89':[85,89],'90-94':[90,94],'95-99':[95,99],'100-104':[100,104],'105-109':[105,109],'110-114':[110,114],'115plus':[115,125]};
   function flexAt(x){return x<80?'Senior / A':x<92?'Regular':x<105?'Stiff':'X-Stiff';}
   function baseWeightFor(labels){
     if(labels.includes('X-Stiff'))return[60,70];
