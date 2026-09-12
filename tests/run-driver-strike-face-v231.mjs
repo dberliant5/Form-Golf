@@ -30,7 +30,7 @@ try{
   }
   async function rankSnapshot(){
     return page.evaluate(()=>{
-      const g=driverProfile(normalizedGolfer());
+      const g=golfer();
       return driverRankV43(g).slice(0,5).map(x=>({name:x.p.brand+' '+x.p.model,score:x.s.overall}));
     });
   }
