@@ -1,0 +1,39 @@
+name: Driver vertical-strike evidence audit v233
+on:
+  push:
+    branches: [audit/vertical-strike-evidence-v233]
+    paths:
+      - 'tests/run-driver-vertical-strike-audit-v233.mjs'
+      - '.github/workflows/driver-vertical-strike-audit-v233.yml'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Confirm production wrapper is unchanged
+        run: |
+          grep -q 'FORM Live Build 14.11.7' index.html
+          grep -q 'driver-strike-face-v231.js' index.html
+          git diff 981362735f1e260b82d2d76b238333e8fafca0a9 -- index.html assets/driver-engine-v228.js assets/driver-evidence-v90.js assets/driver-strike-reliability-v149.js --exit-code
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - name: Run vertical-strike evidence sensitivity audit
+        run: node tests/run-driver-vertical-strike-audit-v233.mjs | tee /tmp/vertical-strike-v233.json
+      - name: Run stable driver regression
+        run: node tests/run-driver-regression.mjs
+      - name: Clean generated regression files
+        if: always()
+        run: rm -f tests/baselines/driver-stable-v220.json tests/baselines/driver-stable-v220-summary.json
