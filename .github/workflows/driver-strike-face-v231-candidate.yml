@@ -1,0 +1,94 @@
+name: Driver strike-face v231 candidate gate
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'assets/driver-strike-face-v231.js'
+      - 'assets/driver-strike-face-bridge-v232.js'
+      - 'tests/run-driver-strike-face-v231.mjs'
+      - '.github/workflows/driver-strike-face-v231-candidate.yml'
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify 14.11.7 baseline and new assets
+        run: |
+          grep -q 'FORM Live Build 14.11.7' index.html
+          grep -q 'form-shell-14-11-7-v228.html' index.html
+          grep -q 'driver-strike-face-v231.js' index.html
+          grep -q 'driver-strike-face-bridge-v232.js' index.html
+          node --check assets/driver-strike-face-v231.js
+          node --check assets/driver-strike-face-bridge-v232.js
+      - name: Check loaded-wrapper syntax
+        run: node tests/check-driver-wrapper-syntax-v244.mjs
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - name: Adapt 14.11.7 e2e harness to visual strike control
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          src=Path('tests/run-driver-e2e-ui-v243.mjs').read_text()
+          old='await page.locator(\'[data-group="strike"] [data-v="heel"]\').click();'
+          new='''await page.waitForSelector("#step4:not(.hidden) .formStrikeFaceWrap", { timeout: 10000 });
+          const face = page.locator(".formStrikeSurface");
+          await face.scrollIntoViewIfNeeded();
+          const faceBox = await face.boundingBox();
+          if (!faceBox) throw new Error("Visual strike face was not rendered");
+          await page.mouse.click(faceBox.x + faceBox.width * 0.18, faceBox.y + faceBox.height * 0.5);
+          await page.waitForTimeout(100);
+          console.log("STRIKE_AFTER_FACE", await page.evaluate(() => ({strike:state.strike, vertical:state.strikeVertical, source:state.strikeSource, label:document.querySelector("[data-strike-label]")?.textContent, sourceHidden:document.getElementById("strikeSourceV150")?.classList.contains("hidden")})));'''
+          if old not in src:
+              raise SystemExit('Legacy strike click not found in e2e harness')
+          Path('tests/.tmp-driver-e2e-strike.mjs').write_text(src.replace(old,new))
+          PY
+      - name: Verify GitHub Pages root contract
+        run: |
+          set -euo pipefail
+          html="$(curl -fsSL --retry 3 http://127.0.0.1:8080/)"
+          printf '%s' "$html" | grep -q 'FORM Live Build 14.11.7'
+          printf '%s' "$html" | grep -q 'form-shell-14-11-7-v228.html'
+          printf '%s' "$html" | grep -q 'driver-strike-face-v231.js'
+          printf '%s' "$html" | grep -q 'driver-strike-face-bridge-v232.js'
+          curl -fsS http://127.0.0.1:8080/form-shell-14-11-7-v228.html >/dev/null
+          curl -fsS http://127.0.0.1:8080/assets/driver-strike-face-v231.js >/dev/null
+          curl -fsS http://127.0.0.1:8080/assets/driver-strike-face-bridge-v232.js >/dev/null
+      - name: Run 14.11.7 questionnaire/results end-to-end
+        run: node tests/.tmp-driver-e2e-strike.mjs
+      - name: Run strike-face UX and scoring-parity checks
+        run: node tests/run-driver-strike-face-v231.mjs
+      - name: Prepare current-gamer parity audits
+        run: |
+          cp tests/run-driver-current-evidence-upgrade-audit-v239.mjs tests/.tmp-strike-current-evidence.mjs
+          sed -i 's/driver-engine-v227\.js/driver-engine-v228.js/g; s#/index\.html#/static-test-v995.html#g; s/active v227/approved 14.11.7 + v228/g' tests/.tmp-strike-current-evidence.mjs
+          cp tests/run-driver-current-claim-confidence-audit-v241.mjs tests/.tmp-strike-claim-confidence.mjs
+          sed -i 's/driver-engine-v227\.js/driver-engine-v228.js/g; s#/index\.html#/static-test-v995.html#g; s/v227 recommendation/v228 recommendation/g' tests/.tmp-strike-claim-confidence.mjs
+      - name: Audit current gamers across eras and manufacturers
+        run: node tests/.tmp-strike-current-evidence.mjs
+      - name: Audit current-club claim confidence
+        run: |
+          node tests/.tmp-strike-claim-confidence.mjs > /tmp/strike-claim-confidence.json
+          cat /tmp/strike-claim-confidence.json
+          jq -e '.failures | length == 0' /tmp/strike-claim-confidence.json >/dev/null
+          jq -e '.report.limitedStrong | length == 0' /tmp/strike-claim-confidence.json >/dev/null
+      - name: Run full Driver regression matrix
+        run: node tests/run-driver-regression.mjs
+      - name: Clean generated audit files
+        if: always()
+        run: |
+          rm -f tests/.tmp-driver-e2e-strike.mjs
+          rm -f tests/.tmp-strike-current-evidence.mjs tests/.tmp-strike-claim-confidence.mjs
+          rm -f tests/baselines/driver-stable-v220.json tests/baselines/driver-stable-v220-summary.json
