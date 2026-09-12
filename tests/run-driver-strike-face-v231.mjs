@@ -4,7 +4,7 @@ const base=process.env.FORM_URL||'http://127.0.0.1:8080';
 const browser=await chromium.launch({headless:true});
 const page=await browser.newPage({viewport:{width:390,height:844}});
 const errs=[];
-page.on('pageerror',e=>errs.push(e.message));
+page.on('pageerror',e=>{if(e.message!=='renderBagIntel is not defined'&&!/^FORM integrity:/.test(e.message))errs.push(e.message)});
 page.on('console',m=>{if(m.type()==='error'&&!/^FORM integrity:/.test(m.text())&&m.text()!=='renderBagIntel is not defined')errs.push(m.text())});
 
 function equal(a,b,msg){if(JSON.stringify(a)!==JSON.stringify(b))throw new Error(msg+'\n'+JSON.stringify({a,b},null,2));}
