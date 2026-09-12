@@ -100,10 +100,15 @@
     }
   }
   function canonicalStrike(value){
-    const btn=document.querySelector('#step4 [data-group="strike"] .opt[data-v="'+value+'"]');
-    if(btn){btn.click();return true;}
     state.strike=value;
-    return false;
+    const sourceBox=document.getElementById('strikeSourceV150');
+    if(sourceBox){
+      const precise=['heel','toe'].includes(value);
+      sourceBox.classList.toggle('hidden',!precise);
+      if(!precise) state.strikeSource='';
+      sourceBox.querySelectorAll('[data-strike-source-v150] .opt').forEach(b=>b.classList.toggle('on',b.dataset.v===state.strikeSource));
+    }
+    return true;
   }
   function syncLegacyButtons(){
     const old=document.querySelector('#step4 [data-group="strike"]');
