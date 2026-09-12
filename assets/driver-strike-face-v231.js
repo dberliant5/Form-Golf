@@ -99,6 +99,12 @@
       label.textContent=state.strike==='varied'?'All over the face':'Not sure';
     }
   }
+  function canonicalStrike(value){
+    const btn=document.querySelector('#step4 [data-group="strike"] .opt[data-v="'+value+'"]');
+    if(btn){btn.click();return true;}
+    state.strike=value;
+    return false;
+  }
   function syncLegacyButtons(){
     const old=document.querySelector('#step4 [data-group="strike"]');
     if(!old) return;
@@ -108,7 +114,7 @@
     x=Math.max(.04,Math.min(.96,x));
     y=Math.max(.08,Math.min(.92,y));
     const z=zoneFromPoint(x,y);
-    state.strike=z.horizontal;
+    canonicalStrike(z.horizontal);
     state.strikeVertical=z.vertical;
     state.strikeX=x;
     state.strikeY=y;
@@ -200,11 +206,11 @@
     host.querySelectorAll('[data-strike-consistency]').forEach(btn=>btn.onclick=()=>{
       state.strikeConsistency=btn.dataset.strikeConsistency;
       if(state.strikeConsistency==='all_over'){
-        state.strike='varied';state.strikeVertical='varied';
+        canonicalStrike('varied');state.strikeVertical='varied';
       }else if(state.strikeConsistency==='unknown'){
-        state.strike='unknown';state.strikeVertical='unknown';
+        canonicalStrike('unknown');state.strikeVertical='unknown';
       }else if(['varied','unknown'].includes(state.strike)){
-        const p=defaultPointForStrike('center');state.strike='center';state.strikeVertical='middle';state.strikeX=p.x;state.strikeY=p.y;
+        const p=defaultPointForStrike('center');canonicalStrike('center');state.strikeVertical='middle';state.strikeX=p.x;state.strikeY=p.y;
       }
       syncLegacyButtons();setChoiceUI(host);setMarkerUI(host);persistProfile();
     });
