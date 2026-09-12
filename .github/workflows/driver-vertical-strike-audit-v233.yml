@@ -20,7 +20,8 @@ jobs:
         run: |
           grep -q 'FORM Live Build 14.11.7' index.html
           grep -q 'driver-strike-face-v231.js' index.html
-          git diff 981362735f1e260b82d2d76b238333e8fafca0a9 -- index.html assets/driver-engine-v228.js assets/driver-evidence-v90.js assets/driver-strike-reliability-v149.js --exit-code
+          git fetch origin main --depth=1
+          git diff origin/main -- index.html assets/driver-engine-v228.js assets/driver-evidence-v90.js assets/driver-strike-reliability-v149.js --exit-code
       - name: Install Playwright
         run: |
           npm init -y >/dev/null 2>&1
