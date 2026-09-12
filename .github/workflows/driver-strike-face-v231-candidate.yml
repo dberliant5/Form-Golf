@@ -55,6 +55,17 @@ jobs:
               raise SystemExit('Legacy strike click not found in e2e harness')
           Path('tests/.tmp-driver-e2e-strike.mjs').write_text(src.replace(old,new))
           PY
+      - name: Verify GitHub Pages root contract
+        run: |
+          set -euo pipefail
+          html="$(curl -fsSL --retry 3 http://127.0.0.1:8080/)"
+          printf '%s' "$html" | grep -q 'FORM Live Build 14.11.7'
+          printf '%s' "$html" | grep -q 'form-shell-14-11-7-v228.html'
+          printf '%s' "$html" | grep -q 'driver-strike-face-v231.js'
+          printf '%s' "$html" | grep -q 'driver-strike-face-bridge-v232.js'
+          curl -fsS http://127.0.0.1:8080/form-shell-14-11-7-v228.html >/dev/null
+          curl -fsS http://127.0.0.1:8080/assets/driver-strike-face-v231.js >/dev/null
+          curl -fsS http://127.0.0.1:8080/assets/driver-strike-face-bridge-v232.js >/dev/null
       - name: Run 14.11.7 questionnaire/results end-to-end
         run: node tests/.tmp-driver-e2e-strike.mjs
       - name: Run strike-face UX and scoring-parity checks
