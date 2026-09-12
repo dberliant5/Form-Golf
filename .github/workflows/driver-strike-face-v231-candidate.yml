@@ -37,8 +37,24 @@ jobs:
         run: |
           python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
           sleep 2
+      - name: Adapt 14.11.7 e2e harness to visual strike control
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          src=Path('tests/run-driver-e2e-ui-v243.mjs').read_text()
+          old='await page.locator(\'[data-group="strike"] [data-v="heel"]\').click();'
+          new='''await page.waitForSelector("#step4:not(.hidden) .formStrikeFaceWrap", { timeout: 10000 });
+          const face = page.locator(".formStrikeSurface");
+          const faceBox = await face.boundingBox();
+          if (!faceBox) throw new Error("Visual strike face was not rendered");
+          await page.mouse.click(faceBox.x + faceBox.width * 0.18, faceBox.y + faceBox.height * 0.5);
+          await page.waitForTimeout(100);'''
+          if old not in src:
+              raise SystemExit('Legacy strike click not found in e2e harness')
+          Path('tests/.tmp-driver-e2e-strike.mjs').write_text(src.replace(old,new))
+          PY
       - name: Run 14.11.7 questionnaire/results end-to-end
-        run: node tests/run-driver-e2e-ui-v243.mjs
+        run: node tests/.tmp-driver-e2e-strike.mjs
       - name: Run strike-face UX and scoring-parity checks
         run: node tests/run-driver-strike-face-v231.mjs
       - name: Prepare current-gamer parity audits
@@ -60,5 +76,6 @@ jobs:
       - name: Clean generated audit files
         if: always()
         run: |
+          rm -f tests/.tmp-driver-e2e-strike.mjs
           rm -f tests/.tmp-strike-current-evidence.mjs tests/.tmp-strike-claim-confidence.mjs
           rm -f tests/baselines/driver-stable-v220.json tests/baselines/driver-stable-v220-summary.json
