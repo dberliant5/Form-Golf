@@ -62,7 +62,20 @@ try{
   if(unknown.strike!=='unknown'||unknown.strikeVertical!=='unknown') throw new Error('Unknown mapping failed');
 
   await clickFrac(.80,.18);
-  await page.evaluate(()=>window.goTo?.(9));
+  await page.evaluate(()=>{
+    state.handed=state.handed||'right';
+    state.start=state.start||'straight';
+    state.curve=state.curve||'straight';
+    state.costly=state.costly||'two_way';
+    state.lm=state.lm||'none';
+    state.transition=state.transition||'neutral';
+    state.style=state.style||state.transition;
+    state.current=state.current||'good';
+    state.driverPrioritySplit=state.driverPrioritySplit||{accuracy:50,distance:50,touched:true};
+    state.priorityWeights=state.priorityWeights||{accuracy:state.driverPrioritySplit.accuracy,distance:state.driverPrioritySplit.distance,touched:true};
+    window.goTo?.(9);
+    window.renderReview?.();
+  });
   await page.waitForSelector('#step9:not(.hidden)');
   const review=await page.locator('#reviewStrike').innerText();
   if(!/High toe/i.test(review)) throw new Error('Review does not preserve vertical strike: '+review);
