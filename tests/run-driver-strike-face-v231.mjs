@@ -57,7 +57,7 @@ try{
   const scattered=await page.evaluate(()=>golfer());
   if(scattered.strike!=='varied'||scattered.strikeVertical!=='varied') throw new Error('All-over mapping failed');
 
-  await page.getByRole('button',{name:/Not sure/i}).click();
+  await page.locator('.formStrikeChoice[data-strike-consistency="unknown"]').click();
   const unknown=await page.evaluate(()=>golfer());
   if(unknown.strike!=='unknown'||unknown.strikeVertical!=='unknown') throw new Error('Unknown mapping failed');
 
