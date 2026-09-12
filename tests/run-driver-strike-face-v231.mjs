@@ -20,6 +20,7 @@ try{
   if(overflow>2) throw new Error('Mobile horizontal overflow detected: '+overflow+'px');
 
   const surface=page.locator('.formStrikeSurface');
+  await surface.scrollIntoViewIfNeeded();
   const box=await surface.boundingBox();
   if(!box) throw new Error('Strike face has no visible bounding box');
 
