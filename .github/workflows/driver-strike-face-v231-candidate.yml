@@ -45,6 +45,7 @@ jobs:
           old='await page.locator(\'[data-group="strike"] [data-v="heel"]\').click();'
           new='''await page.waitForSelector("#step4:not(.hidden) .formStrikeFaceWrap", { timeout: 10000 });
           const face = page.locator(".formStrikeSurface");
+          await face.scrollIntoViewIfNeeded();
           const faceBox = await face.boundingBox();
           if (!faceBox) throw new Error("Visual strike face was not rendered");
           await page.mouse.click(faceBox.x + faceBox.width * 0.18, faceBox.y + faceBox.height * 0.5);
