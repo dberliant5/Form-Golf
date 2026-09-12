@@ -20,11 +20,11 @@ try{
   if(overflow>2) throw new Error('Mobile horizontal overflow detected: '+overflow+'px');
 
   const surface=page.locator('.formStrikeSurface');
-  await surface.scrollIntoViewIfNeeded();
-  const box=await surface.boundingBox();
-  if(!box) throw new Error('Strike face has no visible bounding box');
 
   async function clickFrac(x,y){
+    await surface.scrollIntoViewIfNeeded();
+    const box=await surface.boundingBox();
+    if(!box) throw new Error('Strike face has no visible bounding box');
     await page.mouse.click(box.x+box.width*x,box.y+box.height*y);
     await page.waitForTimeout(80);
   }
