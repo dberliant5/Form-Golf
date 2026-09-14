@@ -1,0 +1,83 @@
+name: Driver vertical-strike v235 candidate gate
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'assets/driver-vertical-strike-v235.js'
+      - 'tests/run-driver-vertical-strike-v235.mjs'
+      - '.github/workflows/driver-vertical-strike-v235-candidate.yml'
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify current production baseline and candidate syntax
+        run: |
+          grep -q 'FORM Live Build 14.11.7' index.html
+          grep -q 'form-shell-14-11-7-v228.html' index.html
+          grep -q 'driver-strike-face-v231.js' index.html
+          grep -q 'driver-vertical-strike-v235.js' index.html
+          node --check assets/driver-vertical-strike-v235.js
+          node --check tests/run-driver-vertical-strike-v235.mjs
+      - name: Check loaded-wrapper syntax
+        run: node tests/check-driver-wrapper-syntax-v244.mjs
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8080 >/tmp/form-http.log 2>&1 &
+          sleep 2
+      - name: Verify Pages root contract
+        run: |
+          set -euo pipefail
+          html="$(curl -fsSL --retry 3 http://127.0.0.1:8080/)"
+          printf '%s' "$html" | grep -q 'FORM Live Build 14.11.7'
+          printf '%s' "$html" | grep -q 'driver-vertical-strike-v235.js'
+          curl -fsS http://127.0.0.1:8080/assets/driver-vertical-strike-v235.js >/dev/null
+      - name: Adapt 14.11.7 e2e harness to visual strike control
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          src=Path('tests/run-driver-e2e-ui-v243.mjs').read_text()
+          old='await page.locator(\'[data-group="strike"] [data-v="heel"]\').click();'
+          new='''await page.evaluate(() => document.querySelector('[data-group="strike"] [data-v="heel"]')?.click());
+          await page.waitForTimeout(100);'''
+          if old not in src:
+              raise SystemExit('Legacy strike click not found in e2e harness')
+          Path('tests/.tmp-driver-e2e-vertical.mjs').write_text(src.replace(old,new))
+          PY
+      - name: Run 14.11.7 questionnaire/results end-to-end
+        run: node tests/.tmp-driver-e2e-vertical.mjs
+      - name: Run vertical-strike candidate audit
+        run: node tests/run-driver-vertical-strike-v235.mjs
+      - name: Prepare current-gamer parity audits
+        run: |
+          cp tests/run-driver-current-evidence-upgrade-audit-v239.mjs tests/.tmp-v235-current-evidence.mjs
+          sed -i 's/driver-engine-v227\.js/driver-engine-v228.js/g; s#/index\.html#/static-test-v995.html#g; s/active v227/approved 14.11.7 + v228/g' tests/.tmp-v235-current-evidence.mjs
+          cp tests/run-driver-current-claim-confidence-audit-v241.mjs tests/.tmp-v235-claim-confidence.mjs
+          sed -i 's/driver-engine-v227\.js/driver-engine-v228.js/g; s#/index\.html#/static-test-v995.html#g; s/v227 recommendation/v228 recommendation/g' tests/.tmp-v235-claim-confidence.mjs
+      - name: Audit current gamers across eras and manufacturers
+        run: node tests/.tmp-v235-current-evidence.mjs
+      - name: Audit current-club claim confidence
+        run: |
+          node tests/.tmp-v235-claim-confidence.mjs > /tmp/v235-claim-confidence.json
+          cat /tmp/v235-claim-confidence.json
+          jq -e '.failures | length == 0' /tmp/v235-claim-confidence.json >/dev/null
+          jq -e '.report.limitedStrong | length == 0' /tmp/v235-claim-confidence.json >/dev/null
+      - name: Run full Driver regression matrix
+        run: node tests/run-driver-regression.mjs
+      - name: Clean generated audit files
+        if: always()
+        run: |
+          rm -f tests/.tmp-driver-e2e-vertical.mjs
+          rm -f tests/.tmp-v235-current-evidence.mjs tests/.tmp-v235-claim-confidence.mjs
+          rm -f tests/baselines/driver-stable-v220.json tests/baselines/driver-stable-v220-summary.json
