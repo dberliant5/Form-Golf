@@ -46,7 +46,23 @@ try{
   const low=await page.evaluate(()=>golfer());
   if(low.strike!=='toe'||low.strikeVertical!=='low') throw new Error('Low-toe capture failed: '+JSON.stringify(low));
   const lowRank=await rankSnapshot();
-  equal(highRank,lowRank,'Vertical strike changed production ranking/scoring');
+  const verticalActive=await page.evaluate(()=>!!window.FORM_DRIVER_VERTICAL_STRIKE_V235);
+  if(!verticalActive){
+    equal(highRank,lowRank,'Vertical strike changed production ranking/scoring');
+  }else{
+    const exact=new Set(['TaylorMade Qi4D','PING G440 K','Cobra OPTM MAX-K']);
+    const H=Object.fromEntries(highRank.map(x=>[x.name,x.score]));
+    const L=Object.fromEntries(lowRank.map(x=>[x.name,x.score]));
+    let exactMoved=false;
+    for(const name of new Set([...Object.keys(H),...Object.keys(L)])){
+      if(H[name]==null||L[name]==null)continue;
+      const d=Math.round((H[name]-L[name])*10)/10;
+      if(exact.has(name)&&d!==0)exactMoved=true;
+      if(!exact.has(name)&&d!==0)throw new Error('Vertical evidence changed an unmeasured model: '+name+' delta '+d);
+      if(Math.abs(d)>1)throw new Error('Vertical evidence exceeded bounded high-vs-low delta for '+name+': '+d);
+    }
+    if(!exactMoved)throw new Error('Active vertical evidence produced no measured-model high-vs-low sensitivity');
+  }
 
   await clickFrac(.80,.18);
   await page.getByRole('button',{name:/Mostly here/i}).click();
@@ -85,7 +101,7 @@ try{
   if((await page.locator('#results').innerText()).trim().length<150) throw new Error('Results failed to render');
   if(errs.length) throw new Error('Unexpected browser errors: '+JSON.stringify(errs));
 
-  console.log(JSON.stringify({ok:true,highToe:high.g,verticalScoreParity:true,top5:highRank},null,2));
+  console.log(JSON.stringify({ok:true,highToe:high.g,verticalScoringActive:await page.evaluate(()=>!!window.FORM_DRIVER_VERTICAL_STRIKE_V235),top5:highRank},null,2));
 }finally{
   await browser.close();
 }
