@@ -93,8 +93,7 @@ function init(){
     if(!out?.detail)return out;
     const brand=g?.currentClub?.brand||'';
     const model=String(g?.currentClub?.model||'').replace(/\s*\(20\d{2}\)\s*/,'').trim();
-    const p=(window.products||[]).find(x=>x.brand===brand&&x.model===model);
-    if(!p)return out;
+    const p={brand,model};
     const detail=apply(out.detail,p,g);
     return {...out,score:detail.overall,detail};
   };
