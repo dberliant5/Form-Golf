@@ -71,49 +71,70 @@ function apply(detail,p,g){
   return {...detail,overall,verticalStrikeEvidence:ev};
 }
 
-function init(){
-  if(window.FORM_DRIVER_VERTICAL_STRIKE_V235)return true;
+function install(){
   const ENG=window.FORM_DRIVER_ENGINE_V80;
   if(!ENG||typeof ENG.winners!=='function'||typeof ENG.scoreOne!=='function'||typeof ENG.currentScore!=='function')return false;
 
-  const priorScore=ENG.scoreOne.bind(ENG);
-  const priorWinners=ENG.winners.bind(ENG);
-  const priorCurrent=ENG.currentScore.bind(ENG);
-
-  ENG.scoreOne=(p,g)=>apply(priorScore(p,g),p,g);
-
-  ENG.winners=g=>{
-    const rows=priorWinners(g).map(row=>({...row,s:apply(row.s,row.p,g)}));
-    rows.sort((a,b)=>b.s.overall-a.s.overall);
-    return rows;
-  };
-
-  ENG.currentScore=g=>{
-    const out=priorCurrent(g);
-    if(!out?.detail)return out;
-    const brand=g?.currentClub?.brand||'';
-    const model=String(g?.currentClub?.model||'').replace(/\s*\(20\d{2}\)\s*/,'').trim();
-    const p={brand,model};
-    const detail=apply(out.detail,p,g);
-    return {...out,score:detail.overall,detail};
-  };
-
-  if(typeof window.driverScoreV43==='function')window.driverScoreV43=(p,g)=>ENG.scoreOne(p,g);
-  if(typeof window.driverRankV43==='function')window.driverRankV43=g=>ENG.winners(g);
-  if(typeof window.currentDriverScoreV43==='function')window.currentDriverScoreV43=g=>ENG.currentScore(g).score??75;
-
-  window.FORM_DRIVER_VERTICAL_STRIKE_V235={
+  const api=window.FORM_DRIVER_VERTICAL_STRIKE_V235||{
     version:'14.11.8-candidate',
     zones:ZONES,
     rawAdjustment,
     consistencyScale,
     verticalEvidence,
-    priorScore,
-    priorWinners,
-    priorCurrent
+    installs:0
   };
+
+  if(ENG.scoreOne!==api.wrappedScore){
+    const priorScore=ENG.scoreOne.bind(ENG);
+    const wrappedScore=(p,g)=>apply(priorScore(p,g),p,g);
+    api.priorScore=priorScore;
+    api.wrappedScore=wrappedScore;
+    ENG.scoreOne=wrappedScore;
+  }
+
+  if(ENG.winners!==api.wrappedWinners){
+    const priorWinners=ENG.winners.bind(ENG);
+    const wrappedWinners=g=>{
+      const rows=priorWinners(g).map(row=>({...row,s:apply(row.s,row.p,g)}));
+      rows.sort((a,b)=>b.s.overall-a.s.overall);
+      return rows;
+    };
+    api.priorWinners=priorWinners;
+    api.wrappedWinners=wrappedWinners;
+    ENG.winners=wrappedWinners;
+  }
+
+  if(ENG.currentScore!==api.wrappedCurrent){
+    const priorCurrent=ENG.currentScore.bind(ENG);
+    const wrappedCurrent=g=>{
+      const out=priorCurrent(g);
+      if(!out?.detail)return out;
+      const brand=g?.currentClub?.brand||'';
+      const model=String(g?.currentClub?.model||'').replace(/\\s*\\(20\\d{2}\\)\\s*/,'').trim();
+      const detail=apply(out.detail,{brand,model},g);
+      return {...out,score:detail.overall,detail};
+    };
+    api.priorCurrent=priorCurrent;
+    api.wrappedCurrent=wrappedCurrent;
+    ENG.currentScore=wrappedCurrent;
+  }
+
+  if(typeof window.driverScoreV43==='function')window.driverScoreV43=(p,g)=>ENG.scoreOne(p,g);
+  if(typeof window.driverRankV43==='function')window.driverRankV43=g=>ENG.winners(g);
+  if(typeof window.currentDriverScoreV43==='function')window.currentDriverScoreV43=g=>ENG.currentScore(g).score??75;
+
+  api.installs=(api.installs||0)+1;
+  window.FORM_DRIVER_VERTICAL_STRIKE_V235=api;
   return true;
 }
 
-let n=0,t=setInterval(()=>{n++;if(init()||n>240)clearInterval(t);},50);
+// Several legacy FORM layers initialize asynchronously. Re-attach only if a later layer
+// replaces one of the final scorer functions; never stack this adjustment on itself.
+let ticks=0;
+const timer=setInterval(()=>{
+  ticks++;
+  install();
+  if(ticks>=80)clearInterval(timer);
+},100);
+install();
 })();
