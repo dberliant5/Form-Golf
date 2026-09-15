@@ -1,0 +1,357 @@
+/* FORM premium fitting experience v236
+   Visual-only layer inspired by the approved Impact Pattern concept.
+   No questionnaire, scoring, data, or navigation semantics are changed. */
+:root{
+  --lux-navy:#07142f;
+  --lux-blue:#2477e8;
+  --lux-blue-soft:#eaf3ff;
+  --lux-ink:#0b1730;
+  --lux-copy:#52617a;
+  --lux-line:#dce3ec;
+  --lux-bg:#fbfdff;
+  --lux-card:#ffffff;
+  --lux-shadow:0 18px 55px rgba(20,42,76,.075);
+}
+#driverExperience{
+  background:
+    radial-gradient(circle at 78% 7%,rgba(63,130,221,.055),transparent 26rem),
+    linear-gradient(180deg,#fff 0%,var(--lux-bg) 100%);
+  color:var(--lux-ink);
+  min-height:100vh;
+}
+#driverExperience .shell{max-width:1220px;padding:0 42px 86px}
+#driverExperience .topline{
+  padding:25px 0 22px;
+  border-bottom:1px solid rgba(13,33,63,.09);
+  grid-template-columns:minmax(0,1fr) auto;
+}
+#driverExperience .progressWrap{gap:18px}
+#driverExperience .progress{
+  width:min(46vw,520px);height:3px;border-radius:99px;background:#e6ebf1;overflow:hidden
+}
+#driverExperience .progress i{background:linear-gradient(90deg,var(--lux-navy),#1c5ca8);border-radius:99px}
+#driverExperience .stepCount,#driverExperience .headerMeta{
+  color:#7e899b;font-size:10px;letter-spacing:.16em;font-weight:700
+}
+#driverExperience .fitStage{padding:48px 0 20px;min-height:660px}
+#driverExperience .mainPane{max-width:980px}
+#driverExperience .step:not(#results){max-width:940px;margin:0 auto}
+#driverExperience .eyebrow{
+  color:#72819a;font-size:10px;letter-spacing:.26em;margin-bottom:17px
+}
+#driverExperience h1,#driverExperience h2,#driverExperience h3{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  color:var(--lux-ink);letter-spacing:-.035em;font-weight:650
+}
+#driverExperience h1{
+  font-size:clamp(42px,5vw,62px);line-height:1.04;max-width:850px
+}
+#driverExperience .lead{
+  color:var(--lux-copy);font-size:16px;line-height:1.65;max-width:760px;margin:18px 0 32px
+}
+#driverExperience .options{
+  max-width:900px;gap:13px;grid-template-columns:repeat(2,minmax(0,1fr))
+}
+#driverExperience .options.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+#driverExperience .opt{
+  min-height:68px;padding:19px 52px 19px 20px;
+  border:1px solid var(--lux-line);border-radius:12px;
+  background:rgba(255,255,255,.82);box-shadow:0 3px 12px rgba(20,42,76,.025);
+  color:#26344c;font-size:14px;font-weight:550;
+  display:flex;align-items:center
+}
+#driverExperience .opt:hover{
+  padding-left:20px;border-color:#aebed2;box-shadow:0 10px 26px rgba(20,42,76,.07);transform:translateY(-1px)
+}
+#driverExperience .opt:after{
+  right:20px;width:16px;height:16px;border:1.5px solid #bac5d4
+}
+#driverExperience .opt.on{
+  color:var(--lux-navy);border-color:var(--lux-blue);
+  background:linear-gradient(135deg,#fff 20%,#f1f7ff 100%);
+  box-shadow:0 0 0 1px rgba(36,119,232,.12),0 12px 30px rgba(36,119,232,.09)
+}
+#driverExperience .opt.on:after{
+  background:var(--lux-blue);border-color:var(--lux-blue);
+  box-shadow:inset 0 0 0 4px #fff
+}
+#driverExperience .derived,#driverExperience .note{
+  border:1px solid #dfe8f3;background:linear-gradient(135deg,#f5f9ff,#fbfdff);
+  border-radius:12px;padding:17px 19px;color:#5c6980
+}
+#driverExperience .note{max-width:760px}
+#driverExperience .techGrid{max-width:900px;gap:16px}
+#driverExperience .field{
+  background:#fff;border:1px solid var(--lux-line);border-radius:12px;padding:14px 17px
+}
+#driverExperience .field label{color:#75839a}
+#driverExperience .field select{
+  border:0;color:var(--lux-ink);font-weight:600;padding:8px 0 2px
+}
+#driverExperience .multiOptions{gap:9px}
+#driverExperience .multiOptions button{
+  border:1px solid var(--lux-line);border-radius:999px;background:#fff;
+  padding:11px 15px;color:#40506a
+}
+#driverExperience .multiOptions button.on{
+  background:var(--lux-navy);border-color:var(--lux-navy);color:#fff
+}
+#driverExperience .priorityRank{
+  max-width:900px;border:1px solid var(--lux-line);border-radius:15px;
+  background:#fff;overflow:hidden;box-shadow:var(--lux-shadow)
+}
+#driverExperience .priorityItem{padding:17px 20px;border-color:#e7ebf0}
+#driverExperience .priorityItem b{font-family:inherit;font-size:17px;font-weight:650;color:var(--lux-ink)}
+#driverExperience .priorityItem small{color:#78869a}
+#driverExperience .priorityItem select{
+  border-color:#d7e0eb!important;color:var(--lux-navy)!important;box-shadow:0 3px 10px rgba(20,42,76,.04)
+}
+#driverExperience .flowNav{
+  margin-top:38px;padding-top:24px;border-color:#e0e6ed
+}
+#driverExperience .btn{
+  border-radius:9px;padding:14px 18px;font-size:10px;letter-spacing:.08em;text-transform:none
+}
+#driverExperience .btn.primary{
+  min-width:150px;background:var(--lux-navy);box-shadow:0 9px 22px rgba(7,20,47,.14)
+}
+#driverExperience .btn.primary:hover{background:#10244b;transform:translateY(-1px)}
+#driverExperience .btn.ghost{
+  border:1px solid #cdd6e2;background:#fff;color:#24334c;min-width:110px
+}
+#driverExperience .reviewHero{padding-top:0}
+#driverExperience .reviewGrid{
+  gap:12px;background:transparent;border:0
+}
+#driverExperience .reviewGroup{
+  border:1px solid var(--lux-line);border-radius:13px;box-shadow:0 7px 24px rgba(20,42,76,.04)
+}
+#driverExperience .readyBox{
+  border-radius:15px;background:linear-gradient(135deg,#07142f,#122c58);
+  box-shadow:0 18px 42px rgba(7,20,47,.16)
+}
+#driverExperience .readyBox h3{color:#fff}
+#driverExperience .openingAnswerSummary{
+  border:1px solid var(--lux-line);border-radius:12px;background:#fff;padding:16px 18px
+}
+#driverExperience .brandScopePanel{
+  border:1px solid var(--lux-line)!important;border-radius:16px!important;
+  background:#fff!important;box-shadow:var(--lux-shadow)!important;padding:28px!important
+}
+#driverExperience .brandMode{
+  border-color:var(--lux-line)!important;border-radius:12px!important;background:#fff!important
+}
+#driverExperience .brandMode.active{
+  border-color:var(--lux-blue)!important;background:#f2f7ff!important;color:var(--lux-navy)!important
+}
+#driverExperience .brandScopeConfirm{background:var(--lux-navy)!important;border-radius:9px!important}
+#driverExperience .metricBox{
+  background:#fff;border:1px solid var(--lux-line);border-radius:13px;padding:18px;margin-bottom:10px
+}
+#driverExperience .metricTop b{font-family:inherit;color:var(--lux-ink);font-weight:650}
+#driverExperience .metricChoice{
+  border:1px solid var(--lux-line);border-radius:9px;background:#fff
+}
+#driverExperience .metricChoice.on{background:var(--lux-navy);border-color:var(--lux-navy)}
+/* Keep the approved strike-face component itself intact; only its surrounding typography/nav inherits premium shell. */
+#driverExperience .formStrikeFaceWrap,
+#driverExperience .formStrikeFace,
+#driverExperience .formStrikeConsistency{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+
+@media(max-width:700px){
+  #driverExperience .shell{padding:0 18px 72px}
+  #driverExperience .topline{padding:18px 0 16px;gap:12px}
+  #driverExperience .headerMeta{display:none}
+  #driverExperience .progress{width:100%}
+  #driverExperience .fitStage{padding-top:30px}
+  #driverExperience h1{font-size:38px;line-height:1.08}
+  #driverExperience .lead{font-size:15px;margin:14px 0 25px}
+  #driverExperience .options,#driverExperience .options.three{grid-template-columns:1fr;gap:9px}
+  #driverExperience .opt{min-height:60px;padding:16px 48px 16px 16px;border-radius:11px}
+  #driverExperience .opt:hover{padding-left:16px}
+  #driverExperience .opt:after{right:16px}
+  #driverExperience .techGrid{grid-template-columns:1fr}
+  #driverExperience .flowNav{
+    position:sticky;bottom:10px;z-index:12;background:rgba(251,253,255,.92);
+    backdrop-filter:blur(14px);border:1px solid #e0e6ed;border-radius:14px;
+    padding:9px;margin:30px -4px 0;box-shadow:0 12px 35px rgba(20,42,76,.1)
+  }
+  #driverExperience .btn{min-height:46px}
+  #driverExperience .reviewGrid{grid-template-columns:1fr}
+  #driverExperience .readyBox{border-radius:13px}
+}
+
+
+/* v236.2 — decisive concept-alignment pass
+   Make every interview screen unmistakably part of the approved Impact Pattern visual language. */
+#driverExperience{
+  --concept-navy:#061b3a;
+  --concept-blue:#0877f9;
+  --concept-pale:#eaf4ff;
+  --concept-border:#d9e0e9;
+  --concept-muted:#718096;
+  background:#fff;
+}
+#driverExperience .shell{max-width:1320px;padding-left:58px;padding-right:58px}
+#driverExperience .topline{
+  min-height:76px;padding:0;
+  display:grid;grid-template-columns:180px minmax(300px,1fr) 180px;align-items:center;
+  border-bottom:1px solid #dfe4eb;
+}
+#driverExperience .topline:before{
+  content:"FORM";font-size:18px;line-height:1;font-weight:900;letter-spacing:.24em;color:var(--concept-navy)
+}
+#driverExperience .progressWrap{justify-self:center;width:min(100%,590px);display:grid;grid-template-columns:1fr auto;align-items:center}
+#driverExperience .progress{width:100%;height:2px;background:#dce3eb}
+#driverExperience .progress i{background:var(--concept-navy)}
+#driverExperience .stepCount{font-size:10px;letter-spacing:.2em;color:#5e6d82}
+#driverExperience .headerMeta{justify-self:end;font-size:9px;letter-spacing:.22em;color:#718096}
+#driverExperience .fitStage{padding-top:70px;min-height:720px}
+#driverExperience .mainPane{max-width:none}
+#driverExperience .step:not(#results){
+  max-width:1100px;margin:0 auto;
+  padding:0 8px;
+}
+#driverExperience .eyebrow{
+  display:inline-flex;align-items:center;gap:10px;
+  margin:0 0 20px;color:#7b8799;font-size:10px;letter-spacing:.24em;font-weight:800
+}
+#driverExperience .eyebrow:before{
+  content:"";width:26px;height:2px;background:var(--concept-blue);border-radius:4px
+}
+#driverExperience h1{
+  font-size:clamp(46px,5.25vw,70px);line-height:.99;letter-spacing:-.048em;
+  max-width:980px;font-weight:760;margin-bottom:0
+}
+#driverExperience h2{
+  font-size:clamp(36px,4.1vw,54px);line-height:1.02;letter-spacing:-.045em;font-weight:740
+}
+#driverExperience .lead{
+  max-width:720px;font-size:17px;line-height:1.7;color:#69778d;margin:22px 0 38px
+}
+#driverExperience .options{
+  width:100%;max-width:1000px;gap:14px;
+  grid-template-columns:repeat(2,minmax(0,1fr))
+}
+#driverExperience .options.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+#driverExperience .opt{
+  position:relative;min-height:86px;padding:22px 62px 22px 24px;
+  border:1px solid var(--concept-border);border-radius:10px;background:#fff;
+  box-shadow:none;font-size:15px;line-height:1.35;font-weight:650;color:#314057;
+  transition:border-color .16s ease,box-shadow .16s ease,background .16s ease,transform .16s ease
+}
+#driverExperience .opt:hover{
+  transform:translateY(-2px);border-color:#a9b7ca;
+  box-shadow:0 12px 30px rgba(16,42,76,.07)
+}
+#driverExperience .opt:after{
+  width:20px;height:20px;right:24px;border:1.5px solid #b7c2d0;background:#fff
+}
+#driverExperience .opt.on{
+  border:2px solid var(--concept-blue);padding:21px 61px 21px 23px;
+  background:linear-gradient(135deg,#fff 15%,var(--concept-pale) 100%);
+  box-shadow:0 10px 30px rgba(8,119,249,.10);color:var(--concept-navy)
+}
+#driverExperience .opt.on:after{
+  right:23px;width:20px;height:20px;background:var(--concept-blue);border-color:var(--concept-blue);
+  box-shadow:inset 0 0 0 5px #fff
+}
+#driverExperience .derived,#driverExperience .note{
+  max-width:1000px;border:0;border-left:3px solid #b9d8ff;border-radius:0 10px 10px 0;
+  background:#f5f9fe;padding:17px 20px;color:#627086;font-size:13px
+}
+#driverExperience .techGrid{
+  max-width:1000px;gap:14px;padding:20px;
+  border:1px solid #e0e6ed;border-radius:14px;background:#f8fafc
+}
+#driverExperience .field{
+  min-height:76px;border:1px solid #dbe2eb;border-radius:9px;padding:14px 17px;
+  box-shadow:0 2px 7px rgba(16,42,76,.025)
+}
+#driverExperience .field label{font-size:9px;letter-spacing:.15em;text-transform:uppercase;font-weight:800}
+#driverExperience .field select{font-size:15px}
+#driverExperience .metricBox{
+  max-width:1000px;border:1px solid #dce3eb;border-radius:11px;padding:20px 22px;
+  box-shadow:0 4px 14px rgba(16,42,76,.035)
+}
+#driverExperience .metricTop b{font-size:16px}
+#driverExperience .metricChoice{min-height:42px;border-radius:8px;font-weight:650}
+#driverExperience .metricChoice.on{background:var(--concept-blue);border-color:var(--concept-blue)}
+#driverExperience .multiOptions button{
+  min-height:44px;border-radius:9px;padding:11px 17px;font-weight:650
+}
+#driverExperience .multiOptions button.on{background:var(--concept-navy);border-color:var(--concept-navy)}
+#driverExperience .priorityRank{
+  max-width:1000px;border:1px solid #dbe2eb;border-radius:12px;box-shadow:none
+}
+#driverExperience .priorityItem{min-height:70px;padding:18px 22px}
+#driverExperience .priorityItem b{font-size:18px}
+#driverExperience .flowNav{
+  margin-top:54px;padding-top:24px;max-width:1000px;border-top:1px solid #e1e6ed
+}
+#driverExperience .btn{
+  min-height:48px;border-radius:7px;padding:14px 24px;
+  font-size:11px;font-weight:800;letter-spacing:.04em
+}
+#driverExperience .btn.primary{
+  min-width:178px;background:var(--concept-navy);box-shadow:none
+}
+#driverExperience .btn.primary:after{content:"  →";margin-left:9px}
+#driverExperience .btn.ghost{
+  min-width:120px;border:1px solid #cbd5e1;background:#fff;color:#334155
+}
+#driverExperience .reviewHero{max-width:1000px}
+#driverExperience .reviewGrid{max-width:1000px;grid-template-columns:repeat(2,minmax(0,1fr))}
+#driverExperience .reviewGroup{
+  border:1px solid #dbe2eb;border-radius:10px;box-shadow:none;padding:22px
+}
+#driverExperience .readyBox{
+  max-width:1000px;border-radius:10px;padding:28px 30px;
+  background:var(--concept-navy);box-shadow:none
+}
+#driverExperience .openingAnswerSummary{
+  max-width:1000px;border-radius:10px;padding:18px 20px;border-color:#dce3eb
+}
+#driverExperience .brandScopePanel{
+  max-width:1000px;border-radius:12px!important;box-shadow:none!important;padding:30px!important
+}
+#driverExperience .brandMode{min-height:70px;border-radius:9px!important}
+#driverExperience .brandMode.active{
+  border:2px solid var(--concept-blue)!important;background:var(--concept-pale)!important
+}
+#driverExperience .brandScopeConfirm{background:var(--concept-navy)!important}
+/* Give short choice screens the editorial two-column rhythm of the reference rather than a floating form. */
+@media(min-width:900px){
+  #driverExperience .step:not(#results) > .options,
+  #driverExperience .step:not(#results) > .techGrid,
+  #driverExperience .step:not(#results) > .metricBox,
+  #driverExperience .step:not(#results) > .priorityRank{
+    margin-top:8px
+  }
+}
+@media(max-width:700px){
+  #driverExperience .shell{padding-left:20px;padding-right:20px}
+  #driverExperience .topline{
+    min-height:64px;grid-template-columns:76px 1fr;
+  }
+  #driverExperience .topline:before{font-size:13px;letter-spacing:.2em}
+  #driverExperience .progressWrap{width:100%;gap:9px}
+  #driverExperience .fitStage{padding-top:42px;min-height:620px}
+  #driverExperience .step:not(#results){padding:0}
+  #driverExperience .eyebrow{margin-bottom:15px}
+  #driverExperience h1{font-size:43px;line-height:1.02;letter-spacing:-.045em}
+  #driverExperience h2{font-size:36px}
+  #driverExperience .lead{font-size:15.5px;line-height:1.6;margin:17px 0 28px}
+  #driverExperience .options,#driverExperience .options.three{grid-template-columns:1fr;gap:10px}
+  #driverExperience .opt{min-height:68px;padding:17px 52px 17px 18px;font-size:14px}
+  #driverExperience .opt.on{padding:16px 51px 16px 17px}
+  #driverExperience .opt:after{right:18px}
+  #driverExperience .opt.on:after{right:17px}
+  #driverExperience .techGrid{padding:12px}
+  #driverExperience .flowNav{
+    margin:34px -6px 0;max-width:none;padding:8px;
+    border:1px solid #dde4ec;border-radius:10px;background:rgba(255,255,255,.94)
+  }
+  #driverExperience .btn{min-height:48px}
+  #driverExperience .reviewGrid{grid-template-columns:1fr}
+}
