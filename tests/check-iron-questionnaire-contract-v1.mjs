@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import {DRIVER_PARITY_CONTRACT_V1 as C,IRON_QUESTIONNAIRE_V1 as Q,PARITY_RULES_V1 as R} from "./iron-questionnaire-contract-v1.mjs";
+assert.deepEqual(C.openingOrder,["handedness","brand_scope"]);
+assert.deepEqual(Q.slice(0,2).map(x=>x.id),C.openingOrder);
+assert.ok(Q.find(x=>x.id==="handedness").sharedWithDriver);
+assert.ok(Q.find(x=>x.id==="brand_scope").sharedWithDriver);
+assert.equal(C.handedness.resetOnFreshFit,true);
+assert.equal(C.brandScope.resetConfirmationOnFreshFit,true);
+assert.equal(R.sharedQuestionsMustNotDrift,true);
+assert.equal(R.driverScoringMustNotBeImported,true);
+assert.equal(R.brandPreferenceMayFilterEligibilityButNeverAddFitPoints,true);
+console.log("PASS iron questionnaire Driver-parity contract",Q.length,"stages");
