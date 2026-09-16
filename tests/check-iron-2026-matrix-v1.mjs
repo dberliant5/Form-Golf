@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import {IRON_2026_MATRIX_V1 as D,MATRIX_RULES_V1 as R} from "./iron-2026-matrix-v1.mjs";
+assert.equal(new Set(D.map(x=>x.model)).size,D.length);
+assert.equal(D.filter(x=>x.category==="players").length,10);
+assert.equal(D.filter(x=>x.category==="players_distance").length,7);
+assert.equal(D.filter(x=>x.category==="super_gi").length,4);
+assert.equal(R.rankingAllowed,false);
+assert.equal(R.nullMeans,"not_yet_verified_not_zero");
+const pxg=D.find(x=>x.model==="PXG 0311XP Gen 8"), ping=D.find(x=>x.model==="Ping i240");
+assert.ok(pxg.carryYd>ping.carryYd && pxg.dispersion95SqFt>ping.dispersion95SqFt*2);
+const knownDisp=D.filter(x=>Number.isFinite(x.dispersion95SqFt));
+assert.equal(knownDisp.sort((a,b)=>a.dispersion95SqFt-b.dispersion95SqFt)[0].model,"Callaway Quantum Max OS");
+console.log("PASS iron matrix integrity",D.length,"verified/partial rows");
