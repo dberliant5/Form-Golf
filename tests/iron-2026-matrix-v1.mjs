@@ -13,11 +13,12 @@ export const IRON_2026_MATRIX_V1 = [
 ["Callaway Quantum Max","super_gi",null,129.2,null],
 ["Cobra Baffler","super_gi",null,145.1,null],
 ["Cobra King Max","super_gi",null,172.7,7.25],
-["PXG 0311XP Gen 8","game_improvement",164.2,360.6],
+["PXG 0311XP Gen 8","game_improvement",164.2,360.6,null,1.17],
 ["Ping G740","game_improvement",158.8,null],
 ["Callaway Apex Ti Fusion Forged","game_improvement",157.4,null],
 ["Cobra 3DP X","game_improvement",156.5,null],
-["TaylorMade Qi4D Max HL","game_improvement",147.0,null],
+["TaylorMade Qi4D Max HL","game_improvement",147.0,null,null,-2.18],
+["Wilson Staff Dynapwr","game_improvement",null,null,7.27,1.26],
 ["Ping i540","players_distance",null,147.5,5.88],
 ["PXG 0311P","players_distance",null,null],
 ["TaylorMade P790","players_distance",null,null],
@@ -25,7 +26,7 @@ export const IRON_2026_MATRIX_V1 = [
 ["Callaway Apex Ti Fusion","players_distance",null,null],
 ["Mizuno Pro M-15","players_distance",null,null],
 ["Wilson Staff Model XB","players_distance",null,null]
-].map(([model,category,carryYd,dispersion95SqFt,lateralWidthYd])=>({model,category,carryYd,dispersion95SqFt,lateralWidthYd:lateralWidthYd??null,protocol:"GD_GL_2026_82MPH_36SHOT_6ZONE",direct:true}));
+].map(([model,category,carryYd,dispersion95SqFt,lateralWidthYd,axisDeg])=>({model,category,carryYd,dispersion95SqFt,lateralWidthYd:lateralWidthYd??null,axisDeg:axisDeg??null,protocol:"GD_GL_2026_82MPH_36SHOT_6ZONE",direct:true}));
 
 export const MATRIX_RULES_V1={
  nullMeans:"not_yet_verified_not_zero",
