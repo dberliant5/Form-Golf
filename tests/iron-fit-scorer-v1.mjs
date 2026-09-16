@@ -17,6 +17,20 @@ export function ironFitScoreV1(profile, club){
     add(Math.max(-6,6-err*.75), profile.carryNeed==="high"?1:0.55);
   }
 
+  // Lateral dispersion is distinct from total ellipse area. Reward narrow left/right patterns
+  // when direction control matters, without double-counting it as another universal forgiveness score.
+  if(Number.isFinite(club.lateralWidthYd)){
+    const lw=Math.max(4.5,Math.min(12,club.lateralWidthYd));
+    add((8-lw)/3.5*3, profile.directionNeed==="high"?1.25:0.55);
+  }
+
+  // Measured head-induced axis can interact with a repeatable directional miss.
+  // Positive = fade-biased, negative = draw-biased in the common protocol.
+  if(Number.isFinite(club.axisDeg) && profile.directionMiss){
+    const wanted=profile.directionMiss==="right" ? -1 : profile.directionMiss==="left" ? 1 : 0;
+    if(wanted) add(Math.max(-3,Math.min(3,(-Math.abs(club.axisDeg-wanted*2)+2)*1.2)),0.8);
+  }
+
   // Landing suitability is a floor/window, not monotonic.
   if(Number.isFinite(club.descentDeg)){
     const floor=profile.flight==="too_low"?45:43;
@@ -30,7 +44,7 @@ export function ironFitScoreV1(profile, club){
     add(-Math.min(8,(best-selected)*.45),1.2);
   }
 
-  const confidence=Math.min(1,used/3.5);
+  const confidence=Math.min(1,used/4.5);
   return {score:+score.toFixed(2),confidence:+confidence.toFixed(2)};
 }
 export const guardrails=G;
