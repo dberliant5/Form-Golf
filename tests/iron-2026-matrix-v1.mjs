@@ -21,9 +21,6 @@ export const IRON_2026_MATRIX_V1 = [
 ["TaylorMade Qi4D Max","game_improvement",null,null],
 ["TaylorMade Qi4D Max HL","game_improvement",147.0,null,null,-2.18],
 ["Wilson Staff Dynapwr","game_improvement",null,null,7.27,1.26],
-["Callaway Apex Ai300","game_improvement",null,null],
-["Cobra King","game_improvement",null,null],
-["TaylorMade Qi Max","game_improvement",null,null],
 ["Ping i540","players_distance",160.0,147.5,5.88],
 ["PXG 0311P","players_distance",161.5,null],
 ["TaylorMade P790","players_distance",157.9,null],
@@ -38,6 +35,9 @@ export const MATRIX_RULES_V1={
  noCrossProtocolNormalization:true,
  lateralWidthCanonicalUnit:"yards",
  sourceUnitNote:"The cross-category Golf Digest analysis explicitly reports 95% side-to-side width in yards; one category article uses inconsistent prose labeling. Canonical values here follow the cross-category dataset.",
+ expectedFieldSize:30,
+ verifiedIdentityRows:29,
+ identityGap:"One of the nine GI robot-tested model identities remains unverified from accessible source text; do not guess it.",
  rankingAllowed:false,
  requiredBeforeRanking:["complete_model_identity","verified_common_fields","field_level_provenance","blind_archetype_tests"]
 };
