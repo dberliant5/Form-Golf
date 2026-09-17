@@ -4,8 +4,7 @@ import {IRON_QUESTIONNAIRE_V1 as Q} from "./iron-questionnaire-contract-v1.mjs";
 
 const src=fs.readFileSync(new URL("../assets/iron-questionnaire-v1.js",import.meta.url),"utf8");
 
-// Research preview must not silently imply that contracted stages are implemented.
-// Require concrete user-facing controls/sections, not incidental words in state or prose.
+// Research preview must implement every contracted stage with a concrete user-facing hook.
 const hooks={
  handedness:["data-field=\"handedness\""],
  brand_scope:["id=\"ironBrandScope\"","class=\"brandMode\""],
@@ -30,10 +29,10 @@ for(const stage of Q){
  const ok=required.every(token=>src.includes(token));
  (ok?implemented:missing).push(stage.id);
 }
+assert.deepEqual(missing,[],"Every contracted Iron questionnaire stage must have a real preview control before questionnaire-complete status");
+assert.deepEqual(implemented,Q.map(x=>x.id));
 
-// Keep the preview honest until these stages actually exist. When implementation lands,
-// move each stage out of this list in the same commit; CI then proves contract/UI convergence.
-const explicitlyDeferred=["current_irons","current_set_makeup","ability_band","strike_consistency","carry_consistency","turf_divot","launch_monitor_detail"];
-assert.deepEqual(missing,explicitlyDeferred,"Questionnaire implementation changed; update the explicit deferred-stage contract intentionally");
-assert.ok(implemented.includes("handedness")&&implemented.includes("brand_scope")&&implemented.includes("review"));
-console.log("PASS iron questionnaire implementation coverage",{implemented,explicitlyDeferred});
+// Launch-monitor quality must retain Driver's current range/general/none semantics and no exact mode.
+for(const v of ["range","general","none"])assert.ok(src.includes(`data-v=\"${v}\"`));
+assert.ok(!src.includes('data-v="exact"'));
+console.log("PASS iron questionnaire implementation coverage",implemented.length,"contracted stages implemented");
