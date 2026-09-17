@@ -28,8 +28,9 @@ function mount(root){
  <h3>What is your common directional miss?</h3><div class="choiceRow" data-field="direction"><button data-v="left">Left</button><button data-v="both">Both</button><button data-v="right">Right</button><button data-v="none">No consistent miss</button></div>
  <h3>How is your typical iron trajectory?</h3><div class="choiceRow" data-field="trajectory"><button data-v="too_low">Too low</button><button data-v="good">About right</button><button data-v="too_high">Too high</button></div>
  <h3>What matters most?</h3><div class="choiceRow multi" data-field="priorities"><button data-v="dispersion">Tighter dispersion</button><button data-v="forgiveness">Mishit forgiveness</button><button data-v="stopping">Stopping power</button><button data-v="distance">Distance</button></div>
- <button id="ironReview">Review iron profile</button></section>
- <section id="ironReviewPanel" hidden><div class="eyebrow">IRON PROFILE</div><h2>Your fitting inputs</h2><pre id="ironSummary"></pre><p class="note">Research candidate only. Rankings remain disabled until the evidence matrix and adversarial gates are complete.</p></section>
+ <button id="ironReview">See research results</button></section>
+ <section id="ironReviewPanel" hidden><div class="eyebrow">IRON PROFILE</div><h2>Your fitting inputs</h2><pre id="ironSummary"></pre>
+ <div id="ironResearchResults"><h2>Research shortlist</h2><p class="note">Test-only ranking. Evidence confidence is shown separately from fit; this is not yet a production recommendation.</p><div id="ironResultCards"></div></div></section>
  </section>`;
  bind(root);
 }
@@ -47,9 +48,17 @@ function bind(root){
   const field=b.closest("[data-field]"); if(field){select(field.dataset.field,b.dataset.v,field.classList.contains("multi"));sync(root);return;}
   if(b.classList.contains("brandMode")){S.brandMode=b.dataset.v;if(S.brandMode==="all")S.brands=[];sync(root);return;}
   if(b.dataset.brand){const i=S.brands.indexOf(b.dataset.brand);i>=0?S.brands.splice(i,1):S.brands.push(b.dataset.brand);sync(root);return;}
-  if(b.id==="ironReview"){S.sevenIron=Number(root.querySelector("#ironCarry").value)||null;root.querySelector("#ironSummary").textContent=JSON.stringify(S,null,2);root.querySelector("#ironReviewPanel").hidden=false;}
+  if(b.id==="ironReview"){S.sevenIron=Number(root.querySelector("#ironCarry").value)||null;root.querySelector("#ironSummary").textContent=JSON.stringify(S,null,2);root.querySelector("#ironReviewPanel").hidden=false;renderResearchResults(root);}
  });
  sync(root);
+}
+async function renderResearchResults(root){
+ const box=root.querySelector("#ironResultCards"); box.innerHTML="<p>Calculating…</p>";
+ try{
+  const {rankIronsV1}=await import("./iron-engine-v1.mjs");
+  const ranked=rankIronsV1(S).filter(x=>x.confidence>0).slice(0,5);
+  box.innerHTML=ranked.map((x,i)=>`<article class="resultCard"><div><span class="rank">#${i+1}</span><b>${x.model}</b></div><div class="resultMeta"><span>Fit ${x.score.toFixed(1)}</span><span>Evidence ${Math.round(x.confidence*100)}%</span></div></article>`).join("")||"<p>No eligible models in the current research matrix.</p>";
+ }catch(e){box.innerHTML="<p>Research results unavailable. No production recommendation was made.</p>";}
 }
 window.FORM_IRON_V1.mount=mount;
 })();
