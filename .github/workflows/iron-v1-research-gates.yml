@@ -29,6 +29,8 @@ jobs:
         run: node tests/check-iron-evidence-anchors-v1.mjs
       - name: Evidence matrix integrity
         run: node tests/check-iron-2026-matrix-v1.mjs
+      - name: Production ranking readiness
+        run: node tests/check-iron-ranking-readiness-v1.mjs
       - name: Scorer adversarial gates
         run: node tests/check-iron-fit-scorer-v1.mjs
       - name: Structural advantage gate
