@@ -6,6 +6,7 @@ on:
       - 'tests/iron-*.mjs'
       - 'tests/check-iron-*.mjs'
       - 'assets/iron-*.mjs'
+      - 'assets/iron-*.js'
       - '.github/workflows/iron-v1-research-gates.yml'
   workflow_dispatch:
 jobs:
@@ -18,6 +19,8 @@ jobs:
           node-version: '22'
       - name: Questionnaire / Driver component parity
         run: node tests/check-iron-questionnaire-contract-v1.mjs
+      - name: Questionnaire implementation coverage
+        run: node tests/check-iron-questionnaire-implementation-v1.mjs
       - name: Category answer isolation / brand zero-weight
         run: node tests/check-iron-answer-isolation-v1.mjs
       - name: Blind archetypes
