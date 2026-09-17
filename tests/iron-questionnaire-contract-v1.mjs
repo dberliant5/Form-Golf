@@ -3,16 +3,18 @@
 export const DRIVER_PARITY_CONTRACT_V1={
  openingOrder:["handedness","brand_scope"],
  handedness:{
-  semantic:"shared_golfer_fact",
+  semantic:"category_specific_answer_shared_component",
   required:true,
   resetOnFreshFit:true,
+  inheritFromOtherCategories:false,
   choices:["right","left"],
   rule:"Use the same wording, controls, selected-state behavior, persistence semantics and review treatment as Driver."
  },
  brandScope:{
-  semantic:"shared_equipment_preference",
+  semantic:"category_specific_answer_shared_component",
   required:true,
   resetConfirmationOnFreshFit:true,
+  inheritFromOtherCategories:false,
   rule:"Reuse Driver brand-scope component and behavior virtually identically; only eligible iron brands/models differ."
  },
  launchMonitor:{
