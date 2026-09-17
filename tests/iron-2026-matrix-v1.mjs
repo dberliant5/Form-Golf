@@ -36,12 +36,18 @@ export const IRON_2026_MATRIX_V1 = [
 ["Callaway Apex Ti Fusion","players_distance",null,null],
 ["Mizuno Pro M-15","players_distance",null,null],
 ["Wilson Staff Model XB","players_distance",149.5,null]
-].map(([model,category,carryYd,dispersion95SqFt,lateralWidthYd,axisDeg,descentDeg])=>({
- model,category,carryYd,dispersion95SqFt,lateralWidthYd:lateralWidthYd??null,
- lateralWidthUnit:lateralWidthYd==null?null:"yards",axisDeg:axisDeg??null,descentDeg:descentDeg??null,
- protocol:"GD_GL_2026_82MPH_36SHOT_6ZONE",direct:true,
- provenance:{categorySource:SOURCES[category],crossCategorySource:SOURCES.cross_category}
-}));
+].map(([model,category,carryYd,dispersion95SqFt,lateralWidthYd,axisDeg,descentDeg])=>{
+ const metricSource={};
+ for(const [field,value] of Object.entries({carryYd,dispersion95SqFt,lateralWidthYd,axisDeg,descentDeg})){
+  if(Number.isFinite(value)) metricSource[field]=SOURCES[category];
+ }
+ return {
+  model,category,carryYd,dispersion95SqFt,lateralWidthYd:lateralWidthYd??null,
+  lateralWidthUnit:lateralWidthYd==null?null:"yards",axisDeg:axisDeg??null,descentDeg:descentDeg??null,
+  protocol:"GD_GL_2026_82MPH_36SHOT_6ZONE",direct:true,
+  provenance:{categorySource:SOURCES[category],crossCategorySource:SOURCES.cross_category,metricSource}
+ };
+});
 
 export const MATRIX_RULES_V1={
  nullMeans:"not_yet_verified_not_zero",
