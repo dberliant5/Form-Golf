@@ -30,3 +30,5 @@ jobs:
         run: node tests/check-iron-multidimensional-v1.mjs
       - name: Repeated-winner diagnostic
         run: node tests/audit-iron-ranking-v1.mjs
+      - name: Questionnaire profile to ranking E2E
+        run: node tests/check-iron-e2e-v1.mjs
