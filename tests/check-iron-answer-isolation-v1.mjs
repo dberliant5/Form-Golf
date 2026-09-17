@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import {buildIronProfileV1,rankIronsV1} from "../assets/iron-engine-v1.mjs";
+const iron={handedness:"left",brandMode:"all",brands:[],sevenIron:150,priorities:["dispersion"],direction:"right",trajectory:"good",strike:"mid_center"};
+const driver={handedness:"right",brandMode:"choose",brands:["Titleist"]};
+const before=JSON.stringify(iron),p=buildIronProfileV1(iron);
+assert.equal(iron.handedness,"left"); assert.equal(driver.handedness,"right"); assert.equal(JSON.stringify(iron),before);
+assert.equal(p.directionMiss,"right");
+const all=rankIronsV1(iron),chosen=rankIronsV1({...iron,brandMode:"choose",brands:["PING"]});
+const pingFromAll=all.filter(x=>/^ping\b/i.test(x.model));
+assert.deepEqual(chosen.map(x=>[x.model,x.score]),pingFromAll.map(x=>[x.model,x.score]),"Brand scope changed fit points instead of eligibility only");
+assert.ok(chosen.every(x=>/^ping\b/i.test(x.model)));
+console.log("PASS iron category answer isolation + brand zero-weight eligibility");
