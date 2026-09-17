@@ -19,7 +19,16 @@ export const DRIVER_PARITY_CONTRACT_V1={
  },
  launchMonitor:{
   semantic:"shared_input_quality_pattern",
-  rule:"Reuse Driver exact/range/general/unknown input-quality pattern where an iron metric supports it."
+  canonicalModes:["range","general","none"],
+  exactModeAllowed:false,
+  categorySpecificAnswer:true,
+  inheritFromOtherCategories:false,
+  copyPattern:{
+   range:"Yes — I know my typical ranges",
+   general:"I know my typical tendencies",
+   none:"No — I don’t know my launch-monitor data"
+  },
+  rule:"Reuse Driver's current range-first/general/none input-quality pattern where an iron metric supports it. Do not reintroduce the retired exact mode."
  },
  strikeMap:{
   semantic:"shared_face_location_pattern",
