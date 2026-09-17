@@ -26,11 +26,13 @@ export const IRON_2026_MATRIX_V1 = [
 ["Callaway Apex Ti Fusion","players_distance",null,null],
 ["Mizuno Pro M-15","players_distance",null,null],
 ["Wilson Staff Model XB","players_distance",null,null]
-].map(([model,category,carryYd,dispersion95SqFt,lateralWidthYd,axisDeg])=>({model,category,carryYd,dispersion95SqFt,lateralWidthYd:lateralWidthYd??null,axisDeg:axisDeg??null,protocol:"GD_GL_2026_82MPH_36SHOT_6ZONE",direct:true}));
+].map(([model,category,carryYd,dispersion95SqFt,lateralWidthYd,axisDeg])=>({model,category,carryYd,dispersion95SqFt,lateralWidthYd:lateralWidthYd??null,lateralWidthUnit:lateralWidthYd==null?null:"yards",axisDeg:axisDeg??null,protocol:"GD_GL_2026_82MPH_36SHOT_6ZONE",direct:true}));
 
 export const MATRIX_RULES_V1={
  nullMeans:"not_yet_verified_not_zero",
  noCrossProtocolNormalization:true,
+ lateralWidthCanonicalUnit:"yards",
+ sourceUnitNote:"The cross-category Golf Digest analysis explicitly reports 95% side-to-side width in yards; one category article uses inconsistent prose labeling. Canonical values here follow the cross-category dataset.",
  rankingAllowed:false,
  requiredBeforeRanking:["complete_model_identity","verified_common_fields","field_level_provenance","blind_archetype_tests"]
 };
