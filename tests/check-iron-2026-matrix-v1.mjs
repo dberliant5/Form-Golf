@@ -4,6 +4,11 @@ assert.equal(new Set(D.map(x=>x.model)).size,D.length);
 assert.equal(D.filter(x=>x.category==="players").length,10);
 assert.equal(D.filter(x=>x.category==="players_distance").length,7);
 assert.equal(D.filter(x=>x.category==="super_gi").length,4);
+assert.equal(D.filter(x=>x.category==="game_improvement").length,8);
+assert.equal(R.expectedFieldSize,30);
+assert.equal(R.verifiedIdentityRows,D.length);
+assert.equal(D.length,29,"Do not silently claim the 30-head field is complete until the ninth GI identity is directly verified");
+assert.ok(R.identityGap.includes("do not guess"));
 assert.equal(R.rankingAllowed,false);
 assert.equal(R.nullMeans,"not_yet_verified_not_zero");
 assert.equal(R.lateralWidthCanonicalUnit,"yards");
@@ -13,4 +18,4 @@ assert.ok(pxg.carryYd>ping.carryYd && pxg.dispersion95SqFt>ping.dispersion95SqFt
 assert.equal(ping.lateralWidthYd,4.58);
 const knownDisp=D.filter(x=>Number.isFinite(x.dispersion95SqFt));
 assert.equal(knownDisp.sort((a,b)=>a.dispersion95SqFt-b.dispersion95SqFt)[0].model,"Callaway Quantum Max OS");
-console.log("PASS iron matrix integrity",D.length,"verified/partial rows; lateral width canonicalized to yards");
+console.log("PASS iron matrix integrity",D.length,"verified/partial rows; 30-head identity field remains fail-closed");
