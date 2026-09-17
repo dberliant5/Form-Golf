@@ -17,7 +17,12 @@ export function buildIronProfileV1(state){
 export function rankIronsV1(state){
  const p=buildIronProfileV1(state);
  const allowed=new Set(state.brands||[]);
- return DATA.filter(c=>state.brandMode!=="choose"||allowed.has(c.model.split(" ")[0])||allowed.has(c.model.startsWith("TaylorMade")?"TaylorMade":c.model.split(" ")[0]))
+ const brandOf=model=>{
+  if(/^ping\b/i.test(model))return "PING";
+  if(/^taylormade\b/i.test(model))return "TaylorMade";
+  return model.split(" ")[0];
+ };
+ return DATA.filter(c=>state.brandMode!=="choose"||allowed.has(brandOf(c.model)))
   .map(c=>({...c,...ironFitScoreV1(p,c)}))
   .sort((a,b)=>b.score-a.score);
 }
