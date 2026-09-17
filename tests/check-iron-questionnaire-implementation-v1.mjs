@@ -5,29 +5,29 @@ import {IRON_QUESTIONNAIRE_V1 as Q} from "./iron-questionnaire-contract-v1.mjs";
 const src=fs.readFileSync(new URL("../assets/iron-questionnaire-v1.js",import.meta.url),"utf8");
 
 // Research preview must not silently imply that contracted stages are implemented.
-// A stage is considered implemented only when its state key and a user-facing control/copy hook exist.
+// Require concrete user-facing controls/sections, not incidental words in state or prose.
 const hooks={
- handedness:["handedness","data-field=\"handedness\""],
- brand_scope:["brandMode","ironBrandScope"],
- current_irons:["currentIrons","current irons"],
- current_set_makeup:["currentSetMakeup","set makeup"],
- ability_band:["ability","ability"],
- seven_iron_distance_or_speed:["sevenIron","7-iron"],
- strike_location:["strike","data-field=\"strike\""],
- strike_consistency:["strikeConsistency","strike consistency"],
- directional_miss:["direction","directional miss"],
- trajectory:["trajectory","trajectory"],
- carry_consistency:["carryConsistency","carry consistency"],
- turf_divot:["turf","divot"],
- priorities:["priorities","What matters most?"],
- launch_monitor_detail:["launchMonitorDetail","launch-monitor"],
- review:["ironReview","ironReviewPanel"]
+ handedness:["data-field=\"handedness\""],
+ brand_scope:["id=\"ironBrandScope\"","class=\"brandMode\""],
+ current_irons:["id=\"ironCurrentIrons\""],
+ current_set_makeup:["data-field=\"currentSetMakeup\""],
+ ability_band:["data-field=\"ability\""],
+ seven_iron_distance_or_speed:["id=\"ironCarry\""],
+ strike_location:["data-field=\"strike\""],
+ strike_consistency:["data-field=\"strikeConsistency\""],
+ directional_miss:["data-field=\"direction\""],
+ trajectory:["data-field=\"trajectory\""],
+ carry_consistency:["data-field=\"carryConsistency\""],
+ turf_divot:["data-field=\"turf\""],
+ priorities:["data-field=\"priorities\""],
+ launch_monitor_detail:["data-field=\"launchMonitorDetail\""],
+ review:["id=\"ironReview\"","id=\"ironReviewPanel\""]
 };
 const implemented=[],missing=[];
 for(const stage of Q){
  const required=hooks[stage.id];
  assert.ok(required,`No implementation hook definition for ${stage.id}`);
- const ok=required.every(token=>src.toLowerCase().includes(token.toLowerCase()));
+ const ok=required.every(token=>src.includes(token));
  (ok?implemented:missing).push(stage.id);
 }
 
