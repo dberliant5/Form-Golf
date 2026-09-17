@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'tests/iron-*.mjs'
+      - 'tests/check-iron-*.mjs'
+      - 'assets/iron-*.mjs'
       - '.github/workflows/iron-v1-research-gates.yml'
   workflow_dispatch:
 jobs:
@@ -16,6 +18,8 @@ jobs:
           node-version: '22'
       - name: Questionnaire / Driver component parity
         run: node tests/check-iron-questionnaire-contract-v1.mjs
+      - name: Category answer isolation / brand zero-weight
+        run: node tests/check-iron-answer-isolation-v1.mjs
       - name: Blind archetypes
         run: node tests/check-iron-archetypes-v1.mjs
       - name: Evidence anchors
