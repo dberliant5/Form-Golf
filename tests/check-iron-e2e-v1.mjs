@@ -24,7 +24,7 @@ assert.equal(buildIronProfileV1({...base,strike:"high_toe"}).strike,"high_toe");
 
 // These contracted questionnaire stages are not yet wired into the engine. Keep that gap explicit
 // so UI expansion cannot imply false personalization before the engine has a defensible use for them.
-const notYetScoring=["currentIrons","currentSetMakeup","ability","strikeConsistency","carryConsistency","turf","launchMonitorDetail"];
+const notYetScoring=["currentIrons","currentSetMakeup","ability","strikeSource","strikeConsistency","carryConsistency","turf","launchMonitorDetail"];
 for(const field of notYetScoring){
  const changed=buildIronProfileV1({...base,[field]:"sentinel"});
  assert.deepEqual(changed,profile,`${field} unexpectedly changed fit before an evidence-backed rule was added`);
