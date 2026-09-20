@@ -3,12 +3,12 @@ import fs from "node:fs";
 import {IRON_QUESTIONNAIRE_V1 as Q,DRIVER_PARITY_CONTRACT_V1 as C} from "./iron-questionnaire-contract-v1.mjs";
 const src=fs.readFileSync(new URL("../assets/iron-questionnaire-v1.js",import.meta.url),"utf8");
 const hooks={
- handedness:['data-field="handedness"'],brand_scope:['id="ironBrandScope"','class="brandMode"'],current_irons:['id="ironCurrentIrons"'],
- current_set_makeup:['data-field="currentSetMakeup"'],ability_band:['data-field="ability"'],seven_iron_distance_or_speed:['id="ironCarry"'],
- strike_location:['data-field="strike"','class="ironFaceWrap"','class="strikeTargets"'],strike_source:['data-field="strikeSource"'],
- strike_consistency:['data-field="strikeConsistency"'],directional_miss:['data-field="direction"'],trajectory:['data-field="trajectory"'],
- carry_consistency:['data-field="carryConsistency"'],turf_divot:['data-field="turf"'],priorities:['data-field="priorities"','class="choiceRow priorityRank"'],
- launch_monitor_detail:['data-field="launchMonitorDetail"'],review:['id="ironReview"','id="ironReviewPanel"','Model-level research shortlist']
+ handedness:['choice("handedness"'],brand_scope:['id="ironBrandScope"','class="brandMode"'],current_irons:['id="ironCurrentIrons"'],
+ current_set_makeup:['choice("currentSetMakeup"'],ability_band:['choice("ability"'],seven_iron_distance_or_speed:['id="ironCarry"'],
+ strike_location:['data-field="strike"','class="ironFaceWrap"','class="strikeTargets"'],strike_source:['choice("strikeSource"'],
+ strike_consistency:['choice("strikeConsistency"'],directional_miss:['choice("direction"'],trajectory:['choice("trajectory"'],
+ carry_consistency:['choice("carryConsistency"'],turf_divot:['choice("turf"'],priorities:['data-field="priorities"','class="choiceRow priorityRank"'],
+ launch_monitor_detail:['choice("launchMonitorDetail"'],review:['id="ironReview"','id="ironReviewPanel"','Model-level research shortlist']
 };
 const implemented=[],missing=[];
 for(const stage of Q){const required=hooks[stage.id];assert.ok(required,`No implementation hook definition for ${stage.id}`);const ok=required.every(token=>src.includes(token));(ok?implemented:missing).push(stage.id);}
