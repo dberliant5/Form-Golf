@@ -24,5 +24,5 @@ export function rankIronsV1(state){
  };
  return DATA.filter(c=>state.brandMode!=="choose"||allowed.has(brandOf(c.model)))
   .map(c=>({...c,...ironFitScoreV1(p,c)}))
-  .sort((a,b)=>b.score-a.score);
+  .sort((a,b)=>{\n   const scoreDelta=b.score-a.score;\n   if(scoreDelta!==0)return scoreDelta;\n   const confidenceDelta=(b.confidence||0)-(a.confidence||0);\n   if(confidenceDelta!==0)return confidenceDelta;\n   return a.model.localeCompare(b.model);\n  });
 }
