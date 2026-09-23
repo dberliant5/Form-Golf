@@ -58,5 +58,5 @@ export const MATRIX_RULES_V1={
  verifiedIdentityRows:29,
  identityGap:"One of the nine GI robot-tested model identities remains unverified from accessible source text; do not guess it.",
  rankingAllowed:false,
- requiredBeforeRanking:["complete_model_identity","verified_common_fields","field_level_provenance","blind_archetype_tests"]
+ requiredBeforeRanking:["complete_model_identity","verified_common_fields","field_level_provenance","blind_archetype_tests","calibrated_priority_rank_weights"]
 };
