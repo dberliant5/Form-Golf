@@ -15,12 +15,31 @@ const profiles=[
  {id:"low_toe_miss",consistencyNeed:"high",directionNeed:"normal",carryNeed:"met",targetCarryYd:150,flight:"adequate",strike:"low_toe"},
  {id:"high_face",consistencyNeed:"high",directionNeed:"high",carryNeed:"met",targetCarryYd:150,flight:"adequate",strike:"high_center"}
 ];
-function rank(p){return D.map(c=>({model:c.model,...ironFitScoreV1(p,c)})).filter(x=>x.confidence>0).sort((a,b)=>b.score-a.score);}
+// Missing evidence remains neutral: confidence is never added to fit score. When two heads
+// have the exact same evidence-backed fit score, prefer the one supported by more measured
+// fields rather than allowing source-array order to decide the recommendation.
+const compareRank=(a,b)=>(b.score-a.score)||(b.confidence-a.confidence)||a.model.localeCompare(b.model);
+function rank(p){return D.map(c=>({model:c.model,...ironFitScoreV1(p,c)})).filter(x=>x.confidence>0).sort(compareRank);}
 const rows=profiles.map(p=>({profile:p.id,top:rank(p).slice(0,5)}));
 const wins={}; for(const r of rows){const m=r.top[0]?.model;if(m)wins[m]=(wins[m]||0)+1;}
 const leaderWins=Math.max(0,...Object.values(wins));
 assert.ok(Object.keys(wins).length>=2,"Opposed profiles collapsed to one universal winner");
 assert.ok(leaderWins<profiles.length,"One model won every opposed profile");
+
+// Confidence may break only exact score ties; it must never compensate for a lower fit score.
+const tieProfile={id:"evidence_tie",consistencyNeed:"normal",directionNeed:"normal",carryNeed:"met",targetCarryYd:150,flight:"adequate"};
+const sparse={model:"Sparse",carryYd:150};
+const supported={model:"Supported",carryYd:150,descentDeg:44};
+const sparseResult={model:sparse.model,...ironFitScoreV1(tieProfile,sparse)};
+const supportedResult={model:supported.model,...ironFitScoreV1(tieProfile,supported)};
+// Equal-score fixture: a neutral measured axis is ignored when no directional miss is supplied,
+// so confidence also stays unchanged. Use a measured descent field only to demonstrate that a
+// real scoring field changes score and therefore cannot be rescued by confidence.
+assert.ok(supportedResult.score>sparseResult.score,"Measured fit evidence should affect fit before confidence tie-breaking");
+const exactTieLow={model:"Z-low",score:60,confidence:.2}, exactTieHigh={model:"A-high",score:60,confidence:.8};
+assert.equal([exactTieLow,exactTieHigh].sort(compareRank)[0].model,"A-high","Exact fit-score ties must prefer stronger evidence coverage");
+const lowerFitHighConfidence={model:"High confidence lower fit",score:59.99,confidence:1};
+assert.equal([exactTieLow,lowerFitHighConfidence].sort(compareRank)[0].model,"Z-low","Confidence must not outweigh a higher evidence-backed fit score");
 
 // Keep the declared blind archetype library connected to executable ranking coverage.
 // Only dimensions already supported by the scorer are projected; unsupported dimensions remain
@@ -48,7 +67,7 @@ assert.ok(blindLeaderWins<executable.length,"One model won every executable blin
 const axis=D.filter(c=>Number.isFinite(c.axisDeg));
 assert.ok(axis.length>=2,"Directional audit needs at least two measured-axis heads");
 const rightP=profiles.find(x=>x.id==="right_miss"), leftP=profiles.find(x=>x.id==="left_miss");
-const axisRank=p=>axis.map(c=>({model:c.model,axisDeg:c.axisDeg,...ironFitScoreV1(p,c)})).sort((a,b)=>b.score-a.score);
+const axisRank=p=>axis.map(c=>({model:c.model,axisDeg:c.axisDeg,...ironFitScoreV1(p,c)})).sort(compareRank);
 const rightAxis=axisRank(rightP), leftAxis=axisRank(leftP);
 const drawHead=axis.find(c=>c.axisDeg<0), fadeHead=axis.find(c=>c.axisDeg>0);
 assert.ok(drawHead&&fadeHead,"Directional audit needs measured draw- and fade-biased heads");
@@ -67,4 +86,4 @@ for(const club of D){
  assert.equal(a.confidence,b.confidence,`${club.model} gained invented high-face evidence confidence`);
 }
 assert.deepEqual(rank(highP).map(x=>x.model),rank(highControl).map(x=>x.model),"High-face answer changed ranking without measured high-face evidence");
-console.log(JSON.stringify({rows,wins,leaderWins,profiles:profiles.length,blindRows,blindWins,blindLeaderWins,executableBlindArchetypes:executable.length,directionalMeasured:axis.length,rightAxis:rightAxis.slice(0,3),leftAxis:leftAxis.slice(0,3),highFaceNeutral:true},null,2));
+console.log(JSON.stringify({rows,wins,leaderWins,profiles:profiles.length,blindRows,blindWins,blindLeaderWins,executableBlindArchetypes:executable.length,directionalMeasured:axis.length,rightAxis:rightAxis.slice(0,3),leftAxis:leftAxis.slice(0,3),highFaceNeutral:true,evidenceTieBreak:true},null,2));
