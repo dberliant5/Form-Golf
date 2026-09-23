@@ -6,11 +6,14 @@ import {IRON_EVIDENCE_ANCHORS_V1 as A} from "./iron-evidence-anchors-v1.mjs";
 // until the matrix's declared prerequisites are actually satisfied. The questionnaire now captures
 // ordered priorities, but rank-position weighting is intentionally NOT invented: it needs a
 // documented calibration/validation step before #1 vs #2 vs #3 can alter production scoring.
+// Strike location is also captured, but production personalization must not claim a strike fit until
+// comparable per-model zone data is ingested; sparse anecdotes/one-off zone facts are not enough.
 assert.equal(R.rankingAllowed,false);
 assert.deepEqual(R.requiredBeforeRanking,[
  "complete_model_identity",
  "verified_common_fields",
  "field_level_provenance",
+ "verified_strike_zone_fields",
  "blind_archetype_tests",
  "calibrated_priority_rank_weights"
 ]);
@@ -22,11 +25,13 @@ const missingDispersion=D.filter(x=>!Number.isFinite(x.dispersion95SqFt)).map(x=
 const missingCarry=D.filter(x=>!Number.isFinite(x.carryYd)).map(x=>x.model);
 const missingDirection=D.filter(x=>!Number.isFinite(x.axisDeg)).map(x=>x.model);
 const missingLateral=D.filter(x=>!Number.isFinite(x.lateralWidthYd)).map(x=>x.model);
+const strikeZoneRows=D.filter(x=>x.zoneCarry && Object.values(x.zoneCarry).some(Number.isFinite));
 
 assert.ok(models.size===D.length);
 assert.ok(missingAnchorRows.length>0,"If every row gains provenance, explicitly review whether ranking readiness can advance");
 assert.ok(missingDispersion.length>0,"If common dispersion becomes complete, explicitly review ranking readiness");
 assert.ok(missingCarry.length>0,"If common carry becomes complete, explicitly review ranking readiness");
+assert.equal(strikeZoneRows.length,0,"If comparable strike-zone rows are ingested, replace this fail-closed sentinel with explicit coverage requirements before enabling strike personalization");
 
 // Sparse optional dimensions are allowed only as neutral missing evidence; never reinterpret null as zero.
 assert.ok(missingDirection.length>0 && missingLateral.length>0);
@@ -36,5 +41,5 @@ console.log("PASS iron production-ranking readiness remains intentionally blocke
  rows:D.length,anchorRows:A.length,missingAnchorRows:missingAnchorRows.length,
  missingDispersion:missingDispersion.length,missingCarry:missingCarry.length,
  missingDirection:missingDirection.length,missingLateral:missingLateral.length,
- priorityRankWeights:"calibration_required"
+ strikeZoneRows:strikeZoneRows.length,priorityRankWeights:"calibration_required"
 });
