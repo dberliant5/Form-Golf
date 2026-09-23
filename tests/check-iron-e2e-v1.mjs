@@ -22,6 +22,18 @@ assert.equal(buildIronProfileV1({...base,direction:"right"}).directionMiss,"righ
 assert.equal(buildIronProfileV1({...base,trajectory:"too_low"}).flight,"too_low");
 assert.equal(buildIronProfileV1({...base,strike:"high_toe"}).strike,"high_toe");
 
+// The UI captures an ordered priority list, but rank-position weights are not calibrated yet.
+// Until calibration is documented and validated, reordering the SAME selected priorities must not
+// silently change the fit profile or model ranking. Membership can matter; arbitrary #1/#2 weights cannot.
+const prioritySetA={...base,priorities:["dispersion","forgiveness","distance"]};
+const prioritySetB={...base,priorities:["distance","dispersion","forgiveness"]};
+assert.deepEqual(buildIronProfileV1(prioritySetA),buildIronProfileV1(prioritySetB),"Uncalibrated priority order changed the fit profile");
+assert.deepEqual(
+ rankIronsV1(prioritySetA).map(x=>({model:x.model,score:x.score,confidence:x.confidence})),
+ rankIronsV1(prioritySetB).map(x=>({model:x.model,score:x.score,confidence:x.confidence})),
+ "Uncalibrated priority order changed model ranking"
+);
+
 // These contracted questionnaire stages are not yet wired into the engine. Keep that gap explicit
 // so UI expansion cannot imply false personalization before the engine has a defensible use for them.
 const notYetScoring=["currentIrons","currentSetMakeup","ability","strikeSource","strikeConsistency","carryConsistency","turf","launchMonitorDetail"];
@@ -30,4 +42,4 @@ for(const field of notYetScoring){
  assert.deepEqual(changed,profile,`${field} unexpectedly changed fit before an evidence-backed rule was added`);
 }
 
-console.log("PASS iron profile-to-ranking e2e",{control:a.slice(0,3).map(x=>x.model),distance:pxg.slice(0,3).map(x=>x.model),ping:pingOnly.map(x=>x.model),contextOnly:notYetScoring});
+console.log("PASS iron profile-to-ranking e2e",{control:a.slice(0,3).map(x=>x.model),distance:pxg.slice(0,3).map(x=>x.model),ping:pingOnly.map(x=>x.model),priorityOrder:"captured_but_neutral_until_calibrated",contextOnly:notYetScoring});
