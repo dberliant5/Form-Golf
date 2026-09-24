@@ -27,7 +27,7 @@ export const IRON_STRIKE_ZONE_EVIDENCE_V1={
    verifiedValues:{},
    verifiedFacts:["best_to_worst_zone_gap_yd_22.6","among_smallest_best_to_worst_zone_gaps_in_gi_field"]
   },
-  "Cobra 3DP King":{
+  "Cobra King":{
    verifiedValues:{},
    verifiedFacts:["among_smallest_best_to_worst_zone_gaps_in_gi_field"]
   }
