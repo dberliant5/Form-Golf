@@ -6,6 +6,18 @@ const SOURCES={
  cross_category:"https://www.golfdigest.com/story/iron-superlatives-categories-robotic-testing-insights"
 };
 
+// Only exact model-level values stated in the accessible 2026 Golf Digest / Golf Laboratories
+// reporting belong here. Absence is deliberately null/omitted, never inferred from category ranges.
+const CROSS_CATEGORY_EVIDENCE={
+ "PXG 0311XP Gen 8":{ballSpeedMph:113.28,spinRpm:4420},
+ "PXG 0311P":{ballSpeedMph:112.89,spinRpm:4919},
+ "Ping G740":{ballSpeedMph:111.44},
+ "Callaway Quantum Max OS":{ballSpeedMph:111.30},
+ "Ping i540":{ballSpeedMph:110.96,spinRpm:4429},
+ "Callaway Quantum Max":{spinRpm:4821},
+ "TaylorMade P790":{spinRpm:4911}
+};
+
 export const IRON_2026_MATRIX_V1 = [
 ["PXG 0311T GEN8","players",155.8,326],
 ["Cobra 3DP Tour","players",150.7,227],
@@ -41,9 +53,14 @@ export const IRON_2026_MATRIX_V1 = [
  for(const [field,value] of Object.entries({carryYd,dispersion95SqFt,lateralWidthYd,axisDeg,descentDeg})){
   if(Number.isFinite(value)) metricSource[field]=SOURCES[category];
  }
+ const cross=CROSS_CATEGORY_EVIDENCE[model]||{};
+ for(const [field,value] of Object.entries(cross)){
+  if(Number.isFinite(value)) metricSource[field]=SOURCES.cross_category;
+ }
  return {
   model,category,carryYd,dispersion95SqFt,lateralWidthYd:lateralWidthYd??null,
   lateralWidthUnit:lateralWidthYd==null?null:"yards",axisDeg:axisDeg??null,descentDeg:descentDeg??null,
+  ballSpeedMph:cross.ballSpeedMph??null,spinRpm:cross.spinRpm??null,
   protocol:"GD_GL_2026_82MPH_36SHOT_6ZONE",direct:true,
   provenance:{categorySource:SOURCES[category],crossCategorySource:SOURCES.cross_category,metricSource}
  };
