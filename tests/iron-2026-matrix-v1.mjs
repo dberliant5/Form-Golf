@@ -18,6 +18,12 @@ const CROSS_CATEGORY_EVIDENCE={
  "TaylorMade P790":{spinRpm:4911}
 };
 
+const CATEGORY_EVIDENCE={
+ "PXG 0311T GEN8":{spinRpm:5244},
+ "Cobra 3DP Tour":{spinRpm:5513},
+ "Wilson Staff Model CB":{spinRpm:6476}
+};
+
 export const IRON_2026_MATRIX_V1 = [
 ["PXG 0311T GEN8","players",155.8,326],
 ["Cobra 3DP Tour","players",150.7,227],
@@ -54,13 +60,18 @@ export const IRON_2026_MATRIX_V1 = [
   if(Number.isFinite(value)) metricSource[field]=SOURCES[category];
  }
  const cross=CROSS_CATEGORY_EVIDENCE[model]||{};
+ const categoryEvidence=CATEGORY_EVIDENCE[model]||{};
  for(const [field,value] of Object.entries(cross)){
   if(Number.isFinite(value)) metricSource[field]=SOURCES.cross_category;
+ }
+ for(const [field,value] of Object.entries(categoryEvidence)){
+  if(Number.isFinite(value)) metricSource[field]=SOURCES[category];
  }
  return {
   model,category,carryYd,dispersion95SqFt,lateralWidthYd:lateralWidthYd??null,
   lateralWidthUnit:lateralWidthYd==null?null:"yards",axisDeg:axisDeg??null,descentDeg:descentDeg??null,
-  ballSpeedMph:cross.ballSpeedMph??null,spinRpm:cross.spinRpm??null,
+  ballSpeedMph:cross.ballSpeedMph??categoryEvidence.ballSpeedMph??null,
+  spinRpm:cross.spinRpm??categoryEvidence.spinRpm??null,
   protocol:"GD_GL_2026_82MPH_36SHOT_6ZONE",direct:true,
   provenance:{categorySource:SOURCES[category],crossCategorySource:SOURCES.cross_category,metricSource}
  };
