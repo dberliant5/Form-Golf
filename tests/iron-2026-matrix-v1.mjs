@@ -54,7 +54,7 @@ export const IRON_2026_MATRIX_V1 = [
 ["Ping G740","game_improvement",158.8,null],
 ["Callaway Apex Ti Fusion Forged","game_improvement",157.4,null,null,2.60],
 ["Cobra 3DP X","game_improvement",156.5,null],
-["Cobra 3DP King","game_improvement",null,166.9,null,-2.33,42.63],
+["Cobra King","game_improvement",null,166.9,null,-2.33,42.63],
 ["TaylorMade Qi4D Max","game_improvement",null,null],
 ["TaylorMade Qi4D Max HL","game_improvement",147.0,null,null,-2.18,45.91],
 ["Wilson Staff Dynapwr","game_improvement",null,null,7.27,1.26,45.81],
