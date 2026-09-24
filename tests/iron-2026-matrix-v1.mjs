@@ -21,7 +21,11 @@ const CROSS_CATEGORY_EVIDENCE={
 const CATEGORY_EVIDENCE={
  "PXG 0311T GEN8":{spinRpm:5244},
  "Cobra 3DP Tour":{spinRpm:5513},
- "Wilson Staff Model CB":{spinRpm:6476}
+ "Wilson Staff Model CB":{spinRpm:6476},
+ "Callaway Quantum Max OS":{spinRpm:5330},
+ "Callaway Quantum Max":{spinRpm:4821},
+ "TaylorMade Qi4D Max HL":{spinRpm:5843},
+ "Wilson Staff Dynapwr":{spinRpm:5604}
 };
 
 export const IRON_2026_MATRIX_V1 = [
