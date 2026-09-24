@@ -19,13 +19,14 @@ const CROSS_CATEGORY_EVIDENCE={
 };
 
 const CATEGORY_EVIDENCE={
- "PXG 0311T GEN8":{spinRpm:5244},
- "Cobra 3DP Tour":{spinRpm:5513},
- "Wilson Staff Model CB":{spinRpm:6476},
+ "PXG 0311T GEN8":{spinRpm:5244,dynamicLoftDeg:25.4},
+ "Cobra 3DP Tour":{spinRpm:5513,dynamicLoftDeg:25.3},
+ "Wilson Staff Model CB":{spinRpm:6476,dynamicLoftDeg:29.3},
  "Callaway Quantum Max OS":{spinRpm:5330},
  "Callaway Quantum Max":{spinRpm:4821},
- "TaylorMade Qi4D Max HL":{spinRpm:5843},
- "Wilson Staff Dynapwr":{spinRpm:5604}
+ "PXG 0311XP Gen 8":{dynamicLoftDeg:22.18},
+ "TaylorMade Qi4D Max HL":{spinRpm:5843,dynamicLoftDeg:26.92},
+ "Wilson Staff Dynapwr":{spinRpm:5604,dynamicLoftDeg:25.92,peakHeightFt:87.8}
 };
 
 export const IRON_2026_MATRIX_V1 = [
@@ -76,6 +77,8 @@ export const IRON_2026_MATRIX_V1 = [
   lateralWidthUnit:lateralWidthYd==null?null:"yards",axisDeg:axisDeg??null,descentDeg:descentDeg??null,
   ballSpeedMph:cross.ballSpeedMph??categoryEvidence.ballSpeedMph??null,
   spinRpm:cross.spinRpm??categoryEvidence.spinRpm??null,
+  dynamicLoftDeg:categoryEvidence.dynamicLoftDeg??null,
+  peakHeightFt:categoryEvidence.peakHeightFt??null,
   protocol:"GD_GL_2026_82MPH_36SHOT_6ZONE",direct:true,
   provenance:{categorySource:SOURCES[category],crossCategorySource:SOURCES.cross_category,metricSource}
  };
