@@ -10,12 +10,18 @@ const SOURCES={
 // reporting belong here. Absence is deliberately null/omitted, never inferred from category ranges.
 const CROSS_CATEGORY_EVIDENCE={
  "PXG 0311XP Gen 8":{ballSpeedMph:113.28,spinRpm:4420},
- "PXG 0311P":{ballSpeedMph:112.89,spinRpm:4919},
+ "PXG 0311P":{ballSpeedMph:112.89,spinRpm:4919,peakHeightFt:89.11},
  "Ping G740":{ballSpeedMph:111.44},
  "Callaway Quantum Max OS":{ballSpeedMph:111.30},
  "Ping i540":{ballSpeedMph:110.96,spinRpm:4429},
  "Callaway Quantum Max":{spinRpm:4821},
- "TaylorMade P790":{spinRpm:4911}
+ "TaylorMade P790":{spinRpm:4911},
+ "Callaway X Forged":{spinRpm:6164,descentDeg:46.24},
+ "Mizuno Pro S-1":{spinRpm:6113,peakHeightFt:86.7,descentDeg:46.75},
+ "Cobra 3DP MB":{spinRpm:5927},
+ "Wilson Staff Model":{spinRpm:5903},
+ "PXG 0311T GEN8":{peakHeightFt:87.78},
+ "Callaway Apex Ai 150":{descentDeg:46.17}
 };
 
 const CATEGORY_EVIDENCE={
@@ -74,11 +80,12 @@ export const IRON_2026_MATRIX_V1 = [
  }
  return {
   model,category,carryYd,dispersion95SqFt,lateralWidthYd:lateralWidthYd??null,
-  lateralWidthUnit:lateralWidthYd==null?null:"yards",axisDeg:axisDeg??null,descentDeg:descentDeg??null,
+  lateralWidthUnit:lateralWidthYd==null?null:"yards",axisDeg:axisDeg??null,
+  descentDeg:descentDeg??cross.descentDeg??categoryEvidence.descentDeg??null,
   ballSpeedMph:cross.ballSpeedMph??categoryEvidence.ballSpeedMph??null,
   spinRpm:cross.spinRpm??categoryEvidence.spinRpm??null,
   dynamicLoftDeg:categoryEvidence.dynamicLoftDeg??null,
-  peakHeightFt:categoryEvidence.peakHeightFt??null,
+  peakHeightFt:cross.peakHeightFt??categoryEvidence.peakHeightFt??null,
   protocol:"GD_GL_2026_82MPH_36SHOT_6ZONE",direct:true,
   provenance:{categorySource:SOURCES[category],crossCategorySource:SOURCES.cross_category,metricSource}
  };
