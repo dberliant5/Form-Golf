@@ -10,15 +10,16 @@ const SOURCES={
 // reporting belong here. Absence is deliberately null/omitted, never inferred from category ranges.
 const CROSS_CATEGORY_EVIDENCE={
  "PXG 0311XP Gen 8":{ballSpeedMph:113.28,spinRpm:4420},
- "PXG 0311P":{ballSpeedMph:112.89,spinRpm:4919,peakHeightFt:89.11},
+ "PXG 0311P":{ballSpeedMph:112.89,spinRpm:4919,peakHeightFt:89.11,frontBackDepthYd:18.54},
  "Ping G740":{ballSpeedMph:111.44},
- "Callaway Quantum Max OS":{ballSpeedMph:111.30},
+ "Callaway Quantum Max OS":{ballSpeedMph:111.30,frontBackDepthYd:15.9},
  "Ping i540":{ballSpeedMph:110.96,spinRpm:4429},
- "Callaway Quantum Max":{spinRpm:4821},
+ "Callaway Quantum Max":{spinRpm:4821,frontBackDepthYd:21.29},
  "TaylorMade P790":{spinRpm:4911},
  "Callaway X Forged":{spinRpm:6164,descentDeg:46.24},
- "Mizuno Pro S-1":{spinRpm:6113,peakHeightFt:86.7,descentDeg:46.75},
+ "Mizuno Pro S-1":{spinRpm:6113,peakHeightFt:86.7,descentDeg:46.75,frontBackDepthYd:22.5},
  "Cobra 3DP MB":{spinRpm:5927},
+ "Cobra Baffler":{frontBackDepthYd:19.62},
  "Wilson Staff Model":{spinRpm:5903},
  "PXG 0311T GEN8":{peakHeightFt:87.78},
  "Callaway Apex Ai 150":{descentDeg:46.17}
@@ -86,6 +87,7 @@ export const IRON_2026_MATRIX_V1 = [
   spinRpm:cross.spinRpm??categoryEvidence.spinRpm??null,
   dynamicLoftDeg:categoryEvidence.dynamicLoftDeg??null,
   peakHeightFt:cross.peakHeightFt??categoryEvidence.peakHeightFt??null,
+  frontBackDepthYd:cross.frontBackDepthYd??categoryEvidence.frontBackDepthYd??null,
   protocol:"GD_GL_2026_82MPH_36SHOT_6ZONE",direct:true,
   provenance:{categorySource:SOURCES[category],crossCategorySource:SOURCES.cross_category,metricSource}
  };
