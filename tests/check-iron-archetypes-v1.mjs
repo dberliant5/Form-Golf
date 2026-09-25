@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import {IRON_ARCHETYPES_V1 as A, IRON_SCORING_GUARDRAILS_V1 as G} from "./iron-archetypes-v1.mjs";
+assert.equal(A.length,12);
+assert.equal(new Set(A.map(x=>x.id)).size,A.length);
+assert.equal(G.distance,"targeted_not_monotonic");
+assert.equal(G.missingPerformance,"neutral_fit_lower_confidence");
+assert.equal(G.brand,"zero_weight");
+assert.equal(G.affiliate,"zero_weight");
+assert.equal(G.recency,"zero_weight");
+assert.ok(A.some(x=>x.id==="toe_miss"));
+assert.ok(A.some(x=>x.id==="high_face" && /do not invent/i.test(x.note)));
+assert.ok(A.some(x=>x.id==="older_gamer_sparse"));
+console.log("PASS iron archetypes v1:",A.length,"blind profiles; guardrails locked");

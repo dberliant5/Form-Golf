@@ -1,0 +1,43 @@
+name: FORM Irons v1 Research Gates
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tests/iron-*.mjs'
+      - 'tests/check-iron-*.mjs'
+      - 'assets/iron-*.mjs'
+      - 'assets/iron-*.js'
+      - '.github/workflows/iron-v1-research-gates.yml'
+  workflow_dispatch:
+jobs:
+  iron-research:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Questionnaire / Driver component parity
+        run: node tests/check-iron-questionnaire-contract-v1.mjs
+      - name: Questionnaire implementation coverage
+        run: node tests/check-iron-questionnaire-implementation-v1.mjs
+      - name: Category answer isolation / brand zero-weight
+        run: node tests/check-iron-answer-isolation-v1.mjs
+      - name: Blind archetypes
+        run: node tests/check-iron-archetypes-v1.mjs
+      - name: Evidence anchors
+        run: node tests/check-iron-evidence-anchors-v1.mjs
+      - name: Evidence matrix integrity
+        run: node tests/check-iron-2026-matrix-v1.mjs
+      - name: Production ranking readiness
+        run: node tests/check-iron-ranking-readiness-v1.mjs
+      - name: Scorer adversarial gates
+        run: node tests/check-iron-fit-scorer-v1.mjs
+      - name: Structural advantage gate
+        run: node tests/check-iron-structural-advantage-v1.mjs
+      - name: Multidimensional dispersion / direction
+        run: node tests/check-iron-multidimensional-v1.mjs
+      - name: Repeated-winner diagnostic
+        run: node tests/audit-iron-ranking-v1.mjs
+      - name: Questionnaire profile to ranking E2E
+        run: node tests/check-iron-e2e-v1.mjs
