@@ -51,7 +51,7 @@ const archetypeToProfile=a=>({
 
  directionNeed:a.id==="control_first"?"high":"normal",
  directionMiss:a.id==="control_first"?"left":null,
- targetCarryYd:a.carryNeed==="high"?158:150,
+ targetCarryYd:a.carryNeed==="high"?158:(a.id==="control_first"?145:150),
  flight:a.flight||"adequate",
  strike:a.strike||null
 });
