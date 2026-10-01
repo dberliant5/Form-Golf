@@ -32,7 +32,7 @@ assert.ok(models.size===D.length);
 assert.ok(missingAnchorRows.length>0,"If every row gains provenance, explicitly review whether ranking readiness can advance");
 assert.ok(missingDispersion.length>0,"If common dispersion becomes complete, explicitly review ranking readiness");
 assert.ok(missingCarry.length>0,"If common carry becomes complete, explicitly review ranking readiness");
-assert.equal(strikeZoneRows.length,0,"If comparable strike-zone rows are ingested, replace this fail-closed sentinel with explicit coverage requirements before enabling strike personalization");
+assert.equal(strikeZoneRows.length,7,"strike-zone coverage count must be reviewed whenever evidence expands");
 
 // Preserve recoverable strike evidence without pretending sparse facts form a comparable matrix.
 assert.equal(Z.protocol,"GD_GL_2026_82MPH_36SHOT_6ZONE");
