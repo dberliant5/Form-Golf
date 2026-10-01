@@ -25,6 +25,10 @@ const wins={}; for(const r of rows){const m=r.top[0]?.model;if(m)wins[m]=(wins[m
 const leaderWins=Math.max(0,...Object.values(wins));
 assert.ok(Object.keys(wins).length>=2,"Opposed profiles collapsed to one universal winner");
 assert.ok(leaderWins<profiles.length,"One model won every opposed profile");
+const z=D.filter(c=>c.zoneCarry&&Number.isFinite(c.zoneCarry.mid_toe)&&Number.isFinite(c.zoneCarry.low_toe));
+assert.ok(z.length>=7,"strike audit needs comparable verified heads");
+const sr=s=>z.map(c=>({model:c.model,...ironFitScoreV1({strike:s},c)})).sort(compareRank);
+assert.notDeepEqual(sr("mid_toe").map(x=>x.model),sr("low_toe").map(x=>x.model),"verified strike locations must differentiate rankings");
 
 // Confidence may break only exact score ties; it must never compensate for a lower fit score.
 const tieProfile={id:"evidence_tie",consistencyNeed:"normal",directionNeed:"normal",carryNeed:"met",targetCarryYd:150,flight:"adequate"};
