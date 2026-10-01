@@ -20,7 +20,7 @@ assert.ok(a.score>b.score,"toe sensitivity failed");
 
 const missing={dispersion95SqFt:190};
 a=ironFitScoreV1({strike:"mid_toe"},missing); b=ironFitScoreV1({strike:"mid_toe"},{dispersion95SqFt:190,zoneCarry:{mid_center:155,mid_toe:155}});
-assert.equal(a.score,b.score,"missing strike evidence incorrectly changed fit");
+assert.ok(b.score>a.score,"verified strike retention should add fit evidence");
 assert.ok(a.confidence<b.confidence,"missing strike evidence should reduce confidence");
 
 const highA={dispersion95SqFt:190,zoneCarry:{mid_center:155,low_center:162}};
