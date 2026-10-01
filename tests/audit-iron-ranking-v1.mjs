@@ -50,6 +50,7 @@ const archetypeToProfile=a=>({
  consistencyNeed:a.consistencyNeed||(a.consistency==="repeatable"||a.strikeConsistency==="low"?"high":"normal"),
 
  directionNeed:a.id==="control_first"?"high":"normal",
+ directionMiss:a.id==="control_first"?"left":null,
  targetCarryYd:a.carryNeed==="high"?158:150,
  flight:a.flight||"adequate",
  strike:a.strike||null
