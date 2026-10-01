@@ -47,7 +47,8 @@ assert.equal([exactTieLow,lowerFitHighConfidence].sort(compareRank)[0].model,"Z-
 const archetypeToProfile=a=>({
  id:`blind_${a.id}`,
  carryNeed:a.carryNeed||"met",
- consistencyNeed:(a.id==="control_first"||a.id==="toe_miss"||a.id==="low_toe_miss"||a.id==="heel_miss"||a.id==="fast_inconsistent")?"high":"normal",
+ consistencyNeed:a.consistencyNeed||(a.consistency==="repeatable"||a.strikeConsistency==="low"?"high":"normal"),
+
  directionNeed:a.id==="control_first"?"high":"normal",
  targetCarryYd:a.carryNeed==="high"?158:150,
  flight:a.flight||"adequate",
