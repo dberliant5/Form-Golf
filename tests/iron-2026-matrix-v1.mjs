@@ -96,21 +96,12 @@ export const IRON_2026_MATRIX_V1 = [
  };
 });
 
-// Attach exact six-zone carry evidence only where all six values are directly verified.
-const VERIFIED_GI_ZONE_CARRY={
- "PXG 0311XP Gen 8":{mid_heel:162,mid_center:172.9,mid_toe:163,low_heel:152,low_center:171,low_toe:165},
- "Ping G740":{mid_heel:154,mid_center:162,mid_toe:150,low_heel:157,low_center:169.2,low_toe:161},
- "Cobra 3DP X":{mid_heel:150,mid_center:153,mid_toe:144,low_heel:152,low_center:164,low_toe:156},
- "Callaway Apex Ti Fusion Forged":{mid_heel:157,mid_center:162,mid_toe:147,low_heel:157,low_center:168,low_toe:155},
- "TaylorMade Qi4D Max":{mid_heel:147,mid_center:155,mid_toe:141,low_heel:151,low_center:164,low_toe:155},
- "Wilson Staff Dynapwr":{mid_heel:154,mid_center:154,mid_toe:139,low_heel:157,low_center:161,low_toe:151},
- "Cobra King":{mid_heel:156,mid_center:158,mid_toe:145,low_heel:160,low_center:164,low_toe:155}
-};
+// Six-zone carry is sourced exclusively from the strike evidence inventory above.
+// Do not duplicate those measurements here; one canonical source prevents drift.
 for(const row of IRON_2026_MATRIX_V1){
- const zones=VERIFIED_GI_ZONE_CARRY[row.model];
- if(zones){
-  row.zoneCarry={...zones};
-  row.provenance.metricSource.zoneCarry=SOURCES.game_improvement;
+ if(row.zoneCarry && Object.values(row.zoneCarry).some(Number.isFinite)){
+  row.zoneCarry={...row.zoneCarry};
+  row.provenance.metricSource.zoneCarry=STRIKE.source;
  }
 }
 
