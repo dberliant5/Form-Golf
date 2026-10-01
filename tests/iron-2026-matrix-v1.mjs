@@ -1,3 +1,4 @@
+import {IRON_STRIKE_ZONE_EVIDENCE_V1 as STRIKE} from "./iron-strike-zone-evidence-v1.mjs";
 const SOURCES={
  players:"https://www.golfdigest.com/story/players-irons-2026-robotic-testing-analysis",
  game_improvement:"https://www.golfdigest.com/story/game-improvement-irons-2026-robotic-testing-analysis",
@@ -79,6 +80,7 @@ export const IRON_2026_MATRIX_V1 = [
  for(const [field,value] of Object.entries(categoryEvidence)){
   if(Number.isFinite(value)) metricSource[field]=SOURCES[category];
  }
+ const zoneCarry=STRIKE.models[model]?.verifiedValues||null;
  return {
   model,category,carryYd,dispersion95SqFt,lateralWidthYd:lateralWidthYd??null,
   lateralWidthUnit:lateralWidthYd==null?null:"yards",axisDeg:axisDeg??null,
@@ -88,6 +90,7 @@ export const IRON_2026_MATRIX_V1 = [
   dynamicLoftDeg:categoryEvidence.dynamicLoftDeg??null,
   peakHeightFt:cross.peakHeightFt??categoryEvidence.peakHeightFt??null,
   frontBackDepthYd:cross.frontBackDepthYd??categoryEvidence.frontBackDepthYd??null,
+  zoneCarry,
   protocol:"GD_GL_2026_82MPH_36SHOT_6ZONE",direct:true,
   provenance:{categorySource:SOURCES[category],crossCategorySource:SOURCES.cross_category,metricSource}
  };
