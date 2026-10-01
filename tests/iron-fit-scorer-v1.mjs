@@ -39,9 +39,8 @@ export function ironFitScoreV1(profile, club){
 
   // Exact strike evidence only. No inferred high-face performance.
   if(profile.strike && club.zoneCarry && Number.isFinite(club.zoneCarry[profile.strike])){
-    const vals=Object.values(club.zoneCarry).filter(Number.isFinite);
-    const best=Math.max(...vals), selected=club.zoneCarry[profile.strike];
-    const penalty=Math.min(8,(best-selected)*.45);
+    const selected=club.zoneCarry[profile.strike], center=club.zoneCarry.mid_center;
+    const penalty=Number.isFinite(center)?Math.min(8,Math.max(0,(center-selected)*.45)):0;
     // A repeatable measured miss is a positive fit signal when a head preserves carry well.
     // Centered/near-best retention can earn up to the same magnitude that poor retention loses;
     // this prevents generic dispersion from swallowing exact strike-location personalization.
