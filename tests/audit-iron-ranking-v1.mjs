@@ -29,6 +29,9 @@ const z=D.filter(c=>c.zoneCarry&&Number.isFinite(c.zoneCarry.mid_toe)&&Number.is
 assert.ok(z.length>=7,"strike audit needs comparable verified heads");
 const sr=s=>z.map(c=>({model:c.model,...ironFitScoreV1({strike:s},c)})).sort(compareRank);
 assert.notDeepEqual(sr("mid_toe").map(x=>x.model),sr("low_toe").map(x=>x.model),"verified strike locations must differentiate rankings");
+const strikeTop=Object.fromEntries(["mid_heel","mid_center","mid_toe","low_heel","low_center","low_toe"].map(s=>[s,sr(s).slice(0,3).map(x=>x.model)]));
+assert.ok(new Set(Object.values(strikeTop).map(xs=>xs[0])).size>=2,"All verified strike zones collapsed to one winner");
+for(const [zone,top] of Object.entries(strikeTop)) assert.equal(top.length,3,`${zone} lacks a three-model comparable strike shortlist`);
 
 // Confidence may break only exact score ties; it must never compensate for a lower fit score.
 const tieProfile={id:"evidence_tie",consistencyNeed:"normal",directionNeed:"normal",carryNeed:"met",targetCarryYd:150,flight:"adequate"};
@@ -92,4 +95,4 @@ for(const club of D){
  assert.equal(a.confidence,b.confidence,`${club.model} gained invented high-face evidence confidence`);
 }
 assert.deepEqual(rank(highP).map(x=>x.model),rank(highControl).map(x=>x.model),"High-face answer changed ranking without measured high-face evidence");
-console.log(JSON.stringify({rows,wins,leaderWins,profiles:profiles.length,blindRows,blindWins,blindLeaderWins,executableBlindArchetypes:executable.length,directionalMeasured:axis.length,rightAxis:rightAxis.slice(0,3),leftAxis:leftAxis.slice(0,3),highFaceNeutral:true,evidenceTieBreak:true},null,2));
+console.log(JSON.stringify({rows,wins,leaderWins,profiles:profiles.length,strikeTop,blindRows,blindWins,blindLeaderWins,executableBlindArchetypes:executable.length,directionalMeasured:axis.length,rightAxis:rightAxis.slice(0,3),leftAxis:leftAxis.slice(0,3),highFaceNeutral:true,evidenceTieBreak:true},null,2));
