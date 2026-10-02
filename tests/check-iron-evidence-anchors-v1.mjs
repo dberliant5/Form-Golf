@@ -1,0 +1,11 @@
+import assert from "node:assert/strict";
+import {IRON_EVIDENCE_ANCHORS_V1 as D,IRON_PROTOCOL_V1 as P} from "./iron-evidence-anchors-v1.mjs";
+const by=Object.fromEntries(D.map(x=>[x.model,x]));
+assert.equal(P.shotsPerHead,36); assert.equal(P.zones.length,6);
+assert.equal(by["Callaway Quantum Max OS"].dispersion95SqFt,85.4);
+assert.equal(by["Ping i240"].dispersion95SqFt,136.6);
+assert.ok(by["PXG 0311XP Gen 8"].carryYd>by["Ping i240"].carryYd);
+assert.ok(by["PXG 0311XP Gen 8"].dispersion95SqFt>by["Ping i240"].dispersion95SqFt*2);
+assert.ok(by["TaylorMade Qi4D Max HL"].descentDeg>by["PXG 0311XP Gen 8"].descentDeg);
+assert.ok(D.every(x=>x.direct===true));
+console.log("PASS verified iron evidence anchors:",D.length);
